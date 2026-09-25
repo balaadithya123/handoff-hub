@@ -1,5 +1,6 @@
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from '../src/server.js';
+import { authenticate } from '../src/auth.js';
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,12 +12,19 @@ function cors(res) {
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method === 'GET') return res.status(200).json({ name: 'handoff-hub', version: '0.3.1', status: 'ok' });
+  if (req.method === 'GET') return res.status(200).json({ name: 'handoff-hub', version: '0.6.0', status: 'ok' });
   if (!['POST', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
+
+  const userId = await authenticate(req);
+  if (!userId) {
+    return res.status(401).json({
+      error: 'Missing or invalid API key. POST /api/signup once to get one, then send it as Authorization: Bearer <api_key>.'
+    });
+  }
 
   try {
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-    const server = createServer();
+    const server = createServer(userId);
     await server.connect(transport);
     await transport.handleRequest(req, res);
   } catch (error) {
