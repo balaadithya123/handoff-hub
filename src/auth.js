@@ -1,5 +1,8 @@
 import crypto from 'node:crypto';
 
+// This is the actual isolation boundary for the whole product: every request
+// to /api/mcp must resolve to exactly one user_id, and every read/write in
+// store.js is scoped to that user_id.
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -19,10 +22,15 @@ function generateApiKey() {
   return `hh_${crypto.randomBytes(24).toString('hex')}`;
 }
 
+// Accept either a Bearer header or a query token. The latter is needed for
+// clients whose custom MCP connector form only accepts a server URL.
 export async function authenticate(req) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
   const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const headerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const queryToken = typeof req.query?.token === 'string' ? req.query.token : null;
+  const token = headerToken || queryToken;
   if (!token) return null;
 
   const keyHash = hashKey(token);
