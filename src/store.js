@@ -1,16 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-// Local fallback store (used only when Supabase env vars are absent, e.g. local dev).
-// NOTE: on Vercel this writes to /tmp, which is per-instance and NOT shared across
-// concurrent function instances or cold starts — fine for local testing, not for
-// production durability. That's what SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fix below.
-const file = process.env.HANDOFF_STATE_FILE || path.join('/tmp', 'handoff-hub-state.json');
+const localFile = userId => path.join('/tmp', `handoff-hub-state-${userId}.json`);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const useSupabase = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
-const ROW_ID = 'default';
 
 const empty = () => ({ projects: {}, memories: [], events: [] });
 
@@ -22,21 +17,22 @@ function supabaseHeaders(extra = {}) {
   };
 }
 
-async function readLocal() {
-  try { return JSON.parse(await fs.readFile(file, 'utf8')); }
+async function readLocal(userId) {
+  try { return JSON.parse(await fs.readFile(localFile(userId), 'utf8')); }
   catch { return empty(); }
 }
 
-async function writeLocal(state) {
+async function writeLocal(userId, state) {
+  const file = localFile(userId);
   await fs.mkdir(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.writeFile(tmp, JSON.stringify(state, null, 2));
   await fs.rename(tmp, file);
 }
 
-async function readSupabase() {
+async function readSupabase(userId) {
   const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/handoff_state?id=eq.${ROW_ID}&select=state`,
+    `${SUPABASE_URL}/rest/v1/handoff_state?user_id=eq.${encodeURIComponent(userId)}&select=state`,
     { headers: supabaseHeaders() }
   );
   if (!r.ok) throw new Error(`Supabase read failed: ${r.status}`);
@@ -44,42 +40,37 @@ async function readSupabase() {
   return rows[0]?.state ?? empty();
 }
 
-async function writeSupabase(state) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/handoff_state?on_conflict=id`, {
+async function writeSupabase(userId, state) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/handoff_state?on_conflict=user_id`, {
     method: 'POST',
     headers: supabaseHeaders({
       'Content-Type': 'application/json',
       Prefer: 'resolution=merge-duplicates,return=minimal'
     }),
-    body: JSON.stringify({ id: ROW_ID, state })
+    body: JSON.stringify({ id: userId, user_id: userId, state, updated_at: new Date().toISOString() })
   });
   if (!r.ok) throw new Error(`Supabase write failed: ${r.status}`);
 }
 
-async function readState() {
-  return useSupabase ? readSupabase() : readLocal();
+async function readState(userId) {
+  return useSupabase ? readSupabase(userId) : readLocal(userId);
 }
 
-async function writeState(state) {
-  return useSupabase ? writeSupabase(state) : writeLocal(state);
+async function writeState(userId, state) {
+  return useSupabase ? writeSupabase(userId, state) : writeLocal(userId, state);
 }
 
-// Serializes writes within a single warm instance. mutate() always re-reads the
-// latest persisted state first (from Supabase when configured) before applying fn,
-// so a partial update never clobbers fields another agent or a different instance
-// already saved. Across *different* concurrent instances this is still read-modify-
-// write, not a transaction — fine for one or two agents talking turn by turn, not
-// yet safe for truly simultaneous writers. A future step would move this to a
-// Postgres function (e.g. Supabase RPC) that does the merge server-side.
-let queue = Promise.resolve();
-export function mutate(fn) {
-  queue = queue.then(async () => {
-    const state = await readState();
+const queues = new Map();
+export function mutate(userId, fn) {
+  const prior = queues.get(userId) ?? Promise.resolve();
+  const next = prior.then(async () => {
+    const state = await readState(userId);
     const result = await fn(state);
-    await writeState(state);
+    await writeState(userId, state);
     return result;
   });
-  return queue;
+  queues.set(userId, next);
+  return next;
 }
 
 export const getState = readState;
