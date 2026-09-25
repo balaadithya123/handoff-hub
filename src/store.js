@@ -41,7 +41,10 @@ async function readSupabase(userId) {
 }
 
 async function writeSupabase(userId, state) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/handoff_state?on_conflict=user_id`, {
+  // userId is also the handoff_state primary key. Use the primary-key
+  // conflict target rather than relying on a separately-created unique index
+  // on user_id, which PostgREST may not expose as an upsert constraint.
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/handoff_state?on_conflict=id`, {
     method: 'POST',
     headers: supabaseHeaders({
       'Content-Type': 'application/json',
