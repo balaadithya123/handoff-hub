@@ -22,15 +22,25 @@ function generateApiKey() {
   return `hh_${crypto.randomBytes(24).toString('hex')}`;
 }
 
-// Accept either a Bearer header or a query token. The latter is needed for
-// clients whose custom MCP connector form only accepts a server URL.
+function queryTokenFromRequest(req) {
+  // Vercel normally exposes query parameters through req.query, but some MCP
+  // clients/proxies preserve the raw URL more reliably than the parsed query.
+  const parsed = new URL(req.url || '/', `https://${req.headers?.host || 'localhost'}`);
+  const token = parsed.searchParams.get('token');
+  return token?.trim() || null;
+}
+
+// Accept Bearer, API-key style headers, or a query token. The query token is
+// needed for custom MCP connector forms that only accept a server URL.
 export async function authenticate(req) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
 
   const authHeader = req.headers['authorization'] || '';
-  const headerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-  const queryToken = typeof req.query?.token === 'string' ? req.query.token : null;
-  const token = headerToken || queryToken;
+  const bearerToken = authHeader.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || null;
+  const apiKeyHeader = req.headers['x-api-key'] || req.headers['x-mcp-api-key'] || null;
+  const parsedQueryToken = queryTokenFromRequest(req);
+  const legacyQueryToken = typeof req.query?.token === 'string' ? req.query.token.trim() : null;
+  const token = bearerToken || apiKeyHeader || parsedQueryToken || legacyQueryToken;
   if (!token) return null;
 
   const keyHash = hashKey(token);
