@@ -9,7 +9,8 @@ function requireEnv(value, name) {
 }
 
 function allowedRepos() {
-  return (process.env.GITHUB_ALLOWED_REPOS || '')
+  const configured = process.env.GITHUB_ALLOWED_REPOS || 'balaadithya123/handoff-hub';
+  return configured
     .split(',')
     .map(x => x.trim())
     .filter(Boolean);
