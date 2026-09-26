@@ -38,25 +38,39 @@ async function hfFetch(path, options = {}) {
   return body;
 }
 
+function isFreeProvider(provider) {
+  if (!provider || provider.status !== 'live') return false;
+  if (provider.is_free === true) return true;
+  const pricing = provider.pricing || {};
+  const input = Number(pricing.input);
+  const output = Number(pricing.output);
+  return Number.isFinite(input) && Number.isFinite(output) && input === 0 && output === 0;
+}
+
+function modelList(data) {
+  return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+}
+
 export async function hfModels(search = '') {
   const data = await hfFetch('/models');
-  const models = (data.data || []).filter(model => {
+  const models = modelList(data).filter(model => {
+    if (!model?.id) return false;
     if (search && !model.id.toLowerCase().includes(search.toLowerCase())) return false;
-    return (model.providers || []).some(provider => provider.status === 'live' && provider.is_free === true);
+    return (model.providers || []).some(isFreeProvider);
   });
   return models.slice(0, 30).map(model => ({
     id: model.id,
-    free_providers: (model.providers || []).filter(p => p.status === 'live' && p.is_free === true).map(p => p.provider)
+    free_providers: (model.providers || []).filter(isFreeProvider).map(p => p.provider)
   }));
 }
 
 async function hfModelInfo(model) {
-  return hfFetch(`/models/${encodeURIComponent(model)}`);
+  return hfFetch(`/models/${model.split('/').map(encodeURIComponent).join('/')}`);
 }
 
 export async function hfChat({ model, prompt, system, max_tokens = 1024 }) {
   const info = await hfModelInfo(model);
-  const freeProviders = (info.providers || []).filter(p => p.status === 'live' && p.is_free === true);
+  const freeProviders = (info.providers || []).filter(isFreeProvider);
   if (!freeProviders.length) {
     throw new Error('No currently free Hugging Face provider is available for this model. No paid fallback is permitted.');
   }
