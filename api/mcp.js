@@ -12,7 +12,7 @@ function cors(res) {
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method === 'GET') return res.status(200).json({ name: 'handoff-hub', version: '0.6.0', status: 'ok' });
+  if (req.method === 'GET') return res.status(200).json({ name: 'handoff-hub', version: '0.7.0', status: 'ok' });
   if (!['POST', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
 
   const userId = await authenticate(req);
