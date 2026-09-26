@@ -1,31 +1,7 @@
 # Handoff Hub
 
-Cloud-first MCP hub for cross-AI project memory, handoffs, events, and integration metadata.
+Cross-AI context handoff and private project memory.
 
-## Architecture
+## Current GitHub integration
 
-AI clients (Claude, ChatGPT, Codex, Gemini, etc.) connect to one MCP endpoint. The hub keeps project context independent of the AI that produced it.
-
-Current MCP tools:
-- `get_project_state`
-- `update_project_state`
-- `remember`
-- `recall`
-- `record_event`
-- `recent_events`
-- `set_integration`
-- `list_projects`
-
-## Deployment
-
-Vercel serves `/mcp` through `api/mcp.js`.
-
-Important: the current file store is a development fallback. Vercel's `/tmp` filesystem is ephemeral. Before production use, replace the store with Supabase/Postgres so memory survives cold starts and multiple instances.
-
-## Next stage
-
-1. Supabase/Postgres persistent store + pgvector.
-2. OAuth/credential vault for integrations.
-3. GitHub, Supabase and Vercel action adapters.
-4. Model gateway with provider-independent AI support.
-5. Browser extension for explicit conversation/project capture.
+The deployed GitHub operator supports `balaadithya123/handoff-hub` through the Hub-owned GitHub integration. The repository allowlist is controlled by `GITHUB_ALLOWED_REPOS`; when that production variable is absent, the server defaults to `balaadithya123/handoff-hub` so the core repository remains operable. Set the production variable explicitly to the same repository for a fully explicit deployment configuration.
