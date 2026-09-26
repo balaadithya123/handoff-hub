@@ -1,11 +1,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { project, getState, mutate } from './store.js';
 import { z } from 'zod';
+import { hfModels, hfChat, githubGetFile, githubCommitFile } from './integrations.js';
 
 const projectId = z.string().min(1).optional().describe('Optional project identifier within your private account. If omitted, uses your own default project; it is never shared with another user.');
 
 export function createServer(userId) {
-  const server = new McpServer({ name: 'handoff-hub', version: '0.6.0' });
+  const server = new McpServer({ name: 'handoff-hub', version: '0.7.0' });
   const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
 
   server.tool('remember', 'Save durable context to your private Handoff Hub memory. Call this proactively when you learn a fact, decision, or context another session or AI agent will need later.', { project_id: projectId, memory: z.string().min(1), source: z.string().optional(), tags: z.array(z.string()).optional() }, async input => text(await mutate(userId, state => { const p = project(state, input.project_id ?? 'default'); const item = { id: crypto.randomUUID(), project_id: input.project_id ?? 'default', memory: input.memory, source: input.source ?? 'unknown', tags: input.tags ?? [], at: new Date().toISOString() }; p.memories.unshift(item); p.memories = p.memories.slice(0, 500); return item; })));
@@ -16,5 +17,12 @@ export function createServer(userId) {
   server.tool('update_project_state', 'Update private project status so your other AI agents can continue from the same state. Call this proactively after meaningful work.', { project_id: projectId, summary: z.string().min(1), decisions: z.array(z.string()).optional(), blockers: z.array(z.string()).optional(), agent: z.string().min(1).optional() }, async input => text(await mutate(userId, state => { const p = project(state, input.project_id ?? 'default'); p.summary = input.summary; p.decisions = input.decisions ?? p.decisions ?? []; p.blockers = input.blockers ?? p.blockers ?? []; p.updated_at = new Date().toISOString(); p.last_agent = input.agent ?? p.last_agent ?? 'unknown'; p.events.unshift({ type: 'state_update', agent: p.last_agent, summary: input.summary, at: p.updated_at }); p.events = p.events.slice(0, 100); return p; })));
   server.tool('set_integration', 'Register an integration available to a private Handoff Hub project. This records capabilities only; it does not grant credentials.', { project_id: projectId, name: z.string().min(1), type: z.string().min(1), capabilities: z.array(z.string()).optional() }, async input => text(await mutate(userId, state => { const p = project(state, input.project_id ?? 'default'); p.integrations[input.name] = { type: input.type, capabilities: input.capabilities ?? [], updated_at: new Date().toISOString() }; return p.integrations[input.name]; })));
   server.tool('list_projects', 'List only your own Handoff Hub projects. Never includes another user\'s projects.', {}, async () => text(Object.values((await getState(userId)).projects)));
+
+  server.tool('huggingface_models', 'List Hugging Face chat models currently exposing a free provider. This is a free-only discovery tool; it never enables paid inference.', { search: z.string().optional() }, async ({ search = '' }) => text(await hfModels(search)));
+  server.tool('huggingface_chat', 'Run an auxiliary AI request through Hugging Face Inference Providers. The Hub only permits a provider explicitly reported as free and never enables pay-as-you-go fallback.', { model: z.string().min(1), prompt: z.string().min(1), system: z.string().optional(), max_tokens: z.number().int().min(1).max(4096).optional() }, async input => text(await hfChat(input)));
+
+  server.tool('github_get_file', 'Read a file from an allowlisted GitHub repository through Handoff Hub. GitHub credentials stay server-side.', { repository: z.string().min(1), path: z.string().min(1), branch: z.string().optional() }, async input => text(await githubGetFile(input)));
+  server.tool('github_commit_file', 'Create or replace a file in an allowlisted GitHub repository through Handoff Hub. GitHub credentials stay server-side; the caller never receives them.', { repository: z.string().min(1), path: z.string().min(1), content: z.string(), message: z.string().min(1), branch: z.string().optional(), sha: z.string().optional() }, async input => text(await githubCommitFile(input)));
+
   return server;
 }
