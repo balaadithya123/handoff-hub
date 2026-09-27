@@ -1,8 +1,12 @@
 {
   "functions": {
-    "api/mcp.js": { "maxDuration": 60 }
+    "api/mcp.js": { "maxDuration": 60 },
+    "api/heartbeat.js": { "maxDuration": 30 }
   },
   "rewrites": [
     { "source": "/mcp", "destination": "/api/mcp" }
+  ],
+  "crons": [
+    { "path": "/api/heartbeat", "schedule": "0 3 * * *" }
   ]
 }
