@@ -3,11 +3,12 @@ import { project, getState, mutate } from './store.js';
 import { z } from 'zod';
 import { hfModels, hfChat, githubGetFile, githubCommitFile, vercelGetLatestDeployment, vercelTriggerRedeploy } from './integrations.js';
 import { optimizeTask } from './optimizer.js';
+import { runHealthCheck } from './worker.js';
 
 const projectId = z.string().min(1).optional().describe('Optional project identifier within your private account. If omitted, uses your own default project; it is never shared with another user.');
 
 export function createServer(userId) {
-  const server = new McpServer({ name: 'handoff-hub', version: '0.9.0' });
+  const server = new McpServer({ name: 'handoff-hub', version: '0.10.0' });
   const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
 
   server.tool('remember', 'Save durable context to your private Handoff Hub memory. Call this proactively when you learn a fact, decision, or context another session or AI agent will need later.', { project_id: projectId, memory: z.string().min(1), source: z.string().optional(), tags: z.array(z.string()).optional() }, async input => text(await mutate(userId, state => { const p = project(state, input.project_id ?? 'default'); const item = { id: crypto.randomUUID(), project_id: input.project_id ?? 'default', memory: input.memory, source: input.source ?? 'unknown', tags: input.tags ?? [], at: new Date().toISOString() }; p.memories.unshift(item); p.memories = p.memories.slice(0, 500); return item; })));
@@ -28,6 +29,8 @@ export function createServer(userId) {
 
   server.tool('vercel_get_deployment', 'Read the latest deployment status for an allowlisted Vercel project through Handoff Hub. Vercel credentials stay server-side.', { projectId: z.string().min(1), target: z.string().optional() }, async input => text(await vercelGetLatestDeployment(input)));
   server.tool('vercel_trigger_redeploy', 'Trigger a redeploy on an allowlisted Vercel project through Handoff Hub (inherits the source deployment\'s settings unless overridden). Vercel credentials stay server-side; the caller never receives them.', { projectId: z.string().min(1), deploymentId: z.string().optional(), name: z.string().optional(), target: z.string().optional() }, async input => text(await vercelTriggerRedeploy(input)));
+
+  server.tool('run_health_check', 'Run the autonomous read-only health check now: Vercel production deployment status, the MCP endpoint\'s own health, and Hugging Face free-model availability. Never writes to GitHub or Vercel, so it never needs approval. The same checks also run automatically once a day via Vercel Cron; call this for an immediate on-demand read instead of waiting for the next scheduled run.', { project_id: projectId, agent: z.string().optional() }, async ({ project_id, agent }) => text(await runHealthCheck(userId, { project_id: project_id ?? 'default', agent: agent ?? 'on-demand' })));
 
   return server;
 }
