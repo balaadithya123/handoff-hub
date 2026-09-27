@@ -2,7 +2,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createServer } from '../src/server.js';
 import { authenticate } from '../src/auth.js';
 
-const MCP_VERSION = '0.9.1';
+const MCP_VERSION = '0.10.0';
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
