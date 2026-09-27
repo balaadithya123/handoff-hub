@@ -1,4 +1,4 @@
-<![CDATA[import { mutate, project } from './store.js';
+import { mutate, project } from './store.js';
 import { hfModels, vercelGetLatestDeployment } from './integrations.js';
 
 function vercelProjectId() {
@@ -72,4 +72,3 @@ export async function runHealthCheck(userId, { agent = 'worker', project_id = 'd
 
   return { summary, checks, anomalies, at: entry.at };
 }
-]]>
