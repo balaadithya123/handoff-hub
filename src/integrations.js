@@ -51,21 +51,37 @@ function modelList(data) {
   return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
 }
 
+async function hfModelInfo(model) {
+  return hfFetch(`/models/${model.split('/').map(encodeURIComponent).join('/')}`);
+}
+
+// The bulk /models listing can report stale provider pricing/status, which
+// previously let hfModels() surface a model that hfChat() would then reject
+// (hfChat checks the per-model detail endpoint instead). To keep discovery
+// and inference consistent, each candidate is re-verified against the same
+// detail endpoint hfChat uses before being returned. Capped at 10 candidates
+// to bound the extra round trips this requires.
 export async function hfModels(search = '') {
   const data = await hfFetch('/models');
-  const models = modelList(data).filter(model => {
+  const candidates = modelList(data).filter(model => {
     if (!model?.id) return false;
     if (search && !model.id.toLowerCase().includes(search.toLowerCase())) return false;
     return (model.providers || []).some(isFreeProvider);
-  });
-  return models.slice(0, 30).map(model => ({
-    id: model.id,
-    free_providers: (model.providers || []).filter(isFreeProvider).map(p => p.provider)
-  }));
-}
+  }).slice(0, 10);
 
-async function hfModelInfo(model) {
-  return hfFetch(`/models/${model.split('/').map(encodeURIComponent).join('/')}`);
+  const verified = [];
+  for (const model of candidates) {
+    try {
+      const info = await hfModelInfo(model.id);
+      const freeProviders = (info.providers || []).filter(isFreeProvider);
+      if (freeProviders.length) {
+        verified.push({ id: model.id, free_providers: freeProviders.map(p => p.provider) });
+      }
+    } catch {
+      // Skip candidates whose live detail lookup fails or errors out.
+    }
+  }
+  return verified;
 }
 
 export async function hfChat({ model, prompt, system, max_tokens = 1024 }) {
