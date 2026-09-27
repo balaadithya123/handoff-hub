@@ -2,6 +2,8 @@ const HF_TOKEN = process.env.HF_TOKEN;
 const HF_ROUTER = 'https://router.huggingface.co/v1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const DEFAULT_GITHUB_BRANCH = process.env.GITHUB_DEFAULT_BRANCH || 'main';
+const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
+const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
 
 function requireEnv(value, name) {
   if (!value) throw new Error(`${name} is not configured on the Handoff Hub server`);
@@ -20,6 +22,24 @@ function allowedRepos() {
 function assertAllowedRepo(repository) {
   if (!allowedRepos().includes(repository)) {
     throw new Error(`Repository is not allowlisted for Handoff Hub: ${repository}`);
+  }
+}
+
+function allowedVercelProjects() {
+  const configured = process.env.VERCEL_ALLOWED_PROJECTS;
+  return (configured || '')
+    .split(',')
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+function assertAllowedVercelProject(projectId) {
+  const allowed = allowedVercelProjects();
+  if (!allowed.length) {
+    throw new Error('VERCEL_ALLOWED_PROJECTS is not configured on the Handoff Hub server');
+  }
+  if (!allowed.includes(projectId)) {
+    throw new Error(`Vercel project is not allowlisted for Handoff Hub: ${projectId}`);
   }
 }
 
@@ -179,4 +199,61 @@ export async function githubCommitFile({ repository, path, content, message, bra
     commit_sha: body.commit?.sha,
     content_sha: body.content?.sha
   };
+}
+
+async function vercelFetch(path, options = {}) {
+  requireEnv(VERCEL_TOKEN, 'VERCEL_TOKEN');
+  const url = new URL(`https://api.vercel.com${path}`);
+  if (VERCEL_TEAM_ID && !url.searchParams.has('teamId')) url.searchParams.set('teamId', VERCEL_TEAM_ID);
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${VERCEL_TOKEN}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`Vercel request failed: ${response.status} ${body?.error?.message || body?.error?.code || ''}`.trim());
+  return body;
+}
+
+function summarizeDeployment(d) {
+  if (!d) return null;
+  return {
+    id: d.uid || d.id,
+    url: d.url,
+    state: d.state || d.readyState,
+    target: d.target,
+    created: d.created ?? d.createdAt,
+    commitSha: d.meta?.githubCommitSha,
+    commitMessage: d.meta?.githubCommitMessage
+  };
+}
+
+export async function vercelGetLatestDeployment({ projectId, target = 'production' } = {}) {
+  assertAllowedVercelProject(projectId);
+  const body = await vercelFetch(`/v6/deployments?projectId=${encodeURIComponent(projectId)}&target=${encodeURIComponent(target)}&limit=1`);
+  return { projectId, target, deployment: summarizeDeployment((body.deployments || [])[0]) };
+}
+
+export async function vercelTriggerRedeploy({ projectId, name, deploymentId, target = 'production' }) {
+  assertAllowedVercelProject(projectId);
+  let sourceDeploymentId = deploymentId;
+  let deploymentName = name;
+  if (!sourceDeploymentId || !deploymentName) {
+    const latest = await vercelGetLatestDeployment({ projectId, target });
+    if (!latest.deployment) throw new Error('No existing deployment found on this project to redeploy from');
+    sourceDeploymentId = sourceDeploymentId || latest.deployment.id;
+    deploymentName = deploymentName || latest.deployment.url?.split('-').slice(0, -2).join('-') || 'redeploy';
+  }
+  const body = await vercelFetch('/v13/deployments', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: deploymentName,
+      deploymentId: sourceDeploymentId,
+      target
+    })
+  });
+  return { projectId, deployment: summarizeDeployment(body) };
 }
