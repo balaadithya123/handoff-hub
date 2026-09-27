@@ -1,13 +1,13 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { project, getState, mutate } from './store.js';
 import { z } from 'zod';
-import { hfModels, hfChat, githubGetFile, githubCommitFile } from './integrations.js';
+import { hfModels, hfChat, githubGetFile, githubCommitFile, vercelGetLatestDeployment, vercelTriggerRedeploy } from './integrations.js';
 import { optimizeTask } from './optimizer.js';
 
 const projectId = z.string().min(1).optional().describe('Optional project identifier within your private account. If omitted, uses your own default project; it is never shared with another user.');
 
 export function createServer(userId) {
-  const server = new McpServer({ name: 'handoff-hub', version: '0.8.0' });
+  const server = new McpServer({ name: 'handoff-hub', version: '0.9.0' });
   const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
 
   server.tool('remember', 'Save durable context to your private Handoff Hub memory. Call this proactively when you learn a fact, decision, or context another session or AI agent will need later.', { project_id: projectId, memory: z.string().min(1), source: z.string().optional(), tags: z.array(z.string()).optional() }, async input => text(await mutate(userId, state => { const p = project(state, input.project_id ?? 'default'); const item = { id: crypto.randomUUID(), project_id: input.project_id ?? 'default', memory: input.memory, source: input.source ?? 'unknown', tags: input.tags ?? [], at: new Date().toISOString() }; p.memories.unshift(item); p.memories = p.memories.slice(0, 500); return item; })));
@@ -25,6 +25,9 @@ export function createServer(userId) {
 
   server.tool('github_get_file', 'Read a file from an allowlisted GitHub repository through Handoff Hub. GitHub credentials stay server-side.', { repository: z.string().min(1), path: z.string().min(1), branch: z.string().optional() }, async input => text(await githubGetFile(input)));
   server.tool('github_commit_file', 'Create or replace a file in an allowlisted GitHub repository through Handoff Hub. GitHub credentials stay server-side; the caller never receives them.', { repository: z.string().min(1), path: z.string().min(1), content: z.string(), message: z.string().min(1), branch: z.string().optional(), sha: z.string().optional() }, async input => text(await githubCommitFile(input)));
+
+  server.tool('vercel_get_deployment', 'Read the latest deployment status for an allowlisted Vercel project through Handoff Hub. Vercel credentials stay server-side.', { projectId: z.string().min(1), target: z.string().optional() }, async input => text(await vercelGetLatestDeployment(input)));
+  server.tool('vercel_trigger_redeploy', 'Trigger a redeploy on an allowlisted Vercel project through Handoff Hub (inherits the source deployment\'s settings unless overridden). Vercel credentials stay server-side; the caller never receives them.', { projectId: z.string().min(1), deploymentId: z.string().optional(), name: z.string().optional(), target: z.string().optional() }, async input => text(await vercelTriggerRedeploy(input)));
 
   return server;
 }
