@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
 import { project, getState, mutate } from './store.js';
 import { hfModels, hfChat, githubGetFile, githubCommitFile, vercelGetLatestDeployment, vercelTriggerRedeploy } from './integrations.js';
 import { optimizeTask } from './optimizer.js';
