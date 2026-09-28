@@ -5,6 +5,14 @@ function vercelProjectId() {
   return (process.env.VERCEL_ALLOWED_PROJECTS || '').split(',').map(x => x.trim()).filter(Boolean)[0] || null;
 }
 
+// Prefer the production domain: deployment-specific URLs (VERCEL_URL) can sit
+// behind Vercel Deployment Protection and return 401 to unauthenticated
+// fetches, which would look like a false outage.
+function selfBaseUrl() {
+  const host = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  return host ? `https://${host}` : null;
+}
+
 // Read-only autonomous checks only: no redeploys, no commits, nothing that
 // mutates GitHub or Vercel. This is the battery of checks that both the
 // daily cron (api/heartbeat.js) and the on-demand `run_health_check` tool
@@ -26,13 +34,17 @@ export async function runHealthCheck(userId, { agent = 'worker', project_id = 'd
   }
 
   try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+    const base = selfBaseUrl();
     if (!base) {
-      checks.mcp_endpoint = { ok: null, note: 'VERCEL_URL not available in this runtime' };
+      checks.mcp_endpoint = { ok: null, note: 'No Vercel URL available in this runtime' };
     } else {
       const r = await fetch(`${base}/api/mcp`, { method: 'GET' });
       const body = await r.json().catch(() => ({}));
-      checks.mcp_endpoint = { ok: r.ok, version: body.version, status: body.status };
+      // 401/403 here means deployment protection, not an outage: report as inconclusive.
+      const blocked = r.status === 401 || r.status === 403;
+      checks.mcp_endpoint = blocked
+        ? { ok: null, status_code: r.status, note: 'Endpoint blocked by deployment protection; inconclusive' }
+        : { ok: r.ok, status_code: r.status, version: body.version, status: body.status };
     }
   } catch (error) {
     checks.mcp_endpoint = { ok: false, error: error.message };
@@ -45,16 +57,18 @@ export async function runHealthCheck(userId, { agent = 'worker', project_id = 'd
     checks.huggingface = { ok: false, error: error.message };
   }
 
+  // No free HF provider is an availability fact, not an outage: don't raise a blocker for it.
   const anomalies = Object.entries(checks)
-    .filter(([, v]) => v.ok === false)
+    .filter(([key, v]) => v.ok === false && !(key === 'huggingface' && !v.error))
     .map(([key, v]) => `${key}: ${v.error || 'check failed'}`);
 
+  const state = key => (checks[key].ok === true ? 'ok' : checks[key].ok === null ? 'inconclusive' : 'FAILED');
   const summary = anomalies.length
     ? `Autonomous health check found issues: ${anomalies.join('; ')}`
-    : `Autonomous health check: Vercel production ${checks.vercel.ok ? 'READY' : 'unknown'}, MCP endpoint ${checks.mcp_endpoint.ok ? 'healthy' : 'unknown'}, ${checks.huggingface.free_models_available || 0} free HF model(s) currently available.`;
+    : `Autonomous health check: Vercel ${state('vercel')}, MCP endpoint ${state('mcp_endpoint')}, ${checks.huggingface.free_models_available || 0} free HF model(s) available.`;
 
-  const entry = await mutate(userId, state => {
-    const p = project(state, project_id);
+  const entry = await mutate(userId, current => {
+    const p = project(current, project_id);
     const record = { id: crypto.randomUUID(), at: new Date().toISOString(), agent, checks, anomalies };
     p.health_checks = p.health_checks || [];
     p.health_checks.unshift(record);
