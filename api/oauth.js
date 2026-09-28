@@ -1,0 +1,204 @@
+import crypto from 'node:crypto';
+import { userIdFromApiKey } from '../src/auth.js';
+import { createClient, getClient, createAuthCode, consumeAuthCode, issueTokens, rotateRefreshToken } from '../src/oauth-store.js';
+
+// Minimal OAuth 2.1 authorization server for the Handoff Hub MCP endpoint:
+// dynamic client registration, authorization code + PKCE (S256), refresh
+// token rotation. Routed via rewrites in vercel.json; one function keeps us
+// well inside the Hobby plan's function limit.
+
+const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com'];
+
+function baseUrl() {
+  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  return 'http://localhost:3000';
+}
+
+function allowedRedirectHosts() {
+  const extra = (process.env.OAUTH_ALLOWED_REDIRECT_HOSTS || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  return [...DEFAULT_REDIRECT_HOSTS, ...extra];
+}
+
+function redirectUriAllowed(uri) {
+  try {
+    const u = new URL(uri);
+    if (u.protocol !== 'https:' || u.username || u.password || u.hash) return false;
+    const host = u.hostname.toLowerCase();
+    return allowedRedirectHosts().some(h => host === h || host.endsWith(`.${h}`));
+  } catch {
+    return false;
+  }
+}
+
+function routeOf(req) {
+  const fromQuery = req.query?.route;
+  if (typeof fromQuery === 'string') return fromQuery;
+  const path = new URL(req.url || '/', 'http://x').pathname;
+  if (path.includes('oauth-protected-resource')) return 'resource';
+  if (path.includes('oauth-authorization-server') || path.includes('openid-configuration')) return 'metadata';
+  if (path.endsWith('/register')) return 'register';
+  if (path.endsWith('/authorize')) return 'authorize';
+  if (path.endsWith('/token')) return 'token';
+  return null;
+}
+
+function cors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, MCP-Protocol-Version');
+}
+
+function bodyOf(req) {
+  const b = req.body;
+  if (!b) return {};
+  if (typeof b === 'string') {
+    try { return JSON.parse(b); } catch { return Object.fromEntries(new URLSearchParams(b)); }
+  }
+  if (Buffer.isBuffer(b)) return Object.fromEntries(new URLSearchParams(b.toString('utf8')));
+  return b;
+}
+
+const str = v => (typeof v === 'string' ? v : '');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function oauthError(res, status, error, error_description) {
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(status).json({ error, error_description });
+}
+
+function page(res, status, title, inner) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");
+  return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;background:#f6f7f9;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center}main{background:#fff;max-width:26rem;width:100%;margin:1rem;padding:1.75rem;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08)}h1{font-size:1.2rem;margin:0 0 .75rem}p{color:#444;line-height:1.5;font-size:.95rem}code{background:#eef0f3;padding:.1rem .35rem;border-radius:4px}input[type=password]{width:100%;box-sizing:border-box;padding:.6rem;margin:.5rem 0 1rem;border:1px solid #c9ced6;border-radius:8px;font-size:1rem}.row{display:flex;gap:.75rem}button{flex:1;padding:.65rem;border-radius:8px;border:0;font-size:1rem;cursor:pointer}.ok{background:#111;color:#fff}.no{background:#e6e8ec}.err{color:#b00020;font-size:.9rem}</style></head><body><main>${inner}</main></body></html>`);
+}
+
+// Validates the parts of an authorization request that must be checked
+// before we ever redirect anywhere.
+async function validateAuthRequest(p) {
+  if (p.response_type !== 'code') return { error: 'Only response_type=code is supported.' };
+  const client = await getClient(p.client_id);
+  if (!client) return { error: 'Unknown client. Remove and re-add the connector so it registers again.' };
+  if (!client.redirect_uris.includes(p.redirect_uri) || !redirectUriAllowed(p.redirect_uri)) return { error: 'Redirect address is not registered for this client.' };
+  if (p.code_challenge_method !== 'S256' || !/^[A-Za-z0-9_-]{43,128}$/.test(p.code_challenge)) return { error: 'PKCE (S256) is required.' };
+  return { client };
+}
+
+function consentForm(p, client, error) {
+  const host = new URL(p.redirect_uri).hostname;
+  const hidden = ['response_type', 'client_id', 'redirect_uri', 'state', 'code_challenge', 'code_challenge_method', 'scope', 'resource']
+    .map(k => `<input type="hidden" name="${k}" value="${esc(p[k] || '')}">`).join('');
+  return `<h1>Connect to Handoff Hub</h1>
+<p><strong>${esc(client.client_name || 'An app')}</strong> (returning to <code>${esc(host)}</code>) wants to read and write your Handoff Hub project state, memories and handoffs, and use its GitHub and Vercel tools.</p>
+<p>Only continue if you started this connection. Enter your Handoff Hub key to approve.</p>
+${error ? `<p class="err">${esc(error)}</p>` : ''}
+<form method="post" action="/oauth/authorize" autocomplete="off">${hidden}
+<label for="k">Handoff Hub key</label>
+<input id="k" name="api_key" type="password" placeholder="hh_..." required autofocus>
+<div class="row"><button class="no" name="decision" value="deny" type="submit" formnovalidate>Deny</button><button class="ok" name="decision" value="approve" type="submit">Approve</button></div>
+</form>`;
+}
+
+function redirectWith(res, redirect_uri, params) {
+  const u = new URL(redirect_uri);
+  for (const [k, v] of Object.entries(params)) if (v) u.searchParams.set(k, v);
+  res.setHeader('Cache-Control', 'no-store');
+  return res.redirect(302, u.toString());
+}
+
+export default async function handler(req, res) {
+  cors(res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  const route = routeOf(req);
+  const base = baseUrl();
+
+  try {
+    if (route === 'resource') {
+      return res.status(200).json({ resource: `${base}/mcp`, authorization_servers: [base], bearer_methods_supported: ['header'], scopes_supported: ['hub'] });
+    }
+
+    if (route === 'metadata') {
+      return res.status(200).json({
+        issuer: base,
+        authorization_endpoint: `${base}/oauth/authorize`,
+        token_endpoint: `${base}/oauth/token`,
+        registration_endpoint: `${base}/oauth/register`,
+        response_types_supported: ['code'],
+        grant_types_supported: ['authorization_code', 'refresh_token'],
+        code_challenge_methods_supported: ['S256'],
+        token_endpoint_auth_methods_supported: ['none'],
+        scopes_supported: ['hub']
+      });
+    }
+
+    if (route === 'register') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const b = bodyOf(req);
+      const uris = Array.isArray(b.redirect_uris) ? b.redirect_uris.filter(u => typeof u === 'string') : [];
+      if (!uris.length || uris.length > 5) return oauthError(res, 400, 'invalid_redirect_uri', 'Provide 1-5 redirect_uris.');
+      if (!uris.every(redirectUriAllowed)) return oauthError(res, 400, 'invalid_redirect_uri', 'Redirect URI host is not allowed for this server.');
+      const client = await createClient({ client_name: str(b.client_name).slice(0, 100), redirect_uris: uris });
+      return res.status(201).json({
+        client_id: client.client_id,
+        client_name: client.client_name,
+        redirect_uris: client.redirect_uris,
+        grant_types: ['authorization_code', 'refresh_token'],
+        response_types: ['code'],
+        token_endpoint_auth_method: 'none'
+      });
+    }
+
+    if (route === 'authorize') {
+      const source = req.method === 'POST' ? bodyOf(req) : req.query || Object.fromEntries(new URL(req.url, 'http://x').searchParams);
+      const p = Object.fromEntries(['response_type', 'client_id', 'redirect_uri', 'state', 'code_challenge', 'code_challenge_method', 'scope', 'resource'].map(k => [k, str(source[k])]));
+      const v = await validateAuthRequest(p);
+      if (v.error) return page(res, 400, 'Cannot connect', `<h1>Cannot connect</h1><p>${esc(v.error)}</p>`);
+
+      if (req.method === 'GET') return page(res, 200, 'Connect to Handoff Hub', consentForm(p, v.client));
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+      const form = bodyOf(req);
+      if (form.decision === 'deny') return redirectWith(res, p.redirect_uri, { error: 'access_denied', state: p.state });
+
+      const userId = await userIdFromApiKey(str(form.api_key).trim());
+      if (!userId) return page(res, 401, 'Connect to Handoff Hub', consentForm(p, v.client, 'That key was not recognised.'));
+
+      const code = await createAuthCode({ client_id: p.client_id, user_id: userId, redirect_uri: p.redirect_uri, code_challenge: p.code_challenge });
+      return redirectWith(res, p.redirect_uri, { code, state: p.state });
+    }
+
+    if (route === 'token') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const b = bodyOf(req);
+      const client_id = str(b.client_id);
+      const client = await getClient(client_id);
+      if (!client) return oauthError(res, 401, 'invalid_client', 'Unknown client_id.');
+      res.setHeader('Cache-Control', 'no-store');
+
+      if (b.grant_type === 'authorization_code') {
+        const row = await consumeAuthCode(str(b.code));
+        if (!row || row.client_id !== client_id || row.redirect_uri !== str(b.redirect_uri)) return oauthError(res, 400, 'invalid_grant', 'Authorization code is invalid, expired or already used.');
+        const challenge = crypto.createHash('sha256').update(str(b.code_verifier)).digest('base64url');
+        const a = Buffer.from(challenge);
+        const c = Buffer.from(row.code_challenge);
+        if (a.length !== c.length || !crypto.timingSafeEqual(a, c)) return oauthError(res, 400, 'invalid_grant', 'PKCE verification failed.');
+        return res.status(200).json(await issueTokens({ client_id, user_id: row.user_id }));
+      }
+
+      if (b.grant_type === 'refresh_token') {
+        const tokens = await rotateRefreshToken(str(b.refresh_token), client_id);
+        if (!tokens) return oauthError(res, 400, 'invalid_grant', 'Refresh token is invalid, expired or already used.');
+        return res.status(200).json(tokens);
+      }
+
+      return oauthError(res, 400, 'unsupported_grant_type', 'Use authorization_code or refresh_token.');
+    }
+
+    return res.status(404).json({ error: 'Not found' });
+  } catch (error) {
+    console.error('OAuth request failed:', error);
+    if (!res.headersSent) return res.status(500).json({ error: 'server_error' });
+  }
+}
