@@ -20,7 +20,20 @@ function cors(res) {
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method === 'GET') return res.status(200).json({ name: 'handoff-hub', version: MCP_VERSION, status: 'ok' });
+  if (req.method === 'GET') {
+    const info = { name: 'handoff-hub', version: MCP_VERSION, status: 'ok' };
+    if (!/[?&]deep=1(?:&|$)/.test(req.url || '')) return res.status(200).json(info);
+    // Deep probe: actually load the server modules and register every tool, so a broken import shows up here instead of on the first real request.
+    try {
+      const { createServer } = await import('../src/server.js');
+      await import('../src/auth.js');
+      const tools = Object.keys(createServer('00000000-0000-0000-0000-000000000000')._registeredTools || {}).length;
+      return res.status(200).json({ ...info, deep: true, tools });
+    } catch (error) {
+      console.error('MCP deep health failed:', error);
+      return res.status(503).json({ ...info, status: 'degraded', deep: true, error: error?.message || String(error) });
+    }
+  }
   if (!['POST', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
 
   try {
