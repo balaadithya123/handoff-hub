@@ -6,6 +6,13 @@ function publicBase() {
   return null;
 }
 
+function protectedResourceMetadataUrl(base) {
+  // RFC 9728 discovery is scoped to the protected-resource path. ChatGPT is
+  // registered against /api/mcp, so advertising the metadata document for the
+  // /mcp alias makes its OAuth resource validation fail before a tool call.
+  return `${base}/.well-known/oauth-protected-resource/api/mcp`;
+}
+
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
@@ -34,7 +41,7 @@ export default async function handler(req, res) {
     const userId = await authenticate(req);
     if (!userId) {
       const base = publicBase();
-      if (base) res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+      if (base) res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${protectedResourceMetadataUrl(base)}"`);
       return res.status(401).json({
         error: 'Authentication required. Connect through OAuth, or send a Handoff Hub API key as Authorization: Bearer <api_key>.'
       });
@@ -43,7 +50,10 @@ export default async function handler(req, res) {
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     const server = createServer(userId);
     await server.connect(transport);
-    await transport.handleRequest(req, res);
+    // Vercel parses JSON request bodies before the function is invoked. Pass
+    // that parsed value to the SDK so it does not try to read an already
+    // consumed request stream during MCP initialization/tool calls.
+    await transport.handleRequest(req, res, req.body);
   } catch (error) {
     console.error('MCP request failed:', error);
     if (!res.headersSent) res.status(500).json({ error: 'MCP request failed', detail: error?.message || String(error) });
