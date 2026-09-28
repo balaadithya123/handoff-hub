@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { userIdFromAccessToken } from './oauth-store.js';
 
 // This is the actual isolation boundary for the whole product: every request
 // to /api/mcp must resolve to exactly one user_id, and every read/write in
@@ -30,8 +31,22 @@ function queryTokenFromRequest(req) {
   return token?.trim() || null;
 }
 
-// Accept Bearer, API-key style headers, or a query token. The query token is
-// needed for custom MCP connector forms that only accept a server URL.
+// Resolve a long-lived Handoff Hub API key (hh_...) to its user id. Also used
+// by the OAuth consent page to prove the person approving is the account owner.
+export async function userIdFromApiKey(token) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !token) return null;
+  const keyHash = hashKey(token);
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/users?key_hash=eq.${encodeURIComponent(keyHash)}&select=id`,
+    { headers: headers() }
+  );
+  if (!r.ok) return null;
+  const rows = await r.json();
+  return rows[0]?.id ?? null;
+}
+
+// Accepts an OAuth access token (hho_...) or an API key (hh_...) sent as a
+// Bearer token, an API-key style header, or, for legacy connectors, a query token.
 export async function authenticate(req) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
 
@@ -43,14 +58,8 @@ export async function authenticate(req) {
   const token = bearerToken || apiKeyHeader || parsedQueryToken || legacyQueryToken;
   if (!token) return null;
 
-  const keyHash = hashKey(token);
-  const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/users?key_hash=eq.${encodeURIComponent(keyHash)}&select=id`,
-    { headers: headers() }
-  );
-  if (!r.ok) return null;
-  const rows = await r.json();
-  return rows[0]?.id ?? null;
+  if (token.startsWith('hho_')) return userIdFromAccessToken(token);
+  return userIdFromApiKey(token);
 }
 
 export async function createUser() {
