@@ -2,13 +2,19 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createServer } from '../src/server.js';
 import { authenticate } from '../src/auth.js';
 
-const MCP_VERSION = '0.11.0';
+const MCP_VERSION = '0.12.0';
+
+function publicBase() {
+  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  return null;
+}
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Mcp-Session-Id, Last-Event-ID, MCP-Protocol-Version');
-  res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, MCP-Protocol-Version');
+  res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, MCP-Protocol-Version, WWW-Authenticate');
 }
 
 export default async function handler(req, res) {
@@ -19,8 +25,12 @@ export default async function handler(req, res) {
 
   const userId = await authenticate(req);
   if (!userId) {
+    // Pointing at the protected-resource metadata is what lets OAuth-capable
+    // clients (ChatGPT, Claude) discover the sign-in flow automatically.
+    const base = publicBase();
+    if (base) res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
     return res.status(401).json({
-      error: 'Missing or invalid API key. POST /api/signup once to get one, then send it as Authorization: Bearer <api_key>.'
+      error: 'Authentication required. Connect through OAuth, or send a Handoff Hub API key as Authorization: Bearer <api_key>.'
     });
   }
 
