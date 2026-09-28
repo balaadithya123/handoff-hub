@@ -1,4 +1,4 @@
-const MCP_VERSION = '0.13.1';
+const MCP_VERSION = '0.14.0';
 
 function publicBase() {
   if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
@@ -7,9 +7,6 @@ function publicBase() {
 }
 
 function protectedResourceMetadataUrl(base) {
-  // RFC 9728 discovery is scoped to the protected-resource path. ChatGPT is
-  // registered against /api/mcp, so advertising the metadata document for the
-  // /mcp alias makes its OAuth resource validation fail before a tool call.
   return `${base}/.well-known/oauth-protected-resource/api/mcp`;
 }
 
@@ -27,13 +24,9 @@ export default async function handler(req, res) {
   if (!['POST', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    // Keep the heavy MCP modules out of Vercel's initial function load. Import
-    // them individually so a module parse/load failure is isolated and reported
-    // with its actual message instead of obscuring the endpoint startup.
     const mcpModule = await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
     const serverModule = await import('../src/server.js');
     const authModule = await import('../src/auth.js');
-
     const StreamableHTTPServerTransport = mcpModule.StreamableHTTPServerTransport;
     const createServer = serverModule.createServer;
     const authenticate = authModule.authenticate;
@@ -42,17 +35,12 @@ export default async function handler(req, res) {
     if (!userId) {
       const base = publicBase();
       if (base) res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${protectedResourceMetadataUrl(base)}"`);
-      return res.status(401).json({
-        error: 'Authentication required. Connect through OAuth, or send a Handoff Hub API key as Authorization: Bearer <api_key>.'
-      });
+      return res.status(401).json({ error: 'Authentication required. Connect through OAuth, or send a Handoff Hub API key as Authorization: Bearer <api_key>.' });
     }
 
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     const server = createServer(userId);
     await server.connect(transport);
-    // Vercel parses JSON request bodies before the function is invoked. Pass
-    // that parsed value to the SDK so it does not try to read an already
-    // consumed request stream during MCP initialization/tool calls.
     await transport.handleRequest(req, res, req.body);
   } catch (error) {
     console.error('MCP request failed:', error);
