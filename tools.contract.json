@@ -1,0 +1,30 @@
+{
+  "_comment": "Exact list of MCP tools the server must register. Update deliberately when adding/removing a tool, and bump the version.",
+  "tools": [
+    "remember",
+    "recall",
+    "record_event",
+    "recent_events",
+    "get_project_state",
+    "update_project_state",
+    "set_integration",
+    "list_projects",
+    "hand_off_task",
+    "get_my_handoffs",
+    "complete_handoff",
+    "list_oauth_clients",
+    "revoke_oauth_sessions",
+    "canva_connect",
+    "canva_list_designs",
+    "canva_get_design",
+    "canva_create_design",
+    "huggingface_models",
+    "huggingface_chat",
+    "optimize_task",
+    "github_get_file",
+    "github_commit_file",
+    "vercel_get_deployment",
+    "vercel_trigger_redeploy",
+    "run_health_check"
+  ]
+}
