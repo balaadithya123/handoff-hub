@@ -1,4 +1,4 @@
-const MCP_VERSION = '0.13.0';
+const MCP_VERSION = '0.13.1';
 
 function publicBase() {
   if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
@@ -20,11 +20,16 @@ export default async function handler(req, res) {
   if (!['POST', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const [{ StreamableHTTPServerTransport }, { createServer }, { authenticate }] = await Promise.all([
-      import('@modelcontextprotocol/sdk/server/streamableHttp.js'),
-      import('../src/server.js'),
-      import('../src/auth.js')
-    ]);
+    // Keep the heavy MCP modules out of Vercel's initial function load. Import
+    // them individually so a module parse/load failure is isolated and reported
+    // with its actual message instead of obscuring the endpoint startup.
+    const mcpModule = await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
+    const serverModule = await import('../src/server.js');
+    const authModule = await import('../src/auth.js');
+
+    const StreamableHTTPServerTransport = mcpModule.StreamableHTTPServerTransport;
+    const createServer = serverModule.createServer;
+    const authenticate = authModule.authenticate;
 
     const userId = await authenticate(req);
     if (!userId) {
