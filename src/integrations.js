@@ -1,5 +1,3 @@
-const HF_TOKEN = process.env.HF_TOKEN;
-const HF_ROUTER = 'https://router.huggingface.co/v1';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const DEFAULT_GITHUB_BRANCH = process.env.GITHUB_DEFAULT_BRANCH || 'main';
 const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
@@ -41,98 +39,6 @@ function assertAllowedVercelProject(projectId) {
   if (!allowed.includes(projectId)) {
     throw new Error(`Vercel project is not allowlisted for Handoff Hub: ${projectId}`);
   }
-}
-
-async function hfFetch(path, options = {}) {
-  requireEnv(HF_TOKEN, 'HF_TOKEN');
-  const response = await fetch(`${HF_ROUTER}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${HF_TOKEN}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`Hugging Face request failed: ${response.status} ${body?.error || body?.message || ''}`.trim());
-  return body;
-}
-
-function isFreeProvider(provider) {
-  if (!provider || provider.status !== 'live') return false;
-  if (provider.is_free === true) return true;
-  const pricing = provider.pricing || {};
-  const input = Number(pricing.input);
-  const output = Number(pricing.output);
-  return Number.isFinite(input) && Number.isFinite(output) && input === 0 && output === 0;
-}
-
-function modelList(data) {
-  return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-}
-
-async function hfModelInfo(model) {
-  return hfFetch(`/models/${model.split('/').map(encodeURIComponent).join('/')}`);
-}
-
-// The bulk /models listing can report stale provider pricing/status, which
-// previously let hfModels() surface a model that hfChat() would then reject
-// (hfChat checks the per-model detail endpoint instead). To keep discovery
-// and inference consistent, each candidate is re-verified against the same
-// detail endpoint hfChat uses before being returned. Capped at 10 candidates
-// to bound the extra round trips this requires.
-export async function hfModels(search = '') {
-  const data = await hfFetch('/models');
-  const candidates = modelList(data).filter(model => {
-    if (!model?.id) return false;
-    if (search && !model.id.toLowerCase().includes(search.toLowerCase())) return false;
-    return (model.providers || []).some(isFreeProvider);
-  }).slice(0, 10);
-
-  const verified = [];
-  for (const model of candidates) {
-    try {
-      const info = await hfModelInfo(model.id);
-      const freeProviders = (info.providers || []).filter(isFreeProvider);
-      if (freeProviders.length) {
-        verified.push({ id: model.id, free_providers: freeProviders.map(p => p.provider) });
-      }
-    } catch {
-      // Skip candidates whose live detail lookup fails or errors out.
-    }
-  }
-  return verified;
-}
-
-export async function hfChat({ model, prompt, system, max_tokens = 1024 }) {
-  const info = await hfModelInfo(model);
-  const freeProviders = (info.providers || []).filter(isFreeProvider);
-  if (!freeProviders.length) {
-    throw new Error('No currently free Hugging Face provider is available for this model. No paid fallback is permitted.');
-  }
-
-  const provider = freeProviders[0].provider;
-  const routedModel = `${model}:${provider}`;
-  const result = await hfFetch('/chat/completions', {
-    method: 'POST',
-    body: JSON.stringify({
-      model: routedModel,
-      messages: [
-        ...(system ? [{ role: 'system', content: system }] : []),
-        { role: 'user', content: prompt }
-      ],
-      max_tokens,
-      stream: false
-    })
-  });
-
-  return {
-    model,
-    provider,
-    free_only: true,
-    content: result.choices?.[0]?.message?.content ?? '',
-    usage: result.usage ?? null
-  };
 }
 
 function githubPath(path) {
@@ -199,6 +105,64 @@ export async function githubCommitFile({ repository, path, content, message, bra
     commit_sha: body.commit?.sha,
     content_sha: body.content?.sha
   };
+}
+
+async function githubApiFetch(path, options = {}) {
+  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
+  const response = await fetch(`https://api.github.com${path}`, {
+    ...options,
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`GitHub request failed: ${response.status} ${body?.message || ''}`.trim());
+  return body;
+}
+
+// Atomic multi-file commit via the git data API (blob -> tree -> commit -> ref update),
+// instead of N sequential single-file PUTs. Works for new or existing paths uniformly,
+// since the tree is built from the branch's current tree plus these blobs — no per-file
+// sha lookup needed. One network round trip per file for the blob, plus 4 fixed calls.
+export async function githubCommitFiles({ repository, files, message, branch = DEFAULT_GITHUB_BRANCH }) {
+  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
+  assertAllowedRepo(repository);
+  if (!Array.isArray(files) || !files.length) throw new Error('files must be a non-empty array of { path, content }');
+
+  const ref = await githubApiFetch(`/repos/${repository}/git/ref/heads/${encodeURIComponent(branch)}`);
+  const baseCommitSha = ref.object.sha;
+  const baseCommit = await githubApiFetch(`/repos/${repository}/git/commits/${baseCommitSha}`);
+  const baseTreeSha = baseCommit.tree.sha;
+
+  const treeEntries = [];
+  for (const file of files) {
+    const blob = await githubApiFetch(`/repos/${repository}/git/blobs`, {
+      method: 'POST',
+      body: JSON.stringify({ content: file.content, encoding: 'utf-8' })
+    });
+    treeEntries.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+
+  const newTree = await githubApiFetch(`/repos/${repository}/git/trees`, {
+    method: 'POST',
+    body: JSON.stringify({ base_tree: baseTreeSha, tree: treeEntries })
+  });
+
+  const newCommit = await githubApiFetch(`/repos/${repository}/git/commits`, {
+    method: 'POST',
+    body: JSON.stringify({ message, tree: newTree.sha, parents: [baseCommitSha] })
+  });
+
+  await githubApiFetch(`/repos/${repository}/git/refs/heads/${encodeURIComponent(branch)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ sha: newCommit.sha })
+  });
+
+  return { repository, branch, commit_sha: newCommit.sha, files: files.map(f => f.path) };
 }
 
 async function vercelFetch(path, options = {}) {
