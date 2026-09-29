@@ -1,4 +1,4 @@
-const MCP_VERSION = '0.14.0';
+const MCP_VERSION = '0.15.0';
 
 function publicBase() {
   if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
