@@ -18,11 +18,9 @@
     "canva_list_designs",
     "canva_get_design",
     "canva_create_design",
-    "huggingface_models",
-    "huggingface_chat",
-    "optimize_task",
     "github_get_file",
     "github_commit_file",
+    "github_commit_files",
     "vercel_get_deployment",
     "vercel_trigger_redeploy",
     "run_health_check"
