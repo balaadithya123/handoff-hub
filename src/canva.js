@@ -24,8 +24,16 @@ export async function startCanvaOAuth(userId) {
   const state = b64url(crypto.randomBytes(32));
   const codeVerifier = verifier();
   const challenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
-  await rest(`canva_connections?user_id=eq.${encodeURIComponent(userId)}`, {method:'DELETE'});
-  await rest('canva_connections', {method:'POST',prefer:'return=minimal',body:{user_id:userId,access_token:'pending',oauth_state_hash:hash(state),code_verifier:codeVerifier,state_expires_at:new Date(Date.now()+10*60*1000).toISOString()}});
+  const stateExpiresAt = new Date(Date.now()+10*60*1000).toISOString();
+  const existing = await rest(`canva_connections?user_id=eq.${encodeURIComponent(userId)}&select=user_id`);
+  if (existing?.length) {
+    // Re-authorizing: only touch the OAuth-flow fields. If this new flow is never
+    // completed, any already-working access/refresh token is left untouched instead
+    // of being deleted up front.
+    await rest(`canva_connections?user_id=eq.${encodeURIComponent(userId)}`, {method:'PATCH',prefer:'return=minimal',body:{oauth_state_hash:hash(state),code_verifier:codeVerifier,state_expires_at:stateExpiresAt}});
+  } else {
+    await rest('canva_connections', {method:'POST',prefer:'return=minimal',body:{user_id:userId,access_token:'pending',oauth_state_hash:hash(state),code_verifier:codeVerifier,state_expires_at:stateExpiresAt}});
+  }
   const u = new URL('https://www.canva.com/api/oauth/authorize');
   u.searchParams.set('code_challenge',challenge); u.searchParams.set('code_challenge_method','S256'); u.searchParams.set('scope',SCOPES); u.searchParams.set('response_type','code'); u.searchParams.set('client_id',CLIENT_ID); u.searchParams.set('state',state); u.searchParams.set('redirect_uri',redirectUri());
   return {authorization_url:u.toString(),redirect_uri:redirectUri(),scopes:SCOPES};

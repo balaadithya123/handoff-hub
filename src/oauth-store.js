@@ -95,6 +95,20 @@ export async function purgeOAuthData() {
   const codes = await rest(`oauth_codes?or=(expires_at.lt.${now},used.eq.true)&select=code_hash`, { method: 'DELETE', prefer: 'return=representation' });
   const tokens = await rest(`oauth_tokens?or=(expires_at.lt.${now},revoked.eq.true)&select=token_hash`, { method: 'DELETE', prefer: 'return=representation' });
   const cutoff = encodeURIComponent(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-  const clients = await rest(`oauth_clients?created_at=lt.${cutoff}&select=client_id`, { method: 'DELETE', prefer: 'return=representation' });
+  const oldClients = await rest(`oauth_clients?created_at=lt.${cutoff}&select=client_id`);
+  let clients = [];
+  if (oldClients?.length) {
+    // oauth_clients has ON DELETE CASCADE to oauth_codes and oauth_tokens, so deleting a
+    // client wipes its sessions too. Dead tokens were just purged above, so anything left
+    // in oauth_tokens right now is active — only delete clients with none remaining.
+    // Being old is never enough on its own; an actively used client must survive.
+    const remaining = await rest('oauth_tokens?select=client_id');
+    const liveClientIds = new Set((remaining || []).map(t => t.client_id));
+    const toDelete = oldClients.map(c => c.client_id).filter(id => !liveClientIds.has(id));
+    if (toDelete.length) {
+      const inList = toDelete.map(id => encodeURIComponent(id)).join(',');
+      clients = await rest(`oauth_clients?client_id=in.(${inList})&select=client_id`, { method: 'DELETE', prefer: 'return=representation' }) || [];
+    }
+  }
   return { oauth_codes: codes?.length || 0, oauth_tokens: tokens?.length || 0, oauth_clients: clients?.length || 0 };
 }
