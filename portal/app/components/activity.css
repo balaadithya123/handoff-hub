@@ -1,0 +1,17 @@
+.feed{margin-top:44px;border:1px solid #222831;background:#11141a;border-radius:18px;padding:22px 24px}
+.feedHead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.feedHead h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.feedHead span{color:#8d95a3;font-size:12px}
+.feedEmpty{color:#8d95a3;font-size:13px;margin:6px 0}
+.feedList{list-style:none;margin:0;padding:0}
+.feedItem{display:flex;gap:14px;padding:13px 0;border-top:1px solid #1b2028}
+.feedItem:first-child{border-top:0}
+.feedDot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:#7c9cff}
+.feedItem.connect .feedDot{background:#6ed39a}
+.feedBody{min-width:0;flex:1}
+.feedTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;text-transform:capitalize}
+.feedTop b{font-weight:650}
+.feedWho{font-size:11px;text-transform:none;color:#a9b1bf;background:#1a1f27;border-radius:999px;padding:3px 9px}
+.feedTop time{margin-left:auto;color:#6b7380;font-size:12px;text-transform:none}
+.feedBody p{margin:5px 0 0;color:#8d95a3;font-size:13px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:860px){.feed{padding:18px}}
