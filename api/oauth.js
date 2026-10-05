@@ -30,7 +30,16 @@ async function supabaseAuth(path,body){
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
 }
-async function allowedLoginEmail(){return str(process.env.OAUTH_LOGIN_EMAIL).trim().toLowerCase();}
+async function ensureHubOwner(verifiedUserId){
+  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key||!verifiedUserId)return false;
+  const existing=await fetch(`${url}/rest/v1/handoff_state?user_id=eq.${encodeURIComponent(verifiedUserId)}&select=user_id&limit=1`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
+  if(!existing.ok)return false;
+  const rows=await existing.json();
+  if(rows?.[0]?.user_id)return true;
+  const r=await fetch(`${url}/rest/v1/handoff_state`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({id:verifiedUserId,user_id:verifiedUserId,state:{projects:{},memories:[],events:[]},version:0,updated_at:new Date().toISOString()})});
+  return r.ok||r.status===409;
+}
 async function hubOwnerId(verifiedUserId){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!key||!verifiedUserId)return null;
@@ -64,21 +73,17 @@ export default async function handler(req,res){
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
       const form=bodyOf(req);
       if(form.decision==='deny')return redirectWith(res,p.redirect_uri,{error:'access_denied',state:p.state});
-      const allowed=await allowedLoginEmail();
-      if(!allowed)return page(res,503,'Connect to Handoff Hub',emailForm(p,v.client,'Email login is not configured yet on this Handoff Hub server.'));
       const email=str(form.email).trim().toLowerCase();
       if(form.action==='send_email'){
-        if(email!==allowed)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,'That email is not authorised for this Handoff Hub.', 'email'));
         const sent=await supabaseAuth('otp',{email,create_user:true});
         if(!sent.ok)return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,'Could not send the verification email. Please try again later.'));
         return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email));
       }
       if(form.action==='verify_email'){
-        if(email!==allowed)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,'That email is not authorised for this Handoff Hub.','otp',email));
         const verified=await supabaseAuth('verify',{email,token:str(form.otp).trim(),type:'email'});
         if(!verified.ok)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
-        const userId=await hubOwnerId(verified.data?.user?.id);
-        if(!userId)return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'This verified email is not linked to a Handoff Hub owner.','otp',email));
+        const userId=verified.data?.user?.id;
+        if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Could not create your Handoff Hub account. Please try again.','otp',email));
         const code=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code,state:p.state});
       }
