@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
+const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,{auth:{flowType:"pkce",detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
 const apps=[
  {id:"github",name:"GitHub",tag:"Development",icon:"GH",description:"Repositories and development access.",enabled:false},
  {id:"canva",name:"Canva",tag:"Design",icon:"C",description:"Designs and creative workspace access.",enabled:true},
@@ -13,7 +13,7 @@ const apps=[
 export default function Home(){
  const[email,setEmail]=useState("");const[user,setUser]=useState<any>(null);const[message,setMessage]=useState("");const[busy,setBusy]=useState(false);
  useEffect(()=>{supabase.auth.getUser().then(({data})=>setUser(data.user));const {data}=supabase.auth.onAuthStateChange((_e,s)=>setUser(s?.user??null));return()=>data.subscription.unsubscribe()},[]);
- async function auth(){setMessage("");const e=email.trim().toLowerCase();if(!e)return setMessage("Enter your email address.");setBusy(true);const r=await supabase.auth.signInWithOtp({email:e,options:{emailRedirectTo:window.location.origin}});setBusy(false);if(r.error)return setMessage(r.error.message);setMessage("Check your email for the secure sign-in link.");}
+ async function auth(){setMessage("");const e=email.trim().toLowerCase();if(!e)return setMessage("Enter your email address.");setBusy(true);const r=await supabase.auth.signInWithOtp({email:e,options:{emailRedirectTo:"https://handoff-portal.vercel.app/auth/callback"}});setBusy(false);if(r.error)return setMessage(r.error.message);setMessage("Check your email for the secure sign-in link.");}
  async function connect(app:any){setMessage("");if(!user)return setMessage("Sign in first.");if(!app.enabled)return setMessage(app.name+" connection is not enabled yet. It will not pretend to be connected.");if(app.id==="canva"){const {data}=await supabase.auth.getSession();const token=data.session?.access_token;if(!token)return setMessage("Your session expired. Sign in again.");setBusy(true);try{const r=await fetch("/api/canva/oauth/start",{headers:{Authorization:"Bearer "+token}});const p=await r.json().catch(()=>({}));if(!r.ok||!p.authorization_url)return setMessage(p.error||"Canva connection is not configured.");window.location.href=p.authorization_url}catch{setMessage("Could not start the Canva connection.")}finally{setBusy(false)}}}
  return <main className="shell">
   <aside className="side"><a className="brand" href="/"><span className="logo">H</span><span>Handoff Hub</span></a>
