@@ -34,7 +34,7 @@ export default function AuthForm() {
         setBusy(false);
         return;
       }
-      router.replace("/");
+      router.replace("/dashboard");
       router.refresh();
     } catch {
       setError("Could not reach the server. Check your connection.");
