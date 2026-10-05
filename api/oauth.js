@@ -30,6 +30,29 @@ async function supabaseAuth(path,body){
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
 }
+async function sendOtpEmail(email,code){
+  const key=process.env.RESEND_API_KEY;
+  if(!key)return{ok:false,error:'Email delivery is not configured on the server.'};
+  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Handoff Hub <onboarding@resend.dev>',to:[email],subject:'Your Handoff Hub verification code',html:`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Handoff Hub</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`})});
+  const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
+  return{ok:r.ok,status:r.status,data,error:data?.message||data?.error||null};
+}
+async function otpDb(path,method='GET',body){
+  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return{ok:false,status:500};
+  const r=await fetch(`${url}/rest/v1/${path}`,{method,headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',...(method==='POST'?{Prefer:'return=representation'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+  const text=await r.text();let data=[];try{data=text?JSON.parse(text):[];}catch{}
+  return{ok:r.ok,status:r.status,data};
+}
+async function findOrCreateUser(email){
+  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return null;
+  const list=await fetch(`${url}/auth/v1/admin/users?page=1&per_page=1000`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
+  if(list.ok){const d=await list.json();const found=(d.users||[]).find(u=>String(u.email||'').toLowerCase()===email);if(found)return found.id;}
+  const created=await fetch(`${url}/auth/v1/admin/users`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({email,email_confirm:true})});
+  if(created.ok){const d=await created.json();return d.user?.id||d.id||null;}
+  return null;
+}
 async function ensureHubOwner(verifiedUserId){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!key||!verifiedUserId)return false;
@@ -75,8 +98,11 @@ export default async function handler(req,res){
       if(form.decision==='deny')return redirectWith(res,p.redirect_uri,{error:'access_denied',state:p.state});
       const email=str(form.email).trim().toLowerCase();
       if(form.action==='send_email'){
-        const sent=await supabaseAuth('otp',{email,create_user:true});
-        if(!sent.ok)return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,'Could not send the verification email. Please try again later.'));
+        const code=String(crypto.randomInt(100000,1000000));
+        await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&consumed_at=is.null`,'DELETE');
+        const saved=await otpDb('handoff_email_otps','POST',{email,code_hash:crypto.createHash('sha256').update(code).digest('hex'),expires_at:new Date(Date.now()+10*60*1000).toISOString()});
+        const sent=await sendOtpEmail(email,code);
+        if(!saved.ok||!sent.ok)return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,'Could not send the verification email. Please try again later.'));
         return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email));
       }
       if(form.action==='verify_email'){
