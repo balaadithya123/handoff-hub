@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SESSION_COOKIE, sessionUser } from "../lib/portal";
-import SignOutButton from "./components/SignOutButton";
+import SignOutButton from "../components/SignOutButton";
 
 export const dynamic = "force-dynamic";
 
