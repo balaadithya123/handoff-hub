@@ -1,9 +1,6 @@
 import crypto from 'node:crypto';
 import { userIdFromAccessToken } from './oauth-store.js';
 
-// This is the actual isolation boundary for the whole product: every request
-// to /api/mcp must resolve to exactly one user_id, and every read/write in
-// store.js is scoped to that user_id.
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -23,8 +20,6 @@ function generateApiKey() {
   return `hh_${crypto.randomBytes(24).toString('hex')}`;
 }
 
-// Resolve a long-lived Handoff Hub API key (hh_...) to its user id. Also used
-// by the OAuth consent page to prove the person approving is the account owner.
 export async function userIdFromApiKey(token) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !token) return null;
   const keyHash = hashKey(token);
@@ -37,14 +32,13 @@ export async function userIdFromApiKey(token) {
   return rows[0]?.id ?? null;
 }
 
-// Accepts an OAuth access token (hho_...) or an API key (hh_...) sent only
-// through an explicit Authorization or API-key header. Legacy ?token= URL
-// authentication is intentionally disabled.
+// OAuth access tokens and API keys are accepted only through explicit auth headers.
+// Legacy ?token= URL authentication remains disabled.
 export async function authenticate(req) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
 
   const authHeader = req.headers['authorization'] || '';
-  const bearerToken = authHeader.match(/^Bearer\\s+(.+)$/i)?.[1]?.trim() || null;
+  const bearerToken = authHeader.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || null;
   const apiKeyHeader = req.headers['x-api-key'] || req.headers['x-mcp-api-key'] || null;
   const token = bearerToken || apiKeyHeader;
   if (!token) return null;
