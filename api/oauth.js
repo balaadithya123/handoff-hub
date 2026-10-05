@@ -106,9 +106,15 @@ export default async function handler(req,res){
         return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email));
       }
       if(form.action==='verify_email'){
-        const verified=await supabaseAuth('verify',{email,token:str(form.otp).trim(),type:'email'});
-        if(!verified.ok)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
-        const userId=verified.data?.user?.id;
+        const otp=str(form.otp).trim();
+        const now=new Date().toISOString();
+        const expectedHash=crypto.createHash('sha256').update(otp).digest('hex');
+        const rows=await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&code_hash=eq.${encodeURIComponent(expectedHash)}&consumed_at=is.null&expires_at=gt.${encodeURIComponent(now)}&select=id&limit=1`);
+        const row=rows.ok&&Array.isArray(rows.data)?rows.data[0]:null;
+        if(!row)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
+        const consumed=await otpDb(`handoff_email_otps?id=eq.${encodeURIComponent(row.id)}&consumed_at=is.null`,'PATCH',{consumed_at:now});
+        if(!consumed.ok)return page(res,409,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code was already used. Please request a new code.','otp',email));
+        const userId=await findOrCreateUser(email);
         if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Could not create your Handoff Hub account. Please try again.','otp',email));
         const code=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code,state:p.state});
