@@ -23,14 +23,6 @@ function generateApiKey() {
   return `hh_${crypto.randomBytes(24).toString('hex')}`;
 }
 
-function queryTokenFromRequest(req) {
-  // Vercel normally exposes query parameters through req.query, but some MCP
-  // clients/proxies preserve the raw URL more reliably than the parsed query.
-  const parsed = new URL(req.url || '/', `https://${req.headers?.host || 'localhost'}`);
-  const token = parsed.searchParams.get('token');
-  return token?.trim() || null;
-}
-
 // Resolve a long-lived Handoff Hub API key (hh_...) to its user id. Also used
 // by the OAuth consent page to prove the person approving is the account owner.
 export async function userIdFromApiKey(token) {
@@ -45,17 +37,16 @@ export async function userIdFromApiKey(token) {
   return rows[0]?.id ?? null;
 }
 
-// Accepts an OAuth access token (hho_...) or an API key (hh_...) sent as a
-// Bearer token, an API-key style header, or, for legacy connectors, a query token.
+// Accepts an OAuth access token (hho_...) or an API key (hh_...) sent only
+// through an explicit Authorization or API-key header. Legacy ?token= URL
+// authentication is intentionally disabled.
 export async function authenticate(req) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
 
   const authHeader = req.headers['authorization'] || '';
-  const bearerToken = authHeader.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || null;
+  const bearerToken = authHeader.match(/^Bearer\\s+(.+)$/i)?.[1]?.trim() || null;
   const apiKeyHeader = req.headers['x-api-key'] || req.headers['x-mcp-api-key'] || null;
-  const parsedQueryToken = queryTokenFromRequest(req);
-  const legacyQueryToken = typeof req.query?.token === 'string' ? req.query.token.trim() : null;
-  const token = bearerToken || apiKeyHeader || parsedQueryToken || legacyQueryToken;
+  const token = bearerToken || apiKeyHeader;
   if (!token) return null;
 
   if (token.startsWith('hho_')) return userIdFromAccessToken(token);
