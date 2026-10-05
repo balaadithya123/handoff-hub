@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Handoff Hub — secure cross-AI context handoff and integrations.">
+  <title>Handoff Hub</title>
+  <style>
+    :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#090b0f;color:#f5f7fa;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .page{min-height:100vh;display:flex;flex-direction:column}.nav{width:min(1120px,calc(100% - 40px));margin:auto;padding:24px 0;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:800}.logo{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#fff;color:#111;font-weight:900}.navlink{color:#a8afba;text-decoration:none;font-size:13px}.navlink:hover{color:#fff}
+    main{width:min(1120px,calc(100% - 40px));margin:auto;flex:1;display:grid;align-items:center}.hero{padding:70px 0 90px;max-width:820px}.eyebrow{font-size:11px;letter-spacing:.18em;color:#858e9c;font-weight:800}.hero h1{font-size:clamp(48px,8vw,92px);line-height:.94;letter-spacing:-.06em;margin:18px 0 24px}.hero h1 span{color:#858e9a}.hero p{max-width:650px;color:#a1a9b6;font-size:18px;line-height:1.7;margin:0 0 32px}.actions{display:flex;gap:12px;flex-wrap:wrap}.button{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;border-radius:10px;text-decoration:none;font-weight:750;font-size:14px}.primary{background:#f4f5f7;color:#111}.secondary{border:1px solid #2a3039;color:#d9dde4;background:#11141a}.primary:hover{background:#fff}.secondary:hover{border-color:#46505e}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:55px}.card{border:1px solid #252b34;background:#101319;border-radius:15px;padding:19px}.icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#20252e;margin-bottom:16px;font-weight:850}.card h2{font-size:16px;margin:0 0 7px}.card p{color:#7f8896;font-size:12px;line-height:1.6;margin:0}.foot{width:min(1120px,calc(100% - 40px));margin:auto;border-top:1px solid #20252d;padding:20px 0;color:#687180;font-size:11px;display:flex;justify-content:space-between;gap:20px}
+    @media(max-width:720px){.nav{padding:18px 0}.hero{padding:55px 0}.hero h1{font-size:54px}.features{grid-template-columns:1fr}.foot{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav">
+      <a class="brand" href="/"><span class="logo">H</span><span>Handoff Hub</span></a>
+      <a class="navlink" href="https://handoff-portal.vercel.app/login">Integration portal →</a>
+    </nav>
+    <main>
+      <section class="hero">
+        <span class="eyebrow">CROSS-AI CONTEXT HANDOFF</span>
+        <h1>Keep your work.<br><span>Move between agents.</span></h1>
+        <p>Handoff Hub keeps project context, decisions and integrations available across AI sessions, so you can continue work without starting over.</p>
+        <div class="actions">
+          <a class="button primary" href="https://handoff-portal.vercel.app/login">Open integration portal</a>
+          <a class="button secondary" href="/mcp">Open MCP endpoint</a>
+        </div>
+        <div class="features">
+          <article class="card"><div class="icon">↔</div><h2>Context handoff</h2><p>Pass durable project state between AI agents without repeating the whole history.</p></article>
+          <article class="card"><div class="icon">✓</div><h2>Private project state</h2><p>Keep decisions, blockers and useful facts organized for the next session.</p></article>
+          <article class="card"><div class="icon">◎</div><h2>Official integrations</h2><p>Connect supported services through their own authorization flows.</p></article>
+        </div>
+      </section>
+    </main>
+    <footer class="foot"><span>Handoff Hub</span><span>Secure context handoff for AI workflows</span></footer>
+  </div>
+</body>
+</html>
