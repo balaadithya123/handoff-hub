@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, sessionUser } from "../lib/portal";
-import { accountIdByEmail, connectionStatus } from "../lib/connections";
+import { connectionStatus } from "../lib/connections";
 import SignOutButton from "./components/SignOutButton";
 import ConnectionButton from "./components/ConnectionButton";
 import type { Provider } from "../lib/connections";
