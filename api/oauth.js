@@ -47,10 +47,14 @@ async function otpDb(path,method='GET',body){
 async function findOrCreateUser(email){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!key)return null;
-  const list=await fetch(`${url}/auth/v1/admin/users?page=1&per_page=1000`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
-  if(list.ok){const d=await list.json();const found=(d.users||[]).find(u=>String(u.email||'').toLowerCase()===email);if(found)return found.id;}
-  const created=await fetch(`${url}/auth/v1/admin/users`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({email,email_confirm:true})});
-  if(created.ok){const d=await created.json();return d.user?.id||d.id||null;}
+  const headers={apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'};
+  const q=`${url}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id&limit=1`;
+  const existing=await fetch(q,{headers});
+  if(existing.ok){const rows=await existing.json();if(rows?.[0]?.id)return rows[0].id;}
+  const keyHash=crypto.createHash('sha256').update(`email:${email}:${crypto.randomUUID()}`).digest('hex');
+  const created=await fetch(`${url}/rest/v1/users`,{method:'POST',headers:{...headers,Prefer:'return=representation'},body:JSON.stringify({email,key_hash:keyHash})});
+  if(created.ok){const rows=await created.json();return rows?.[0]?.id||null;}
+  if(created.status===409){const retry=await fetch(q,{headers});if(retry.ok){const rows=await retry.json();return rows?.[0]?.id||null;}}
   return null;
 }
 async function ensureHubOwner(verifiedUserId){
