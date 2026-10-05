@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, sessionUser } from "../../../../lib/portal";
-import { accountIdByEmail, exchangeCode, pkceChallenge, providerConfig, randomUrlSafe, saveConnection } from "../../../../lib/connections";
+import { exchangeCode, pkceChallenge, providerConfig, randomUrlSafe, saveConnection } from "../../../../lib/connections";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +12,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
 
   const user = await sessionUser(req.cookies.get(SESSION_COOKIE)?.value);
   if (!user) return NextResponse.redirect(new URL("/login?next=/", req.url));
-  const accountId = await accountIdByEmail(user.email);
-  if (!accountId) return NextResponse.json({ error: "Portal account not found" }, { status: 401 });
+  const sessionToken = req.cookies.get(SESSION_COOKIE)?.value;
+  if (!sessionToken) return NextResponse.redirect(new URL("/login?next=/", req.url));
 
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
         const p = await fetch("https://api.vercel.com/login/oauth/userinfo", { headers: { Authorization: `Bearer ${token.access_token}` } });
         if (p.ok) { const u = await p.json(); providerId = u.sub; providerName = u.preferred_username || u.name || u.email; }
       }
-      await saveConnection(accountId, provider as "github" | "canva" | "vercel", token, providerId, providerName);
+      await saveConnection(sessionToken, provider as "github" | "canva" | "vercel", token, providerId, providerName);
       for (const name of ["oauth_state","oauth_verifier","oauth_provider"]) jar.set(name, "", { maxAge: 0, path: "/" });
       return NextResponse.redirect(new URL("/?connected=" + provider, req.url));
     } catch (e) {
