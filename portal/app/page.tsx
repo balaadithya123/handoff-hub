@@ -3,10 +3,11 @@ import { SESSION_COOKIE, sessionUser } from "../lib/portal";
 import { accountIdByEmail, connectionStatus } from "../lib/connections";
 import SignOutButton from "./components/SignOutButton";
 import ConnectionButton from "./components/ConnectionButton";
+import type { Provider } from "../lib/connections";
 
 export const dynamic = "force-dynamic";
 
-const apps = [
+const apps: Array<{ id: Provider; name: string; tag: string; icon: string; description: string }> = [
   { id: "github", name: "GitHub", tag: "Development", icon: "GH", description: "Repositories, branches and commits." },
   { id: "canva", name: "Canva", tag: "Design", icon: "Ca", description: "Designs and your creative workspace." },
   { id: "vercel", name: "Vercel", tag: "Deployments", icon: "▲", description: "Projects, deployments and hosting." },
