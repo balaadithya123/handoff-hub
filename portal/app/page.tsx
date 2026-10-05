@@ -1,56 +1,29 @@
 "use client";
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-import { useState } from "react";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+);
 
 const apps = [
-  { id: "github", name: "GitHub", icon: "GH", description: "Repositories, commits and development workflows.", available: true },
-  { id: "canva", name: "Canva", icon: "C", description: "Designs and creative workspace access.", available: true },
-  { id: "vercel", name: "Vercel", icon: "▲", description: "Projects, deployments and hosting.", available: true },
+  { id:"github", name:"GitHub", icon:"GH", description:"Repositories, commits and development workflows.", configured:true },
+  { id:"canva", name:"Canva", icon:"C", description:"Designs and creative workspace access.", configured:false },
+  { id:"vercel", name:"Vercel", icon:"▲", description:"Projects, deployments and hosting.", configured:false },
 ];
 
-export default function Home() {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [connected, setConnected] = useState<Record<string, boolean>>({});
-
-  async function login() {
-    if (!email) return;
-    setSent(true);
-    // Authentication/OAuth endpoints are wired through the Hub environment in production.
-  }
-
-  function connect(id: string) {
-    const base = process.env.NEXT_PUBLIC_HUB_URL;
-    const url = base ? `${base.replace(/\/$/, "")}/oauth/${id}/authorize?return_to=${encodeURIComponent(window.location.origin)}` : "";
-    if (url) window.location.href = url;
-    else setConnected((x) => ({ ...x, [id]: true }));
-  }
-
-  return (
-    <main>
-      <header className="top"><div className="brand"><span className="mark">H</span><span>Handoff</span></div><span className="pill">Integration Portal</span></header>
-      <section className="hero">
-        <div className="eyebrow">ONE ACCOUNT · ALL YOUR TOOLS</div>
-        <h1>Connect your apps<br/><em>in one place.</em></h1>
-        <p>Sign in once, then securely connect the services you use with Handoff Hub. No API keys to copy around.</p>
-        <div className="login">
-          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="you@example.com" />
-          <button onClick={login}>{sent ? "Check your email" : "Continue with email →"}</button>
-        </div>
-        {sent && <div className="notice">A sign-in link will be sent to your email when authentication is enabled for this portal.</div>}
-      </section>
-      <section className="apps">
-        <div className="sectionHead"><div><span className="eyebrow">AVAILABLE CONNECTIONS</span><h2>Your integrations</h2></div><span className="count">{apps.length} apps</span></div>
-        <div className="grid">
-          {apps.map(app => <article className="card" key={app.id}>
-            <div className="appIcon">{app.icon}</div>
-            <div className="cardBody"><h3>{app.name}</h3><p>{app.description}</p></div>
-            <button className={connected[app.id] ? "connected" : ""} onClick={()=>connect(app.id)}>{connected[app.id] ? "✓ Connected" : "Connect"}</button>
-          </article>)}
-          <article className="card add"><div className="plus">+</div><div className="cardBody"><h3>More integrations</h3><p>New connectors can be added without changing your account.</p></div></article>
-        </div>
-      </section>
-      <footer><span>Handoff Hub</span><span>Secure OAuth connections · Tokens stay server-side</span></footer>
-    </main>
-  );
+export default function Home(){
+ const [email,setEmail]=useState(""); const [user,setUser]=useState<any>(null);
+ const [message,setMessage]=useState(""); const [busy,setBusy]=useState(false);
+ useEffect(()=>{supabase.auth.getUser().then(({data})=>setUser(data.user)); const {data}=supabase.auth.onAuthStateChange((_e,s)=>setUser(s?.user??null)); return()=>data.subscription.unsubscribe()},[]);
+ async function login(){setMessage(""); if(!email){setMessage("Enter your email.");return} setBusy(true); const {error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.origin}}); setBusy(false); setMessage(error?error.message:"Check your email for the secure sign-in link.");}
+ async function connect(app:any){ if(!user){setMessage("Sign in with email first.");return} if(!app.configured){setMessage(app.name+" OAuth is not configured on the Handoff Hub yet.");return} setMessage("Starting "+app.name+" authorization…"); window.location.href=`${process.env.NEXT_PUBLIC_HUB_URL}/oauth/${app.id}/authorize?return_to=${encodeURIComponent(window.location.origin)}`; }
+ async function logout(){await supabase.auth.signOut();setUser(null)}
+ return <main><header className="top"><div className="brand"><span className="mark">H</span>Handoff</div><span className="pill">Integration Portal</span></header>
+ <section className="hero"><div className="eyebrow">SECURE APP CONNECTIONS</div><h1>Connect your apps<br/><em>for real.</em></h1><p>Sign in with your email, then authorize each service through its official OAuth screen. No credentials are collected by this portal.</p>
+ {!user?<div className="login"><input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="you@example.com"/><button disabled={busy} onClick={login}>{busy?"Sending…":"Email me a sign-in link →"}</button></div>:<div className="signed">Signed in as <b>{user.email}</b><button onClick={logout}>Sign out</button></div>}
+ {message&&<div className="notice">{message}</div>}</section>
+ <section className="apps"><div className="sectionHead"><div><span className="eyebrow">INTEGRATIONS</span><h2>Available apps</h2></div></div><div className="grid">{apps.map(app=><article className="card" key={app.id}><div className="appIcon">{app.icon}</div><div className="cardBody"><h3>{app.name}</h3><p>{app.description}</p></div><button disabled={!user||!app.configured} onClick={()=>connect(app)}>{!app.configured?"Setup required":user?"Connect":"Sign in first"}</button></article>)}</div></section>
+ <footer><span>Handoff Hub</span><span>OAuth tokens stay server-side · No passwords collected</span></footer></main>
 }
