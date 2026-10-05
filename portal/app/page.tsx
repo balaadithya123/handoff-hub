@@ -44,9 +44,8 @@ function Landing() {
   );
 }
 
-async function Dashboard({ email }: { email: string }) {
-  const accountId = await accountIdByEmail(email);
-  const connections = accountId ? await connectionStatus(accountId) : [];
+async function Dashboard({ email, sessionToken }: { email: string; sessionToken: string }) {
+  const connections = await connectionStatus(sessionToken);
   const connected = new Map(connections.map((c) => [c.provider, c]));
   return (
     <div className="page">
@@ -77,6 +76,7 @@ async function Dashboard({ email }: { email: string }) {
 
 export default async function Home() {
   const jar = await cookies();
-  const user = await sessionUser(jar.get(SESSION_COOKIE)?.value);
-  return user ? <Dashboard email={user.email} /> : <Landing />;
+  const token = jar.get(SESSION_COOKIE)?.value;
+  const user = await sessionUser(token);
+  return user && token ? <Dashboard email={user.email} sessionToken={token} /> : <Landing />;
 }
