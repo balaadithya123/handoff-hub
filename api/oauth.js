@@ -7,7 +7,7 @@ function baseUrl(){if(process.env.PUBLIC_BASE_URL)return process.env.PUBLIC_BASE
 function protectedResource(base,req){const path=req.query?.resource_path;return path==='api/mcp'?\`${base}/api/mcp\`:\`${base}/mcp\`;}
 function allowedRedirectHosts(){const extra=(process.env.OAUTH_ALLOWED_REDIRECT_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);return [...DEFAULT_REDIRECT_HOSTS,...extra];}
 function redirectUriAllowed(uri){try{const u=new URL(uri);if(u.protocol!=='https:'||u.username||u.password||u.hash)return false;const host=u.hostname.toLowerCase();return allowedRedirectHosts().some(h=>host===h||host.endsWith(\`.${h}\`));}catch{return false;}}
-function routeOf(req){const q=req.query?.route;if(typeof q==='string')return q;const p=new URL(req.url||'/','http://x').pathname;if(p.includes('oauth-protected-resource'))return'resource';if(p.includes('oauth-authorization-server')||p.includes('openid-configuration'))return'metadata';if(p.endsWith('/register'))return'register';if(p.endsWith('/authorize'))return'authorize';if(p.endsWith('/token'))return'token';return null;}
+function routeOf(req){const q=req.query?.route;if(typeof q==='string')return q;const raw=String(req.url||'').split('?')[0];if(raw.includes('oauth-protected-resource'))return'resource';if(raw.includes('oauth-authorization-server')||raw.includes('openid-configuration'))return'metadata';if(raw.endsWith('/register'))return'register';if(raw.endsWith('/authorize'))return'authorize';if(raw.endsWith('/token'))return'token';return null;}
 function cors(res){res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization, MCP-Protocol-Version');}
 function bodyOf(req){const b=req.body;if(!b)return{};if(typeof b==='string'){try{return JSON.parse(b);}catch{return Object.fromEntries(new URLSearchParams(b));}}if(Buffer.isBuffer(b))return Object.fromEntries(new URLSearchParams(b.toString('utf8')));return b;}
 const str=v=>typeof v==='string'?v:'';const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -45,7 +45,7 @@ export default async function handler(req,res){
   cors(res);if(req.method==='OPTIONS')return res.status(204).end();
   const route=routeOf(req),base=baseUrl();
   try{
-    if(route==='resource')return res.status(200).json({resource:protectedResource(base,req),authorization_servers:[base],bearer_methods_supported:['header'],scopes_supported:['hub']});
+    if(route==='resource'){const resource=`${base}/api/mcp`;return res.status(200).json({resource,authorization_servers:[base],bearer_methods_supported:['header'],scopes_supported:['hub']});}
     if(route==='metadata')return res.status(200).json({issuer:base,authorization_endpoint:`${base}/oauth/authorize`,token_endpoint:`${base}/oauth/token`,registration_endpoint:`${base}/oauth/register`,response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],code_challenge_methods_supported:['S256'],token_endpoint_auth_methods_supported:['none'],scopes_supported:['hub']});
     if(route==='register'){
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
