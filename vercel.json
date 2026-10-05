@@ -8,7 +8,7 @@
   "rewrites": [
     { "source": "/mcp", "destination": "/api/mcp" },
     { "source": "/login", "destination": "/api/login" },
-    { "source": "/.well-known/oauth-protected-resource/api/mcp", "destination": "/api/oauth?route=resource&resource_path=api/mcp" },
+    { "source": "/.well-known/oauth-protected-resource/api/mcp", "destination": "/api/oauth?route=resource" },
     { "source": "/.well-known/oauth-protected-resource", "destination": "/api/oauth?route=resource" },
     { "source": "/.well-known/oauth-protected-resource/:path*", "destination": "/api/oauth?route=resource" },
     { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth?route=metadata" },
