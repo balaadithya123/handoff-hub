@@ -31,13 +31,13 @@ async function supabaseAuth(path,body){
   return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
 }
 async function allowedLoginEmail(){return str(process.env.OAUTH_LOGIN_EMAIL).trim().toLowerCase();}
-async function hubOwnerId(){
+async function hubOwnerId(verifiedUserId){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if(!url||!key)return null;
-  const r=await fetch(`${url}/rest/v1/handoff_state?select=user_id&limit=2`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
+  if(!url||!key||!verifiedUserId)return null;
+  const r=await fetch(`${url}/rest/v1/handoff_state?user_id=eq.${encodeURIComponent(verifiedUserId)}&select=user_id&limit=1`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
   if(!r.ok)return null;
   const rows=await r.json();
-  return rows?.length===1?rows[0]?.user_id:null;
+  return rows?.[0]?.user_id||null;
 }
 function redirectWith(res,redirect_uri,params){const u=new URL(redirect_uri);for(const[k,v]of Object.entries(params))if(v)u.searchParams.set(k,v);res.setHeader('Cache-Control','no-store');return res.redirect(302,u.toString());}
 
@@ -77,8 +77,8 @@ export default async function handler(req,res){
         if(email!==allowed)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,'That email is not authorised for this Handoff Hub.','otp',email));
         const verified=await supabaseAuth('verify',{email,token:str(form.otp).trim(),type:'email'});
         if(!verified.ok)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
-        const userId=await hubOwnerId();
-        if(!userId)return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Handoff Hub could not identify its single active owner.','otp',email));
+        const userId=await hubOwnerId(verified.data?.user?.id);
+        if(!userId)return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'This verified email is not linked to a Handoff Hub owner.','otp',email));
         const code=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code,state:p.state});
       }
