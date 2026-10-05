@@ -9,6 +9,8 @@
     "update_project_state",
     "set_integration",
     "list_projects",
+    "add_blocker",
+    "resolve_blocker",
     "hand_off_task",
     "get_my_handoffs",
     "complete_handoff",
