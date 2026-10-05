@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-type Provider = "github" | "canva" | "vercel";
+export type Provider = "github" | "canva" | "vercel";
 
 const configs: Record<Provider, { client: string; secret: string; auth: string; token: string; scopes: string }> = {
   github: {
