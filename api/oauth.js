@@ -4,9 +4,9 @@ import { createClient, getClient, createAuthCode, consumeAuthCode, issueTokens, 
 const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com'];
 
 function baseUrl(){if(process.env.PUBLIC_BASE_URL)return process.env.PUBLIC_BASE_URL.replace(/\/$/,'');if(process.env.VERCEL_PROJECT_PRODUCTION_URL)return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;return 'http://localhost:3000';}
-function protectedResource(base,req){const path=req.query?.resource_path;return path==='api/mcp'?\`${base}/api/mcp\`:\`${base}/mcp\`;}
+function protectedResource(base,req){const path=req.query?.resource_path;return path==='api/mcp'?`${base}/api/mcp`:`${base}/mcp`;}
 function allowedRedirectHosts(){const extra=(process.env.OAUTH_ALLOWED_REDIRECT_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);return [...DEFAULT_REDIRECT_HOSTS,...extra];}
-function redirectUriAllowed(uri){try{const u=new URL(uri);if(u.protocol!=='https:'||u.username||u.password||u.hash)return false;const host=u.hostname.toLowerCase();return allowedRedirectHosts().some(h=>host===h||host.endsWith(\`.${h}\`));}catch{return false;}}
+function redirectUriAllowed(uri){try{const u=new URL(uri);if(u.protocol!=='https:'||u.username||u.password||u.hash)return false;const host=u.hostname.toLowerCase();return allowedRedirectHosts().some(h=>host===h||host.endsWith(`.${h}`));}catch{return false;}}
 function routeOf(req){const q=req.query?.route;if(typeof q==='string')return q;const raw=String(req.url||'').split('?')[0];if(raw.includes('oauth-protected-resource'))return'resource';if(raw.includes('oauth-authorization-server')||raw.includes('openid-configuration'))return'metadata';if(raw.endsWith('/register'))return'register';if(raw.endsWith('/authorize'))return'authorize';if(raw.endsWith('/token'))return'token';return null;}
 function cors(res){res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization, MCP-Protocol-Version');}
 function bodyOf(req){const b=req.body;if(!b)return{};if(typeof b==='string'){try{return JSON.parse(b);}catch{return Object.fromEntries(new URLSearchParams(b));}}if(Buffer.isBuffer(b))return Object.fromEntries(new URLSearchParams(b.toString('utf8')));return b;}
