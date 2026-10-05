@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { SESSION_COOKIE, sessionUser } from "../lib/portal";
+import { accountIdByEmail, connectionStatus } from "../lib/connections";
 import SignOutButton from "./components/SignOutButton";
+import ConnectionButton from "./components/ConnectionButton";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,10 @@ function Landing() {
   );
 }
 
-function Dashboard({ email }: { email: string }) {
+async function Dashboard({ email }: { email: string }) {
+  const accountId = await accountIdByEmail(email);
+  const connections = accountId ? await connectionStatus(accountId) : [];
+  const connected = new Map(connections.map((c) => [c.provider, c]));
   return (
     <div className="page">
       <header className="top">
@@ -50,11 +54,22 @@ function Dashboard({ email }: { email: string }) {
         <div className="userChip"><span className="avatar">{email[0].toUpperCase()}</span><span className="userEmail">{email}</span><SignOutButton /></div>
       </header>
       <main className="wrap">
-        <section className="dash"><span className="eyebrow">Signed in</span><h1>Connect your apps</h1><p className="lead">App connections are being enabled one at a time. None are connected yet.</p>
-          <div className="grid">{apps.map(a => <article className="card dim" key={a.id}><div className="cardTop"><div className="appIcon">{a.icon}</div><span className="pill soon">Coming soon</span></div><div className="tag">{a.tag}</div><h3>{a.name}</h3><p>{a.description}</p><button className="connect" disabled>Coming soon</button></article>)}</div>
+        <section className="dash">
+          <span className="eyebrow">Signed in</span>
+          <h1>Connect your apps</h1>
+          <p className="lead">Authorize each service once. Handoff Hub stores the connection securely and can use it for future AI tool calls.</p>
+          <div className="grid">{apps.map(a => {
+            const c = connected.get(a.id);
+            return <article className={"card" + (c ? "" : " dim")} key={a.id}>
+              <div className="cardTop"><div className="appIcon">{a.icon}</div><span className={"pill " + (c ? "connectedPill" : "soon")}>{c ? "Connected" : "Ready to connect"}</span></div>
+              <div className="tag">{a.tag}</div><h3>{a.name}</h3>
+              <p>{c?.provider_account_name ? `Connected as ${c.provider_account_name}.` : a.description}</p>
+              <ConnectionButton provider={a.id} connected={!!c} />
+            </article>;
+          })}</div>
         </section>
       </main>
-      <footer className="foot"><span className="shield">✓</span>Access is granted on each service's own authorization page. Your third-party passwords stay with their provider.</footer>
+      <footer className="foot"><span className="shield">✓</span>OAuth tokens stay server-side and encrypted. Provider passwords never reach Handoff Hub.</footer>
     </div>
   );
 }
