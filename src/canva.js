@@ -7,7 +7,7 @@ const CLIENT_SECRET = process.env.CANVA_CLIENT_SECRET;
 const SCOPES = process.env.CANVA_SCOPES || 'design:content:write design:meta:read';
 
 function requireEnv(value, name) { if (!value) throw new Error(`${name} is not configured on the Handoff Hub server`); return value; }
-function baseUrl() { const b = process.env.PUBLIC_BASE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : ''); return b.replace(/\/$/, ''); }
+function baseUrl() { return 'https://handoff-mcp.vercel.app'; }
 function redirectUri() { return `${baseUrl()}/api/canva/oauth/callback`; }
 function hash(v) { return crypto.createHash('sha256').update(v).digest('hex'); }
 function b64url(buf) { return Buffer.from(buf).toString('base64url'); }
