@@ -12,10 +12,13 @@ export async function GET(req:Request){
   if(search)u.searchParams.set("search",search);
   try{
     const r=await fetch(u,{headers:{Accept:"application/json"},cache:"no-store"});
-    const text=await r.text();
-    if(!r.ok)return NextResponse.json({error:"Registry unavailable"}, {status:502});
-    const d=JSON.parse(text);
-    return NextResponse.json(d,{headers:{"Cache-Control":"public, max-age=300, s-maxage=300"}});
+    const raw=await r.text();
+    if(!r.ok)return NextResponse.json({error:"Registry unavailable"},{status:502});
+    const d=JSON.parse(raw);
+    const servers=Array.isArray(d?.servers)
+      ? d.servers.map((entry:any)=>entry?.server??entry).filter(Boolean)
+      : [];
+    return NextResponse.json({...d,servers},{headers:{"Cache-Control":"public, max-age=300, s-maxage=300"}});
   }catch{
     return NextResponse.json({error:"Registry unavailable"},{status:502});
   }
