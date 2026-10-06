@@ -1,6 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 import {SESSION_COOKIE,sessionUser} from "../../../../lib/portal";
 import {consumeProviderOAuth,startProviderOAuth,Provider} from "../../../../lib/connections";
-const providers:Provider[]=["github","canva","vercel"];
+const providers:Provider[]=["github","canva","vercel","supabase"];
 export const dynamic="force-dynamic";
 export async function GET(req:NextRequest,{params}:{params:Promise<{provider:string}>}){const {provider}=await params;if(!providers.includes(provider as Provider))return NextResponse.json({error:"Unsupported provider"},{status:404});const session=req.cookies.get(SESSION_COOKIE)?.value;if(!session||!(await sessionUser(session)))return NextResponse.redirect(new URL("/login?next=/",req.url));const u=new URL(req.url),ticket=u.searchParams.get("ticket"),err=u.searchParams.get("connection_error");if(err)return NextResponse.redirect(new URL("/?connection_error="+encodeURIComponent(err),req.url));try{if(ticket){await consumeProviderOAuth(session,provider as Provider,ticket);return NextResponse.redirect(new URL("/?connected="+provider,req.url))}return NextResponse.redirect(await startProviderOAuth(session,provider as Provider))}catch(e){return NextResponse.redirect(new URL("/?connection_error="+encodeURIComponent(e instanceof Error?e.message:"oauth_failed"),req.url))}}
