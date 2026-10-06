@@ -60,6 +60,8 @@ async function account(session) {
 }
 
 function callback(p) { return base() + '/api/provider-oauth?callback=1&provider=' + encodeURIComponent(p); }
+// MCP servers are stricter about redirect URIs, so they get a clean path with no query string (rewritten in vercel.json).
+function callbackMcp(p) { return base() + '/oauth/provider/' + encodeURIComponent(p); }
 
 async function newFlow(id, p, ver, meta) {
   const state = rnd();
@@ -136,7 +138,7 @@ async function register(meta, name, note) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     signal: AbortSignal.timeout(8000),
-    body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callback(name.toLowerCase())], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
+    body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callbackMcp(name.toLowerCase())], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.client_id) throw new Error(name + ' refused the app registration (' + (d.error_description || d.error || r.status) + ').' + (note ? ' ' + note : ''));
@@ -148,7 +150,7 @@ async function startMcp(p, id) {
   const state = await newFlow(id, p, ver, { client_id: cl.client_id, client_secret: cl.client_secret ? encrypt(cl.client_secret) : null, token_endpoint: d.meta.token_endpoint, resource: d.resource });
   const u = new URL(d.meta.authorization_endpoint);
   u.searchParams.set('client_id', cl.client_id);
-  u.searchParams.set('redirect_uri', callback(p));
+  u.searchParams.set('redirect_uri', callbackMcp(p));
   u.searchParams.set('response_type', 'code');
   u.searchParams.set('state', state);
   u.searchParams.set('code_challenge', pkce(ver));
@@ -160,7 +162,7 @@ async function startMcp(p, id) {
 
 async function exchangeMcp(p, code, row) {
   const m = row.client_meta;
-  const form = new URLSearchParams({ grant_type: 'authorization_code', client_id: m.client_id, code, redirect_uri: callback(p), code_verifier: row.code_verifier, resource: m.resource });
+  const form = new URLSearchParams({ grant_type: 'authorization_code', client_id: m.client_id, code, redirect_uri: callbackMcp(p), code_verifier: row.code_verifier, resource: m.resource });
   if (m.client_secret) form.set('client_secret', decrypt(m.client_secret));
   const r = await fetch(m.token_endpoint, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' }, body: form, signal: AbortSignal.timeout(10000) });
   const d = await r.json().catch(() => ({}));
