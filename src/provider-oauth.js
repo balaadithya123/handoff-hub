@@ -17,9 +17,14 @@ const CFG = {
 // MCP servers: the app registers itself automatically during sign-in (no client ID/secret to set up).
 const MCP = {
   supabase: { name: 'Supabase', server: 'https://mcp.supabase.com/mcp' },
-  canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' }
+  canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' },
+  gitlab: { name: 'GitLab' }, 'google-drive': { name: 'Google Drive' }, slack: { name: 'Slack' },
+  notion: { name: 'Notion' }, linear: { name: 'Linear' }, hubspot: { name: 'HubSpot' },
+  box: { name: 'Box' }, dropbox: { name: 'Dropbox' }, gmail: { name: 'Gmail' },
+  'google-calendar': { name: 'Google Calendar' }, 'microsoft-teams': { name: 'Microsoft Teams' },
+  sharepoint: { name: 'SharePoint' }, onenote: { name: 'OneNote' }, zendesk: { name: 'Zendesk' }
 };
-const PROVIDERS = ['github', 'canva', 'vercel', 'supabase'];
+const PROVIDERS = Object.keys({...CFG,...MCP});
 
 const hash = v => crypto.createHash('sha256').update(v).digest('hex');
 const rnd = (n = 32) => crypto.randomBytes(n).toString('base64url');
@@ -146,8 +151,23 @@ async function register(meta, name, note) {
   return d;
 }
 
+async function registryServer(provider) {
+  const aliases = {
+    'google-drive':['google drive','googledrive'], 'google-calendar':['google calendar','googlecalendar'],
+    'microsoft-teams':['microsoft teams','teams']
+  };
+  const wanted = (aliases[provider] || [provider]).map(x=>x.toLowerCase());
+  const r = await fetch('https://registry.modelcontextprotocol.io/v0.1/servers?limit=100&version=latest',{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+  if(!r.ok) throw new Error('MCP registry unavailable');
+  const d=await r.json();
+  const entries=Array.isArray(d?.servers)?d.servers.map(x=>x?.server??x).filter(Boolean):[];
+  const entry=entries.find(s=>{const n=String(s.title||s.name||'').toLowerCase().replace(/[._/-]+/g,' ').replace(/\s+/g,' ').trim();return wanted.some(a=>n===a||n.endsWith(' '+a)||n.startsWith(a+' '));});
+  const remote=entry?.remotes?.find(x=>typeof x?.url==='string'&&/^https?:\/\//i.test(x.url));
+  if(!remote?.url) throw new Error(provider+' does not currently expose a remote MCP server.');
+  return remote.url;
+}
 async function startMcp(p, id) {
-  const m = MCP[p], d = await discover(m.server), cl = await register(d.meta, m.name, m.note), ver = rnd(48);
+  const m = MCP[p], server = m.server || await registryServer(p), d = await discover(server), cl = await register(d.meta, m.name, null), ver = rnd(48);
   const state = await newFlow(id, p, ver, { client_id: cl.client_id, client_secret: cl.client_secret ? encrypt(cl.client_secret) : null, token_endpoint: d.meta.token_endpoint, resource: d.resource });
   const u = new URL(d.meta.authorization_endpoint);
   u.searchParams.set('client_id', cl.client_id);
