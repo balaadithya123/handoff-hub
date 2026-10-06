@@ -76,11 +76,14 @@ export async function userIdFromAccessToken(token) {
   } catch { return null; }
 }
 
+// Only AI apps that hold active tokens for THIS user are listed (never other users' clients).
 export async function listOAuthClients(user_id) {
-  const rows = await rest(`oauth_clients?select=client_id,client_name,created_at&order=created_at.desc`);
   const tokens = await rest(`oauth_tokens?user_id=eq.${encodeURIComponent(user_id)}&revoked=eq.false&expires_at=gt.${encodeURIComponent(nowIso())}&select=client_id`);
   const counts = new Map();
   for (const t of tokens || []) counts.set(t.client_id, (counts.get(t.client_id) || 0) + 1);
+  const ids = [...counts.keys()];
+  if (!ids.length) return [];
+  const rows = await rest(`oauth_clients?client_id=in.(${ids.map(id => encodeURIComponent(id)).join(',')})&select=client_id,client_name,created_at&order=created_at.desc`);
   return (rows || []).map(c => ({ ...c, active_token_count: counts.get(c.client_id) || 0 }));
 }
 

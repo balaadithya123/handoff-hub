@@ -25,6 +25,10 @@
     "github_commit_files",
     "vercel_get_deployment",
     "vercel_trigger_redeploy",
-    "run_health_check"
+    "run_health_check",
+    "link_portal_account",
+    "connected_apps",
+    "app_list_tools",
+    "app_call_tool"
   ]
 }

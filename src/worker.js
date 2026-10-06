@@ -1,12 +1,14 @@
 import { mutate, project } from './store.js';
 import { vercelGetLatestDeployment } from './integrations.js';
 import { purgeOAuthData } from './oauth-store.js';
+import { isOwner } from './owner.js';
 
 function vercelProjectId(){return(process.env.VERCEL_ALLOWED_PROJECTS||'').split(',').map(x=>x.trim()).filter(Boolean)[0]||null;}
 function selfBaseUrl(){const host=process.env.VERCEL_PROJECT_PRODUCTION_URL||process.env.VERCEL_URL;return host?`https://${host}`:null;}
 
-async function checkVercel(){
+async function checkVercel(userId){
   try{
+    if(!isOwner(userId))return{ok:null,note:'Vercel deployment check is owner-only'};
     const projectId=vercelProjectId();
     if(!projectId)return{ok:null,note:'VERCEL_ALLOWED_PROJECTS is not configured'};
     const dep=await vercelGetLatestDeployment({projectId,target:'production'});
@@ -54,7 +56,7 @@ export async function runHealthCheck(userId,{agent='worker',project_id='default'
   // Four independent, read-only probes — run them concurrently instead of one after
   // another so a full health check costs roughly one round trip, not four.
   const[vercel,mcp_endpoint,routes,oauth_cleanup]=await Promise.all([
-    checkVercel(),checkMcpEndpoint(),checkRoutes(),checkOAuthCleanup()
+    checkVercel(userId),checkMcpEndpoint(),checkRoutes(),checkOAuthCleanup()
   ]);
   const checks={vercel,mcp_endpoint,routes,oauth_cleanup};
   const purge={oauth_codes:oauth_cleanup.oauth_codes||0,oauth_tokens:oauth_cleanup.oauth_tokens||0,oauth_clients:oauth_cleanup.oauth_clients||0};
