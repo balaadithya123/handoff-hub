@@ -36,7 +36,7 @@ export default function ConnectorDirectory(){
 
   return <section className="directory">
     <div className="directoryHead">
-      <div><span className="eyebrow">Connectors</span><h2>Connect your tools</h2><p>Only remote MCP connectors that can be reached by Handoff Hub are shown here.</p></div>
+      <div><span className="eyebrow">Connectors</span><h2>Connect your tools</h2><p>Only a curated set of apps currently documented as available in ChatGPT is shown here.</p></div>
       <form onSubmit={e=>{e.preventDefault();load(q)}}><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search GitHub, Notion, Slack…" /><button>Search</button></form>
     </div>
     {loading?<div className="registryState">Loading connectors…</div>:error?<div className="notice error">{error}</div>:data.length===0?<div className="registryState">No connectable remote connectors found.</div>:
@@ -45,7 +45,7 @@ export default function ConnectorDirectory(){
         const url=s.remotes?.find(x=>x.url)?.url;
         return <article className="registryCard" key={s.name||name+i}>
           <div className="registryIcon">{name.slice(0,2).toUpperCase()}</div>
-          <div className="registryBody"><div className="registryTitle"><h3>{name}</h3><span>{s.version||"latest"}</span></div><p>{s.description||"Remote MCP connector."}</p><div className="registryMeta"><span>Remote</span></div></div>
+          <div className="registryBody"><div className="registryTitle"><h3>{name}</h3><span>{s.version||"latest"}</span></div><p>{s.description||"Remote MCP connector."}</p><div className="registryMeta"><span>ChatGPT app</span></div></div>
           <a className="connect registryConnect" href={url} target="_blank" rel="noreferrer">Connect</a>
         </article>
       })}</div>}
