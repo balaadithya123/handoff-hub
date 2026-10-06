@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
+import { getToken } from '@vercel/connect';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ENC_KEY = process.env.PROVIDER_TOKEN_ENC_KEY;
+const VERCEL_CONNECTOR = process.env.VERCEL_CONNECTOR || 'vercel/vercel';
 const VERSION = '0.18.0';
 const MAX_CHARS = 20000;
 const SERVERS = {
@@ -55,10 +57,13 @@ export async function connectedApps(userId) {
   const acc = await accountFor(userId);
   if (!acc) return { linked: false, how_to_link: LINK_HINT, supported_apps: Object.keys(SERVERS) };
   const rows = await rest('provider_connections?account_id=eq.' + encodeURIComponent(acc) + '&select=provider,provider_account_name,expires_at,updated_at');
+  if (VERCEL_CONNECTOR) { try { await getToken(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(acc) } }); if (!rows.some(r => r.provider === 'vercel')) rows.push({ provider: 'vercel', provider_account_name: null, expires_at: null, updated_at: new Date().toISOString() }); } catch {} }
   return { linked: true, supported_apps: Object.keys(SERVERS), connections: (rows || []).map(r => ({ provider: r.provider, account: r.provider_account_name, connected_at: r.updated_at, expires_at: r.expires_at })) };
 }
 
 async function tokenFor(userId, provider) {
+  if (provider === 'vercel') { const acc = await accountFor(userId); if (!acc) throw new Error(LINK_HINT); try { return await getToken(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(acc) } }); } catch { throw new Error('Connect Vercel in the portal first.'); } }
+
   if (!SERVERS[provider]) throw new Error('Unsupported app. Supported: ' + Object.keys(SERVERS).join(', '));
   const acc = await accountFor(userId);
   if (!acc) throw new Error(LINK_HINT);
