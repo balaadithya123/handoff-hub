@@ -59,7 +59,7 @@ async function account(session) {
   return rows?.[0]?.account_id || null;
 }
 
-function callback(p) { return base() + '/api/provider-oauth?callback=1&provider=' + encodeURIComponent(p); }
+function callback(p) { return base() + '/oauth/provider/' + encodeURIComponent(p); }
 // MCP servers are stricter about redirect URIs, so they get a clean path with no query string (rewritten in vercel.json).
 function callbackMcp(p) { return base() + '/oauth/provider/' + encodeURIComponent(p); }
 
