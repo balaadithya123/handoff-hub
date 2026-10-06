@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 
 const REGISTRY="https://registry.modelcontextprotocol.io/v0.1/servers";
 
-const CHATGPT_APPS:Record<string,string[]>={
+const CHATGPT_APPS:Record<string,string[]> = {
   "github":["github"],"gitlab":["gitlab"],"google drive":["google drive","googledrive"],"slack":["slack"],
   "notion":["notion"],"linear":["linear"],"hubspot":["hubspot"],"box":["box"],"dropbox":["dropbox"],
   "gmail":["gmail"],"google calendar":["google calendar","googlecalendar"],"microsoft teams":["microsoft teams","teams"],
@@ -10,7 +10,7 @@ const CHATGPT_APPS:Record<string,string[]>={
 };
 
 function canonicalName(name:string){
-  const n=name.toLowerCase().replace(/[._/-]+/g," ").replace(/\\s+/g," ").trim();
+  const n=name.toLowerCase().replace(/[._/-]+/g," ").replace(/\s+/g," ").trim();
   for(const [canonical,aliases] of Object.entries(CHATGPT_APPS)){
     if(aliases.some(a=>n===a || n.endsWith(" "+a) || n.startsWith(a+" "))) return canonical;
   }
@@ -34,7 +34,7 @@ export async function GET(req:Request){
     const servers=Array.isArray(d?.servers)
       ? d.servers.map((entry:any)=>entry?.server??entry).filter(Boolean).filter((s:any)=>{
           const canonical=canonicalName(String(s.title||s.name||""));
-          const remote=Array.isArray(s.remotes)&&s.remotes.some((x:any)=>typeof x?.url==="string"&&/^https?:\\/\\//i.test(x.url));
+          const remote=Array.isArray(s.remotes)&&s.remotes.some((x:any)=>typeof x?.url==="string"&&/^https?:\/\//i.test(x.url));
           if(!canonical||!remote||seen.has(canonical)) return false;
           seen.add(canonical); return true;
         })
