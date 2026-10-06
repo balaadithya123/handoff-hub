@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
+import { startAuthorization, getToken, revokeToken } from '@vercel/connect';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ENC_KEY = process.env.PROVIDER_TOKEN_ENC_KEY;
+const VERCEL_CONNECTOR = process.env.VERCEL_CONNECTOR || 'vercel/vercel';
 const base = () => 'https://handoff-mcp.vercel.app';
 
 // Classic OAuth apps: need a client ID/secret registered by the app owner.
@@ -170,11 +172,19 @@ async function exchangeMcp(p, code, row) {
 }
 
 // ---------- shared ----------
+async function startVercelConnect(id) {
+  const { url } = await startAuthorization(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }, { callbackUrl: 'https://handoff-portal.vercel.app/api/connect/vercel/callback' });
+  return url;
+}
+async function vercelConnectAuthorized(id) { try { await getToken(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }); return true; } catch { return false; } }
+async function disconnectVercelConnect(id) { try { await revokeToken(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }); } catch {} return { ok: true }; }
+
 async function start(p, session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
   if (!PROVIDERS.includes(p)) throw new Error('Unsupported provider');
   env(ENC_KEY, 'PROVIDER_TOKEN_ENC_KEY');
+  if (p === 'vercel') return startVercelConnect(id);
   if (classicReady(p)) return startClassic(p, id);
   if (MCP[p]) return startMcp(p, id);
   throw new Error(p + ' cannot connect without a registered OAuth app. Set ' + CFG[p].client + ' and ' + CFG[p].secret + ' on the Handoff Hub server.');
@@ -211,13 +221,16 @@ async function consume(p, session, ticket) {
 async function status(session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
-  return await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&select=provider,provider_account_name,scope,updated_at');
+  const rows = await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&select=provider,provider_account_name,scope,updated_at');
+  if (await vercelConnectAuthorized(id)) { if (!rows.some(r => r.provider === 'vercel')) rows.push({ provider: 'vercel', provider_account_name: null, scope: null, updated_at: new Date().toISOString() }); } else return rows.filter(r => r.provider !== 'vercel');
+  return rows;
 }
 
 async function disconnect(p, session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
   if (!PROVIDERS.includes(p)) throw new Error('Unsupported provider');
+  if (p === 'vercel') return disconnectVercelConnect(id);
   await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&provider=eq.' + encodeURIComponent(p), { method: 'DELETE', prefer: 'return=minimal' });
   return { ok: true };
 }
