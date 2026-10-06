@@ -15,7 +15,6 @@ const CFG = {
 // MCP servers: the app registers itself automatically during sign-in (no client ID/secret to set up).
 const MCP = {
   supabase: { name: 'Supabase', server: 'https://mcp.supabase.com/mcp' },
-  vercel: { name: 'Vercel', server: 'https://mcp.vercel.com', note: 'Vercel only lets AI apps on its approved list connect, so this may be refused.' },
   canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' }
 };
 const PROVIDERS = ['github', 'canva', 'vercel', 'supabase'];
@@ -178,7 +177,7 @@ async function start(p, session) {
   env(ENC_KEY, 'PROVIDER_TOKEN_ENC_KEY');
   if (classicReady(p)) return startClassic(p, id);
   if (MCP[p]) return startMcp(p, id);
-  throw new Error('GitHub cannot connect without a registered OAuth app. Set ' + CFG[p].client + ' and ' + CFG[p].secret + ' on the Handoff Hub server.');
+  throw new Error(p + ' cannot connect without a registered OAuth app. Set ' + CFG[p].client + ' and ' + CFG[p].secret + ' on the Handoff Hub server.');
 }
 
 async function complete(p, code, state) {
