@@ -3,16 +3,14 @@ import crypto from 'node:crypto';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ENC_KEY = process.env.PROVIDER_TOKEN_ENC_KEY;
-const base = () => (process.env.PUBLIC_BASE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL : 'http://localhost:3000')).replace(/\/$/, '');
+const base = () => 'https://handoff-mcp.vercel.app';
 
-// Classic OAuth apps: need a client ID/secret registered by the app owner.
 const CFG = {
   github: { client: 'GITHUB_CLIENT_ID', secret: 'GITHUB_CLIENT_SECRET', auth: 'https://github.com/login/oauth/authorize', token: 'https://github.com/login/oauth/access_token', scope: 'read:user user:email repo' },
   canva: { client: 'CANVA_CLIENT_ID', secret: 'CANVA_CLIENT_SECRET', auth: 'https://www.canva.com/api/oauth/authorize', token: 'https://api.canva.com/rest/v1/oauth/token', scope: 'design:meta:read design:content:read profile:read' },
   vercel: { client: 'VERCEL_CLIENT_ID', secret: 'VERCEL_CLIENT_SECRET', auth: 'https://vercel.com/oauth/authorize', token: 'https://api.vercel.com/login/oauth/token', scope: 'openid email profile offline_access' }
 };
 
-// MCP servers: the app registers itself automatically during sign-in (no client ID/secret to set up).
 const MCP = {
   supabase: { name: 'Supabase', server: 'https://mcp.supabase.com/mcp' },
   canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' }
@@ -34,7 +32,7 @@ async function rest(path, o = {}) {
   const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, { method: o.method || 'GET', headers: h, body: o.body === undefined ? undefined : JSON.stringify(o.body) });
   const t = await r.text();
   let d = {};
-  try { d = t ? JSON.parse(t) : {}; } catch { /* non-JSON body */ }
+  try { d = t ? JSON.parse(t) : {}; } catch {}
   if (!r.ok) throw new Error('Supabase request failed: ' + r.status);
   return d;
 }
@@ -59,7 +57,6 @@ async function account(session) {
 }
 
 function callback(p) { return base() + '/oauth/provider/' + encodeURIComponent(p); }
-// MCP servers are stricter about redirect URIs, so they get a clean path with no query string (rewritten in vercel.json).
 function callbackMcp(p) { return base() + '/oauth/provider/' + encodeURIComponent(p); }
 
 async function newFlow(id, p, ver, meta) {
@@ -68,7 +65,6 @@ async function newFlow(id, p, ver, meta) {
   return state;
 }
 
-// ---------- classic OAuth app flow ----------
 async function startClassic(p, id) {
   const c = CFG[p], ver = rnd(48), state = await newFlow(id, p, ver, null);
   const u = new URL(c.auth);
@@ -107,43 +103,30 @@ async function profile(p, token) {
   return r.ok ? { id: d.sub, name: d.preferred_username || d.name || d.email } : {};
 }
 
-// ---------- MCP self-registration flow ----------
 async function jget(url) {
   const r = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
 async function firstOk(urls) {
-  for (const u of urls) { try { return await jget(u); } catch { /* try next */ } }
+  for (const u of urls) { try { return await jget(u); } catch {} }
   return null;
 }
-
 async function discover(server) {
   const s = new URL(server), path = s.pathname === '/' ? '' : s.pathname.replace(/\/$/, '');
   const pr = await firstOk([s.origin + '/.well-known/oauth-protected-resource' + path, s.origin + '/.well-known/oauth-protected-resource']);
   const issuer = pr?.authorization_servers?.[0] || s.origin, i = new URL(issuer), ip = i.pathname === '/' ? '' : i.pathname.replace(/\/$/, '');
-  const meta = await firstOk([
-    i.origin + '/.well-known/oauth-authorization-server' + ip,
-    i.origin + '/.well-known/openid-configuration' + ip,
-    issuer.replace(/\/$/, '') + '/.well-known/openid-configuration'
-  ]);
+  const meta = await firstOk([i.origin + '/.well-known/oauth-authorization-server' + ip, i.origin + '/.well-known/openid-configuration' + ip, issuer.replace(/\/$/, '') + '/.well-known/openid-configuration']);
   if (!meta?.authorization_endpoint || !meta?.token_endpoint) throw new Error('Could not find the sign-in details for ' + server);
   return { meta, resource: pr?.resource || server, scopes: Array.isArray(pr?.scopes_supported) ? pr.scopes_supported : null };
 }
-
 async function register(meta, name, note) {
   if (!meta.registration_endpoint) throw new Error(name + ' does not allow apps to register themselves.' + (note ? ' ' + note : ''));
-  const r = await fetch(meta.registration_endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    signal: AbortSignal.timeout(8000),
-    body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callbackMcp(name.toLowerCase())], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
-  });
+  const r = await fetch(meta.registration_endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, signal: AbortSignal.timeout(8000), body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callbackMcp(name.toLowerCase())], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' }) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.client_id) throw new Error(name + ' refused the app registration (' + (d.error_description || d.error || r.status) + ').' + (note ? ' ' + note : ''));
   return d;
 }
-
 async function startMcp(p, id) {
   const m = MCP[p], d = await discover(m.server), cl = await register(d.meta, m.name, m.note), ver = rnd(48);
   const state = await newFlow(id, p, ver, { client_id: cl.client_id, client_secret: cl.client_secret ? encrypt(cl.client_secret) : null, token_endpoint: d.meta.token_endpoint, resource: d.resource });
@@ -158,7 +141,6 @@ async function startMcp(p, id) {
   if (d.scopes?.length) u.searchParams.set('scope', d.scopes.join(' '));
   return u.toString();
 }
-
 async function exchangeMcp(p, code, row) {
   const m = row.client_meta;
   const form = new URLSearchParams({ grant_type: 'authorization_code', client_id: m.client_id, code, redirect_uri: callbackMcp(p), code_verifier: row.code_verifier, resource: m.resource });
@@ -168,8 +150,6 @@ async function exchangeMcp(p, code, row) {
   if (!r.ok || !d.access_token) throw new Error(d.error_description || d.error || 'Token exchange failed');
   return d;
 }
-
-// ---------- shared ----------
 async function start(p, session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
@@ -179,7 +159,6 @@ async function start(p, session) {
   if (MCP[p]) return startMcp(p, id);
   throw new Error(p + ' cannot connect without a registered OAuth app. Set ' + CFG[p].client + ' and ' + CFG[p].secret + ' on the Handoff Hub server.');
 }
-
 async function complete(p, code, state) {
   const rows = await rest('provider_oauth_flows?state_hash=eq.' + encodeURIComponent(hash(state)) + '&expires_at=gt.' + encodeURIComponent(new Date().toISOString()) + '&select=account_id,provider,code_verifier,client_meta&limit=1'), row = rows?.[0];
   if (!row || row.provider !== p) throw new Error('Invalid or expired OAuth state');
@@ -187,18 +166,11 @@ async function complete(p, code, state) {
   const t = mcp ? await exchangeMcp(p, code, row) : await exchange(p, code, row);
   const pr = mcp ? {} : await profile(p, t.access_token).catch(() => ({}));
   await rest('provider_connections?account_id=eq.' + encodeURIComponent(row.account_id) + '&provider=eq.' + encodeURIComponent(p), { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});
-  await rest('provider_connections', { method: 'POST', prefer: 'return=minimal', body: {
-    account_id: row.account_id, provider: p, access_token: encrypt(t.access_token),
-    refresh_token: t.refresh_token ? encrypt(t.refresh_token) : null,
-    expires_at: t.expires_in ? new Date(Date.now() + Number(t.expires_in) * 1000).toISOString() : null,
-    provider_account_id: pr.id || null, provider_account_name: pr.name || null, scope: t.scope || null,
-    client_meta: mcp ? row.client_meta : null
-  } });
+  await rest('provider_connections', { method: 'POST', prefer: 'return=minimal', body: { account_id: row.account_id, provider: p, access_token: encrypt(t.access_token), refresh_token: t.refresh_token ? encrypt(t.refresh_token) : null, expires_at: t.expires_in ? new Date(Date.now() + Number(t.expires_in) * 1000).toISOString() : null, provider_account_id: pr.id || null, provider_account_name: pr.name || null, scope: t.scope || null, client_meta: mcp ? row.client_meta : null } });
   const ticket = rnd();
   await rest('provider_oauth_flows?state_hash=eq.' + encodeURIComponent(hash(state)), { method: 'PATCH', prefer: 'return=minimal', body: { completed_at: new Date().toISOString(), ticket_hash: hash(ticket), code_verifier: null, client_meta: null } });
   return ticket;
 }
-
 async function consume(p, session, ticket) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
@@ -207,13 +179,11 @@ async function consume(p, session, ticket) {
   await rest('provider_oauth_flows?ticket_hash=eq.' + encodeURIComponent(hash(ticket)), { method: 'PATCH', prefer: 'return=minimal', body: { consumed_at: new Date().toISOString() } });
   return true;
 }
-
 async function status(session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
   return await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&select=provider,provider_account_name,scope,updated_at');
 }
-
 async function disconnect(p, session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
@@ -221,13 +191,11 @@ async function disconnect(p, session) {
   await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&provider=eq.' + encodeURIComponent(p), { method: 'DELETE', prefer: 'return=minimal' });
   return { ok: true };
 }
-
 export async function providerAction(b) {
   if (b.action === 'start') return { authorization_url: await start(b.provider, b.portal_session) };
   if (b.action === 'consume') return { ok: await consume(b.provider, b.portal_session, b.ticket) };
-  if (b.action === 'status') return { connections: await status(b.portal_session), providers: PROVIDERS.map(provider => ({ provider, configured: classicReady(provider) || Boolean(MCP[provider]), method: classicReady(provider) ? 'oauth_app' : MCP[provider] ? 'mcp' : 'none' })) };
+  if (b.action === 'status') return { connections: await status(b.portal_session), providers: PROVIDERS.map(provider => ({ provider, configured: classicReady(provider) || Boolean(MCP[provider]), method: classicReady(provider) ? 'oauth_app' : MCP[provider] ? 'mcp' : 'none' })) });
   if (b.action === 'disconnect') return disconnect(b.provider, b.portal_session);
   throw new Error('Unknown action');
 }
-
 export async function providerCallback(p, code, state) { return complete(p, code, state); }
