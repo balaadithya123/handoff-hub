@@ -29,31 +29,38 @@ export default async function AiApps({ token }: { token: string }) {
     <section className="feed aiApps">
       <div className="feedHead">
         <h2>AI apps</h2>
-        <span>{linked ? "Linked to your Handoff Hub account" : "Not linked yet"}</span>
+        <span className={linked ? "status-pill status-pill-green" : "status-pill status-pill-grey"}>
+          <i className="status-dot" aria-hidden="true" />
+          {linked ? "Linked to your Handoff Hub account" : "Not linked yet"}
+        </span>
       </div>
 
       {clients.length > 0 && (
         <ul className="aiList">
           {clients.map((c, i) => (
-            <li key={i}><span className="feedDot" /><b>{c.name}</b><time>{ago(c.last_active)}</time></li>
+            <li key={i}>
+              <span className="feedDot" />
+              <b>{c.name}</b>
+              <time>{ago(c.last_active)}</time>
+            </li>
           ))}
         </ul>
       )}
 
       <div className="aiGrid">
         <div>
-          <h3>1 · Connect an AI app</h3>
+          <h3>1 &middot; Connect an AI app</h3>
           <p>Add this server URL as a connector (sign-in opens in the AI app):</p>
           <code>{MCP_URL}</code>
           <ul className="aiSteps">
-            <li><b>Claude:</b> Settings → Connectors → Add custom connector</li>
-            <li><b>ChatGPT:</b> Settings → Connectors → Developer mode → add MCP server</li>
+            <li><b>Claude:</b> Settings &rarr; Connectors &rarr; Add custom connector</li>
+            <li><b>ChatGPT:</b> Settings &rarr; Connectors &rarr; Developer mode &rarr; add MCP server</li>
             <li><b>Claude Code:</b> <code>claude mcp add --transport http handoff {MCP_URL}</code></li>
             <li><b>Codex:</b> <code>codex mcp add handoff --url {MCP_URL}</code></li>
           </ul>
         </div>
         <div>
-          <h3>2 · Link it to this portal</h3>
+          <h3>2 &middot; Link it to this portal</h3>
           <p>{linked ? "Already linked. Your AI apps can use the apps you connected above." : "Linking lets your AI apps use Supabase, Vercel and Canva through your connections here."}</p>
           <LinkCodeButton linked={linked} />
         </div>

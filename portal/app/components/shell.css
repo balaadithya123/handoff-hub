@@ -1,54 +1,521 @@
-.sh{min-height:100vh;background:#f7f7f7;color:#111;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-.shTop{position:sticky;top:0;z-index:20;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid #e5e5e5}
-.shBrand{display:flex;align-items:center;gap:10px;font-weight:700;color:#111;text-decoration:none;font-size:15px}
-.shLogo{width:26px;height:26px;border-radius:6px;background:#f6821f;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:800}
-.shUser{display:flex;align-items:center;gap:12px;font-size:13px;color:#555}
-.shBody{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 56px)}
-.shSide{background:#fff;border-right:1px solid #e5e5e5;padding:16px 12px;position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);box-sizing:border-box}
-.shSide h5{margin:6px 12px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8a8a8a;font-weight:600}
-.shSide a{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:6px;color:#333;text-decoration:none;font-size:14px;border-left:3px solid transparent}
-.shSide a:hover{background:#f4f4f4}
-.shSide a[aria-current=page]{background:#fff4ea;color:#b95500;font-weight:600;border-left-color:#f6821f}
-.shSide i{font-style:normal;width:16px;text-align:center;opacity:.8}
-.shMain{padding:28px 36px 56px;max-width:1280px;width:100%;box-sizing:border-box}
-.shHead h1{font-size:26px;letter-spacing:-.02em;margin:0 0 4px;color:#111}
-.shHead p{color:#666;margin:0 0 24px;font-size:15px}
-.shNotice{padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:14px;border:1px solid}
-.shNotice.error{background:#fff1f0;border-color:#f5c2be;color:#a1281d}
-.shNotice.ok{background:#eef8f0;border-color:#bfe3c8;color:#17692b}
-.shCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px}
-.shCard{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:6px}
-.shCard span{font-size:13px;color:#666}
-.shCard b{font-size:30px;letter-spacing:-.02em}
-.shCard a,.shPanelHead a{font-size:13px;color:#b95500;text-decoration:none;font-weight:600}
-.shPanel{background:#fff;border:1px solid #e5e5e5;border-radius:8px;margin-bottom:20px;overflow:hidden}
-.shPanelHead{padding:14px 18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.shPanelHead h2{margin:0;font-size:15px}
-.shPad{padding:18px}
-.shPad p{margin:0 0 12px;color:#444;font-size:14px;line-height:1.5}
-.shScroll{overflow-x:auto}
-.shTable{width:100%;border-collapse:collapse;font-size:14px}
-.shTable th{text-align:left;font-weight:600;color:#666;font-size:12px;padding:10px 18px;border-bottom:1px solid #eee;background:#fafafa;white-space:nowrap}
-.shTable td{padding:12px 18px;border-bottom:1px solid #f1f1f1;vertical-align:top;color:#222}
-.shTable tr:last-child td{border-bottom:0}
-.shMuted{color:#777;font-size:13px}
-.shTag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:#f1f1f1;color:#333;margin:0 6px 4px 0}
-.shEmpty{padding:36px 18px;text-align:center;color:#666;font-size:14px}
-.shSteps{margin:0;padding:6px 18px 14px;list-style:none}
-.shSteps li{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #f1f1f1;font-size:14px}
-.shSteps li:last-child{border-bottom:0}
-.shSteps .dot{width:20px;height:20px;border-radius:50%;border:2px solid #d4d4d4;display:grid;place-items:center;font-size:11px;color:#fff;flex:none}
-.shSteps .done .dot{background:#17692b;border-color:#17692b}
-.shSteps a{margin-left:auto;font-size:13px;color:#b95500;text-decoration:none;font-weight:600}
-.shCode{display:block;padding:10px 12px;background:#f6f6f6;border:1px solid #e5e5e5;border-radius:6px;font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;margin:0 0 14px}
-.shField{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-.shField input{padding:10px 12px;border:1px solid #d4d4d4;border-radius:6px;font-size:14px;min-width:200px}
-.shField input:focus{outline:2px solid #f6821f;border-color:#f6821f}
-.shBtn{padding:9px 16px;border-radius:6px;border:1px solid #111;background:#111;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
-.shBtn:hover{background:#333}.shBtn:disabled{opacity:.6;cursor:default}
-.shBtn.ghost{background:#fff;color:#a1281d;border-color:#e5b3af;padding:6px 12px;font-size:13px}
-.shBigCode{font-family:ui-monospace,Menlo,monospace;font-size:28px;letter-spacing:.2em;padding:14px 0;color:#111}
-.shErr{color:#a1281d;font-size:13px;margin:6px 0 0}
-@media(max-width:820px){.shBody{grid-template-columns:1fr}.shSide{position:static;height:auto;display:flex;gap:4px;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid #e5e5e5}.shSide h5{display:none}.shSide a{white-space:nowrap;border-left:0;border-bottom:3px solid transparent}.shSide a[aria-current=page]{border-bottom-color:#f6821f}.shMain{padding:20px 16px 40px}.shUser span{display:none}}
-.shMain .cfMain>h1,.shMain .cfMain>h1+p{display:none}
-.shMain .cf{margin-top:0}
+.sh {
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.shTop {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.shBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+
+.shLogo {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: var(--orange);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.shBrandName {
+  font-weight: 700;
+}
+
+.shUser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.shEmail {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.shUser button {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-main);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shUser button:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.shBody {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  flex: 1;
+}
+
+.shSide {
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  padding: 16px 8px;
+  position: sticky;
+  top: 48px;
+  align-self: start;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.shSideGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shSideHeader {
+  margin: 8px 12px 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.shSideLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.shSideLink:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.shSideLink.active,
+.shSideLink[aria-current="page"] {
+  background-color: var(--orange-subtle);
+  color: var(--orange);
+  font-weight: 600;
+  border-left-color: var(--orange);
+}
+
+.shIcon {
+  font-style: normal;
+  width: 16px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.shMain {
+  padding: 24px 32px 48px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.shHead {
+  margin-bottom: 24px;
+}
+
+.shHead h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  color: var(--text-main);
+}
+
+.shHead p {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 14px;
+}
+
+.shNotice {
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  border: 1px solid;
+}
+
+.shNotice.error {
+  background-color: var(--pill-amber-bg);
+  border-color: var(--pill-amber-border);
+  color: var(--pill-amber-text);
+}
+
+.shNotice.ok {
+  background-color: var(--pill-green-bg);
+  border-color: var(--pill-green-border);
+  color: var(--pill-green-text);
+}
+
+/* Common Card & Panel components */
+.shCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.shCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shCard span {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.shCard b {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.shCard a, .shPanelHead a {
+  font-size: 13px;
+  color: var(--orange);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.shCard a:hover, .shPanelHead a:hover {
+  text-decoration: underline;
+}
+
+.shPanel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.shPanelHead {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--bg-surface);
+}
+
+.shPanelHead h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.shPad {
+  padding: 16px;
+}
+
+.shPad p {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shScroll {
+  overflow-x: auto;
+}
+
+/* Dense Data Tables */
+.shTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.shTable th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-soft);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.shTable td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text-main);
+}
+
+.shTable tbody tr:hover {
+  background-color: var(--bg-hover);
+}
+
+.shTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.shMuted {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.shTag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  margin: 0 6px 4px 0;
+}
+
+.shEmpty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.shSteps {
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+}
+
+.shSteps li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.shSteps li:last-child {
+  border-bottom: 0;
+}
+
+.shSteps .dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: transparent;
+  flex: none;
+}
+
+.shSteps .done .dot {
+  background-color: var(--pill-green-text);
+  border-color: var(--pill-green-text);
+  color: #ffffff;
+}
+
+.shSteps a {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--orange);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.shCode {
+  display: block;
+  padding: 8px 12px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-main);
+  word-break: break-all;
+  margin: 0 0 12px;
+}
+
+.shField {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.shField input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-size: 13px;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  min-width: 200px;
+}
+
+.shField input:focus {
+  outline: 2px solid var(--orange);
+  border-color: var(--orange);
+}
+
+.shBtn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--orange);
+  background-color: var(--orange);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.shBtn:hover {
+  background-color: var(--orange-hover);
+}
+
+.shBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shBtn.ghost {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border-strong);
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.shBtn.ghost:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.shBigCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 24px;
+  letter-spacing: 0.15em;
+  padding: 12px 0;
+  color: var(--orange);
+  font-weight: 700;
+}
+
+.shErr {
+  color: var(--pill-amber-text);
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 820px) {
+  .shBody {
+    grid-template-columns: 1fr;
+  }
+
+  .shSide {
+    position: static;
+    height: auto;
+    display: flex;
+    overflow-x: auto;
+    padding: 6px 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .shSideHeader {
+    display: none;
+  }
+
+  .shSideGroup {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .shSideLink {
+    white-space: nowrap;
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 8px 12px;
+  }
+
+  .shSideLink.active,
+  .shSideLink[aria-current="page"] {
+    border-left-color: transparent;
+    border-bottom-color: var(--orange);
+  }
+
+  .shMain {
+    padding: 16px 16px 32px;
+  }
+
+  .shEmail {
+    display: none;
+  }
+}
+
+/* Overrides for directory inside Shell main */
+.shMain .cfMain > h1,
+.shMain .cfMain > h1 + p {
+  display: none;
+}
+
+.shMain .cf {
+  margin-top: 0;
+}

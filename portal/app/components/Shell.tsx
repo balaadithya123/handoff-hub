@@ -13,20 +13,45 @@ export default function Shell({ email, tab, title, sub, notice, children }: { em
   return (
     <div className="sh">
       <header className="shTop">
-        <a className="shBrand" href="/"><span className="shLogo">H</span>Handoff Hub</a>
-        <div className="shUser"><span>{email}</span><SignOutButton /></div>
+        <a className="shBrand" href="/">
+          <span className="shLogo">H</span>
+          <span className="shBrandName">Handoff Hub</span>
+        </a>
+        <div className="shUser">
+          <span className="shEmail">{email}</span>
+          <SignOutButton />
+        </div>
       </header>
       <div className="shBody">
-        <nav className="shSide" aria-label="Main">
-          <h5>Workspace</h5>
-          {NAV.map(([id, label, icon]) => (
-            <a key={id} href={"/?tab=" + id} aria-current={tab === id ? "page" : undefined}><i>{icon}</i>{label}</a>
-          ))}
+        <nav className="shSide" aria-label="Main Navigation">
+          <div className="shSideGroup">
+            <h5 className="shSideHeader">Workspace</h5>
+            {NAV.map(([id, label, icon]) => (
+              <a
+                key={id}
+                href={"/?tab=" + id}
+                aria-current={tab === id ? "page" : undefined}
+                className={"shSideLink" + (tab === id ? " active" : "")}
+              >
+                <i className="shIcon" aria-hidden="true">{icon}</i>
+                <span>{label}</span>
+              </a>
+            ))}
+          </div>
         </nav>
         <main className="shMain">
-          <div className="shHead"><h1>{title}</h1><p>{sub}</p></div>
-          {notice && <div className={"shNotice " + notice.kind}>{notice.text}</div>}
-          {children}
+          <header className="shHead">
+            <h1>{title}</h1>
+            <p>{sub}</p>
+          </header>
+          {notice && (
+            <div className={"shNotice " + notice.kind} role="status">
+              {notice.text}
+            </div>
+          )}
+          <div className="shContent">
+            {children}
+          </div>
         </main>
       </div>
     </div>

@@ -15,20 +15,41 @@ export default async function Overview({ token, connected }: { token: string; co
   return (
     <>
       <div className="shCards">
-        <div className="shCard"><span>Integrations connected</span><b>{connected}</b><a href="/?tab=integrations">Manage →</a></div>
-        <div className="shCard"><span>AI accounts linked</span><b>{accts.length}</b><a href="/?tab=ai">Manage →</a></div>
-        <div className="shCard"><span>AI apps signed in</span><b>{apps}</b><a href="/?tab=ai">View →</a></div>
+        <div className="shCard">
+          <span>Integrations connected</span>
+          <b>{connected}</b>
+          <a href="/?tab=integrations">Manage &rarr;</a>
+        </div>
+        <div className="shCard">
+          <span>AI accounts linked</span>
+          <b>{accts.length}</b>
+          <a href="/?tab=ai">Manage &rarr;</a>
+        </div>
+        <div className="shCard">
+          <span>AI apps signed in</span>
+          <b>{apps}</b>
+          <a href="/?tab=ai">View &rarr;</a>
+        </div>
       </div>
       <section className="shPanel">
-        <div className="shPanelHead"><h2>Get started</h2></div>
+        <div className="shPanelHead">
+          <h2>Get started</h2>
+        </div>
         <ul className="shSteps">
           {steps.map(([label, done, href, cta]) => (
-            <li key={label} className={done ? "done" : ""}><span className="dot">{done ? "✓" : ""}</span>{label}{!done && <a href={href}>{cta}</a>}</li>
+            <li key={label} className={done ? "done" : ""}>
+              <span className="dot" aria-hidden="true">{done ? "✓" : ""}</span>
+              <span>{label}</span>
+              {!done && <a href={href}>{cta}</a>}
+            </li>
           ))}
         </ul>
       </section>
       <section className="shPanel">
-        <div className="shPanelHead"><h2>Recent activity</h2><a href="/?tab=activity">View all</a></div>
+        <div className="shPanelHead">
+          <h2>Recent activity</h2>
+          <a href="/?tab=activity">View all</a>
+        </div>
         <ActivityLog token={token} limit={5} />
       </section>
     </>
