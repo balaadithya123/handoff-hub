@@ -17,10 +17,13 @@ async function validateAuthRequest(p){if(p.response_type!=='code')return{error:'
 
 const oauthFields=['response_type','client_id','redirect_uri','state','code_challenge','code_challenge_method','scope','resource'];
 function hiddenFields(p){return oauthFields.map(k=>`<input type="hidden" name="${k}" value="${esc(p[k]||'')}">`).join('');}
-function emailForm(p,client,error,step='email',email=''){
+function emailForm(p,client,error,step='email',email='',extra={}){
   const host=new URL(p.redirect_uri).hostname;
   const common=`<h1>Connect to Handoff Hub</h1><p><strong>${esc(client.client_name||'An app')}</strong> wants access to your Handoff Hub.</p>${error?`<p>${esc(error)}</p>`:''}`;
-  if(step==='otp') return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code</label><input id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" required><button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Verify & approve</button></form>`;
+  if(step==='otp'){
+    const gate=extra.gate?`<p>This AI app is already connected to your Hub. Choose one:</p><label for="unlock">Adding a different account? Enter your unlock code</label><input id="unlock" name="unlock" type="password" autocomplete="off"><label><input type="checkbox" name="replace" value="1"> Same account reconnecting: replace the old connection</label>`:'';
+    return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code</label><input id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" value="${esc(extra.otp||'')}" required>${gate}<button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Verify & approve</button></form>`;
+  }
   return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="send_email"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required><button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Send verification code</button></form>`;
 }
 async function supabaseAuth(path,body){
@@ -43,6 +46,25 @@ async function otpDb(path,method='GET',body){
   const r=await fetch(`${url}/rest/v1/${path}`,{method,headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',...(method==='POST'?{Prefer:'return=representation'}:{})},...(body?{body:JSON.stringify(body)}:{})});
   const text=await r.text();let data=[];try{data=text?JSON.parse(text):[];}catch{}
   return{ok:r.ok,status:r.status,data};
+}
+async function lookupUser(email){
+  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return null;
+  const r=await fetch(`${url}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id&limit=1`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
+  if(!r.ok)return null;
+  const rows=await r.json();
+  return rows?.[0]?.id||null;
+}
+// Limits how many accounts of the same AI app (for example two Claude accounts) can use one Hub account. Fails closed.
+async function gateClient(userId,clientId,unlock,replace,apply){
+  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!url||!key)return{ok:false,error:'Could not check your account limit. Try again.'};
+  try{
+    const r=await fetch(`${url}/rest/v1/rpc/hub_client_gate`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({p_user:userId,p_client:clientId,p_unlock:unlock||null,p_replace:Boolean(replace),p_apply:Boolean(apply)})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d)return{ok:false,error:'Could not check your account limit. Try again.'};
+    return d;
+  }catch{return{ok:false,error:'Could not check your account limit. Try again.'};}
 }
 async function findOrCreateUser(email){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -111,15 +133,21 @@ export default async function handler(req,res){
       }
       if(form.action==='verify_email'){
         const otp=str(form.otp).trim();
+        const unlock=str(form.unlock).trim().slice(0,64),replace=form.replace==='1';
         const now=new Date().toISOString();
         const expectedHash=crypto.createHash('sha256').update(otp).digest('hex');
         const rows=await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&code_hash=eq.${encodeURIComponent(expectedHash)}&consumed_at=is.null&expires_at=gt.${encodeURIComponent(now)}&select=id&limit=1`);
         const row=rows.ok&&Array.isArray(rows.data)?rows.data[0]:null;
         if(!row)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
+        // Account limit: a second account of the same AI app needs an unlock code (or replaces the old connection). Checked before the code is used up.
+        const known=await lookupUser(email);
+        if(known){const check=await gateClient(known,p.client_id,unlock,replace,false);if(!check.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,check.error||'Adding another account needs an unlock code.','otp',email,{gate:Boolean(check.needs_unlock),otp}));}
         const consumed=await otpDb(`handoff_email_otps?id=eq.${encodeURIComponent(row.id)}&consumed_at=is.null`,'PATCH',{consumed_at:now});
         if(!consumed.ok)return page(res,409,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code was already used. Please request a new code.','otp',email));
         const userId=await findOrCreateUser(email);
         if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Could not create your Handoff Hub account. Please try again.','otp',email));
+        const applied=await gateClient(userId,p.client_id,unlock,replace,true);
+        if(!applied.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,applied.error||'Adding another account needs an unlock code.','email'));
         const code=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code,state:p.state});
       }

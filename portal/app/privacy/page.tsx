@@ -1,5 +1,5 @@
 import Legal from "../components/Legal";
-export const metadata = { title: "Privacy Policy \u00B7 Handoff Hub" };
+export const metadata = { title: "Privacy Policy · Handoff Hub" };
 const CONTACT = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
 
 export default function Privacy() {
@@ -16,7 +16,7 @@ export default function Privacy() {
       <h2>What we do not do</h2>
       <ul>
         <li>We do not sell your data, show ads, or use your content to train AI models.</li>
-        <li>We never receive your passwords for connected apps; sign-in happens on the provider\u2019s own page.</li>
+        <li>We never receive your passwords for connected apps; sign-in happens on the provider’s own page.</li>
       </ul>
       <h2>How data is used</h2>
       <p>Data is used only to run the features you use: signing you in, linking AI accounts, calling the integrations you connected, and showing your activity history. When an AI app calls a tool, the request and result pass through our server to the provider you chose.</p>

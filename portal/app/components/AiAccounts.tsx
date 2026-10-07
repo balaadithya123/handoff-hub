@@ -27,7 +27,7 @@ export default async function AiAccounts({ token }: { token: string }) {
                 {accts.map(a => (
                   <tr key={a.id}>
                     <td><b>{a.label}</b></td>
-                    <td>{a.clients.length === 0 ? <span className="shMuted">Signed out</span> : a.clients.map((c, i) => <span className="shTag" key={i}>{c.name} \u00B7 {ago(c.last_active)}</span>)}</td>
+                    <td>{a.clients.length === 0 ? <span className="shMuted">Signed out</span> : a.clients.map((c, i) => <span className="shTag" key={i}>{c.name} · {ago(c.last_active)}</span>)}</td>
                     <td className="shMuted">{ago(a.linked_at)}</td>
                     <td><UnlinkButton id={a.id} /></td>
                   </tr>
@@ -40,17 +40,18 @@ export default async function AiAccounts({ token }: { token: string }) {
 
       <div className="shCards" style={{ alignItems: "start" }}>
         <section className="shPanel" style={{ margin: 0 }}>
-          <div className="shPanelHead"><h2>1 \u00B7 Connect an AI app</h2></div>
+          <div className="shPanelHead"><h2>1 · Connect an AI app</h2></div>
           <div className="shPad">
             <p>Add this server URL as a connector. Sign-in opens inside the AI app.</p>
             <code className="shCode">{MCP_URL}</code>
-            <p className="shMuted"><b>Claude:</b> Settings \u2192 Connectors \u2192 Add custom connector<br /><b>ChatGPT:</b> Settings \u2192 Connectors \u2192 Developer mode<br /><b>Claude Code:</b> claude mcp add --transport http handoff {MCP_URL}</p>
+            <p className="shMuted"><b>Claude:</b> Settings → Connectors → Add custom connector<br /><b>ChatGPT:</b> Settings → Connectors → Developer mode<br /><b>Claude Code:</b> claude mcp add --transport http handoff {MCP_URL}</p>
+            <p className="shMuted">A second account of the same AI app (for example another Claude account) asks for the unlock code on the Hub sign-in page.</p>
           </div>
         </section>
         <section className="shPanel" style={{ margin: 0 }}>
-          <div className="shPanelHead"><h2>2 \u00B7 Link it to this portal</h2></div>
+          <div className="shPanelHead"><h2>2 · Link it to this portal</h2></div>
           <div className="shPad">
-            <p>{d?.needs_unlock ? "Your first AI account is free. Adding another one (for example a second Claude account) needs an unlock code." : "Your first AI account is free. Create a code and give it to the AI account."}</p>
+            <p>{d?.needs_unlock ? "Your first AI account is free. Linking another Hub account needs an unlock code." : "Your first AI account is free. Create a code and give it to the AI account."}</p>
             <LinkCodeButton linked={Boolean(d?.linked)} needsUnlock={Boolean(d?.needs_unlock)} />
           </div>
         </section>
