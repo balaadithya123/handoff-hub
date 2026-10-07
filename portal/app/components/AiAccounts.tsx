@@ -2,9 +2,10 @@ import { rpc } from "../../lib/portal";
 import { ago } from "../../lib/format";
 import LinkCodeButton from "./LinkCodeButton";
 import UnlinkButton from "./UnlinkButton";
+import AccountName from "./AccountName";
 
 type Client = { name: string; last_active: string };
-type Acct = { id: string; label: string; linked_at: string; clients: Client[] };
+type Acct = { id: string; label: string; nickname?: string | null; linked_at: string; clients: Client[] };
 type Res = { ok?: boolean; linked?: boolean; needs_unlock?: boolean; accounts?: Acct[] } | null;
 
 const MCP_URL = (process.env.NEXT_PUBLIC_HUB_URL || "https://handoff-mcp.vercel.app").replace(/\/$/, "") + "/mcp";
@@ -36,7 +37,7 @@ export default async function AiAccounts({ token }: { token: string }) {
               <tbody>
                 {accts.map(a => (
                   <tr key={a.id}>
-                    <td><b>{a.label}</b></td>
+                    <td><AccountName id={a.id} label={a.label} nickname={a.nickname ?? null} /></td>
                     <td>
                       {a.clients.length === 0 ? (
                         <span className="shMuted">Signed out</span>
@@ -49,7 +50,7 @@ export default async function AiAccounts({ token }: { token: string }) {
                       )}
                     </td>
                     <td className="shMuted">{ago(a.linked_at)}</td>
-                    <td style={{ textAlign: "right" }}><UnlinkButton id={a.id} /></td>
+                    <td style={{ textAlign: "right" }}><UnlinkButton id={a.id} name={a.nickname || a.label} /></td>
                   </tr>
                 ))}
               </tbody>

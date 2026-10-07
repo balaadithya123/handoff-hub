@@ -21,9 +21,6 @@ export async function rpc<T = unknown>(fn: string, args: Record<string, unknown>
 
 export async function sessionUser(token?: string | null): Promise<SessionUser | null> {
   if (!token) return null;
-  if (token === "mock" || token === "preview" || token === "demo") {
-    return { email: "alex@example.com" };
-  }
   try {
     const d = await rpc<{ ok?: boolean; email?: string } | null>("portal_session", { p_token: token });
     return d && d.ok && d.email ? { email: d.email } : null;
