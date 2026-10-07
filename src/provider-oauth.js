@@ -15,11 +15,19 @@ const CFG = {
 };
 
 // MCP servers: the app registers itself automatically during sign-in (no client ID/secret to set up).
+// Entries with `server` use a verified official endpoint; the rest are looked up in the MCP registry by name.
+// A provider that refuses dynamic registration fails with a clear message instead of a fake Connect.
 const MCP = {
   supabase: { name: 'Supabase', server: 'https://mcp.supabase.com/mcp' },
   canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' },
+  notion: { name: 'Notion', server: 'https://mcp.notion.com/mcp' },
+  linear: { name: 'Linear', server: 'https://mcp.linear.app/mcp' },
+  jira: { name: 'Jira', server: 'https://mcp.atlassian.com/v1/mcp' },
+  asana: { name: 'Asana', server: 'https://mcp.asana.com/mcp' },
+  sentry: { name: 'Sentry', server: 'https://mcp.sentry.dev/mcp' },
+  figma: { name: 'Figma', server: 'https://mcp.figma.com/mcp' },
   gitlab: { name: 'GitLab' }, 'google-drive': { name: 'Google Drive' }, slack: { name: 'Slack' },
-  notion: { name: 'Notion' }, linear: { name: 'Linear' }, hubspot: { name: 'HubSpot' },
+  hubspot: { name: 'HubSpot' },
   box: { name: 'Box' }, dropbox: { name: 'Dropbox' }, gmail: { name: 'Gmail' },
   'google-calendar': { name: 'Google Calendar' }, 'microsoft-teams': { name: 'Microsoft Teams' },
   sharepoint: { name: 'SharePoint' }, onenote: { name: 'OneNote' }, zendesk: { name: 'Zendesk' }
@@ -138,16 +146,17 @@ async function discover(server) {
   return { meta, resource: pr?.resource || server, scopes: Array.isArray(pr?.scopes_supported) ? pr.scopes_supported : null };
 }
 
-async function register(meta, name, note) {
-  if (!meta.registration_endpoint) throw new Error(name + ' does not allow apps to register themselves.' + (note ? ' ' + note : ''));
+// The redirect URI must use the provider id (e.g. google-drive), the same value the callback route uses.
+async function register(meta, name, pid) {
+  if (!meta.registration_endpoint) throw new Error(name + ' does not allow apps to register themselves, so it cannot be connected without an approved OAuth app.');
   const r = await fetch(meta.registration_endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     signal: AbortSignal.timeout(8000),
-    body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callbackMcp(name.toLowerCase())], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
+    body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callbackMcp(pid)], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok || !d.client_id) throw new Error(name + ' refused the app registration (' + (d.error_description || d.error || r.status) + ').' + (note ? ' ' + note : ''));
+  if (!r.ok || !d.client_id) throw new Error(name + ' refused the app registration (' + (d.error_description || d.error || r.status) + ').');
   return d;
 }
 
@@ -157,17 +166,18 @@ async function registryServer(provider) {
     'microsoft-teams':['microsoft teams','teams']
   };
   const wanted = (aliases[provider] || [provider]).map(x=>x.toLowerCase());
-  const r = await fetch('https://registry.modelcontextprotocol.io/v0.1/servers?limit=100&version=latest',{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+  // Search by name: the registry has thousands of entries, so an unfiltered first page rarely contains the app.
+  const r = await fetch('https://registry.modelcontextprotocol.io/v0.1/servers?limit=100&version=latest&search=' + encodeURIComponent(wanted[0]),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
   if(!r.ok) throw new Error('MCP registry unavailable');
   const d=await r.json();
   const entries=Array.isArray(d?.servers)?d.servers.map(x=>x?.server??x).filter(Boolean):[];
   const entry=entries.find(s=>{const n=String(s.title||s.name||'').toLowerCase().replace(/[._/-]+/g,' ').replace(/\s+/g,' ').trim();return wanted.some(a=>n===a||n.endsWith(' '+a)||n.startsWith(a+' '));});
   const remote=entry?.remotes?.find(x=>typeof x?.url==='string'&&/^https?:\/\//i.test(x.url));
-  if(!remote?.url) throw new Error(provider+' does not currently expose a remote MCP server.');
+  if(!remote?.url) throw new Error(MCP[provider].name+' has no official remote MCP server in the registry yet, so it cannot be connected here.');
   return remote.url;
 }
 async function startMcp(p, id) {
-  const m = MCP[p], server = m.server || await registryServer(p), d = await discover(server), cl = await register(d.meta, m.name, null), ver = rnd(48);
+  const m = MCP[p], server = m.server || await registryServer(p), d = await discover(server), cl = await register(d.meta, m.name, p), ver = rnd(48);
   const state = await newFlow(id, p, ver, { client_id: cl.client_id, client_secret: cl.client_secret ? encrypt(cl.client_secret) : null, token_endpoint: d.meta.token_endpoint, resource: d.resource });
   const u = new URL(d.meta.authorization_endpoint);
   u.searchParams.set('client_id', cl.client_id);
