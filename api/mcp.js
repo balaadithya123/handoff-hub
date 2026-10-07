@@ -1,4 +1,4 @@
-const MCP_VERSION = '0.18.0';
+const MCP_VERSION = '0.19.0';
 
 const DEFAULT_ORIGINS = ['https://claude.ai', 'https://www.claude.ai', 'https://claude.com', 'https://chatgpt.com', 'https://chat.openai.com', 'https://platform.openai.com'];
 

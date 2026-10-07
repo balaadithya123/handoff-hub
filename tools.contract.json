@@ -29,6 +29,20 @@
     "link_portal_account",
     "connected_apps",
     "app_list_tools",
-    "app_call_tool"
+    "app_call_tool",
+    "whats_new",
+    "claim_resource",
+    "release_resource",
+    "list_claims",
+    "request_approval",
+    "list_approvals",
+    "decide_approval",
+    "verify_url",
+    "allowlist_list",
+    "allowlist_update",
+    "handoff_brief",
+    "set_agent_profile",
+    "route_task",
+    "agent_stats"
   ]
 }
