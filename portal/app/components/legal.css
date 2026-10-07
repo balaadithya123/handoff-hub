@@ -1,0 +1,7 @@
+.legal{max-width:760px;margin:0 auto;padding:40px 20px 80px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#222;line-height:1.65;background:#fff}
+.legal>a{color:#b95500;text-decoration:none;font-size:14px;font-weight:600}
+.legal h1{font-size:30px;letter-spacing:-.02em;margin:18px 0 4px;color:#111}
+.legal h2{font-size:18px;margin:30px 0 8px;color:#111}
+.legal p,.legal li{font-size:15px;color:#333}
+.legal ul{padding-left:20px}
+.legal .lu{color:#777;font-size:13px;margin:0 0 20px}
