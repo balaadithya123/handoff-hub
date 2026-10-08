@@ -131,6 +131,26 @@ export function mutate(userId, fn) {
 export const getState = async userId => readState(userId);
 
 export function project(state, id) {
-  if (!state.projects[id]) state.projects[id] = { id, memories: [], events: [], integrations: {} };
+  if (!state.projects[id]) state.projects[id] = { id, memories: [], events: [], integrations: {}, created_at: new Date().toISOString() };
   return state.projects[id];
+}
+
+// The project the portal Overview and approvals read. Unset means the normal "default" pool (unchanged behaviour).
+export function opsProject(state) {
+  return state?.meta?.ops_project || 'default';
+}
+
+// Optional projects only: the normal "default" pool is never listed, and no projects means an empty list.
+export function summarizeProjects(state) {
+  const ops = opsProject(state);
+  return Object.values(state.projects || {})
+    .filter(p => p.id !== 'default')
+    .map(p => ({
+      id: p.id,
+      name: p.name || p.id,
+      description: p.description,
+      counts: { memories: (p.memories || []).length, events: (p.events || []).length, tasks: (p.tasks || []).length },
+      updated_at: p.updated_at || p.created_at || null,
+      ...(p.id === ops ? { portal_project: true } : {})
+    }));
 }

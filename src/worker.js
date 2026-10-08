@@ -1,4 +1,4 @@
-import { mutate, project } from './store.js';
+import { mutate, project, opsProject } from './store.js';
 import { vercelGetLatestDeployment } from './integrations.js';
 import { purgeOAuthData } from './oauth-store.js';
 import { isOwner } from './owner.js';
@@ -52,7 +52,8 @@ async function checkOAuthCleanup(){
   }catch(error){return{ok:false,error:error.message,oauth_codes:0,oauth_tokens:0,oauth_clients:0};}
 }
 
-export async function runHealthCheck(userId,{agent='worker',project_id='default'}={}){
+// project_id omitted: the health check is Hub operations data, so it goes to the portal project (state.meta.ops_project), which is the normal pool unless a project was designated.
+export async function runHealthCheck(userId,{agent='worker',project_id}={}){
   // Four independent, read-only probes — run them concurrently instead of one after
   // another so a full health check costs roughly one round trip, not four.
   const[vercel,mcp_endpoint,routes,oauth_cleanup]=await Promise.all([
@@ -65,6 +66,6 @@ export async function runHealthCheck(userId,{agent='worker',project_id='default'
   const summary=anomalies.length
     ?`Autonomous health check found issues: ${anomalies.join('; ')}`
     :`Autonomous health check: Vercel ${state('vercel')}, MCP endpoint ${state('mcp_endpoint')}, routes ${state('routes')}, OAuth cleanup removed ${purge.oauth_codes} code(s), ${purge.oauth_tokens} token(s), ${purge.oauth_clients} client(s).`;
-  const entry=await mutate(userId,current=>{const p=project(current,project_id);const record={id:crypto.randomUUID(),at:new Date().toISOString(),agent,checks,anomalies};p.health_checks=p.health_checks||[];p.health_checks.unshift(record);p.health_checks=p.health_checks.slice(0,50);p.blockers=(p.blockers||[]).filter(b=>!b.startsWith('[auto]'));if(anomalies.length)p.blockers.push(`[auto] ${summary}`);p.events.unshift({type:'health_check',agent,summary,at:record.at});p.events=p.events.slice(0,100);return record;});
+  const entry=await mutate(userId,current=>{const p=project(current,project_id??opsProject(current));const record={id:crypto.randomUUID(),at:new Date().toISOString(),agent,checks,anomalies};p.health_checks=p.health_checks||[];p.health_checks.unshift(record);p.health_checks=p.health_checks.slice(0,50);p.blockers=(p.blockers||[]).filter(b=>!b.startsWith('[auto]'));if(anomalies.length)p.blockers.push(`[auto] ${summary}`);p.events.unshift({type:'health_check',agent,summary,at:record.at});p.events=p.events.slice(0,100);return record;});
   return{summary,checks,anomalies,at:entry.at};
 }

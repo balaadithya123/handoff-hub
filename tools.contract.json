@@ -43,6 +43,8 @@
     "handoff_brief",
     "set_agent_profile",
     "route_task",
-    "agent_stats"
+    "agent_stats",
+    "create_project",
+    "move_project"
   ]
 }
