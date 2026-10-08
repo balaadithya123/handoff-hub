@@ -1,5 +1,6 @@
 import SignOutButton from "./SignOutButton";
 import "./shell.css";
+import "./topbar.css";
 
 export type Tab = "overview" | "integrations" | "ai" | "activity";
 const NAV: ReadonlyArray<readonly [Tab, string, string]> = [
@@ -18,7 +19,7 @@ export default function Shell({ email, tab, title, sub, notice, children }: { em
           <span className="shBrandName">Handoff Hub</span>
         </a>
         <div className="shUser">
-          <span className="shEmail">{email}</span>
+          <span className="shEmail" title={email}>{email}</span>
           <SignOutButton />
         </div>
       </header>

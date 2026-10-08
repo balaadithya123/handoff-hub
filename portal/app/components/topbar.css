@@ -1,0 +1,18 @@
+/* Topbar fixes: stay above the sidebar, never overflow, readable on mobile. */
+.shTop { z-index: 50; gap: 12px; min-width: 0; box-shadow: 0 1px 0 var(--border); }
+.shBrand { flex: none; white-space: nowrap; }
+.shUser { min-width: 0; flex: 0 1 auto; }
+.shEmail { min-width: 0; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shSide { z-index: 20; }
+.shUser button { white-space: nowrap; flex: none; }
+
+.top { z-index: 50; gap: 12px; }
+.top .brand { white-space: nowrap; }
+
+@media (max-width: 820px) {
+  .shTop { padding: 0 12px; }
+  .shEmail { display: block; max-width: 120px; font-size: 12px; }
+  .shSide { position: static; z-index: auto; }
+  .top { padding: 0 12px; }
+  .top nav { gap: 10px; }
+}
