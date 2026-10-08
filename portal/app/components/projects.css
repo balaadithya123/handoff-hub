@@ -1,0 +1,16 @@
+.prTable .prNum { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.prSr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.prTable tr.prDetailRow td { padding-top: 0; }
+.prTable tbody tr:hover + tr.prDetailRow td { background: var(--bg-hover); }
+.prDetail summary { cursor: pointer; font-size: 12px; color: var(--accent-text); width: fit-content; }
+.prDetail summary:hover { text-decoration: underline; }
+.prSummary { margin: 8px 0 4px; font-size: 13px; color: var(--text-muted); max-width: 820px; }
+.prRecent { list-style: none; margin: 8px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.prRecent li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 12.5px; }
+.prFoot { border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.prCreate .shField { margin-bottom: 0; }
+.prWide { flex: 1; min-width: 220px; }
+@media (max-width: 480px) {
+  .shNavLink { font-size: 10px; }
+  .prCreate .shField input { width: 100%; }
+}

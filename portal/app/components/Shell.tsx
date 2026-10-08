@@ -2,18 +2,19 @@ import SignOutButton from "./SignOutButton";
 import "./shell.css";
 import "./topbar.css";
 
-export type Tab = "overview" | "integrations" | "ai" | "tools" | "activity";
+export type Tab = "overview" | "integrations" | "projects" | "ai" | "tools" | "activity";
 
 const ICON: Record<Tab, React.ReactNode> = {
   overview: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
   integrations: <path d="M9 3v4M15 3v4M7 7h10v4a5 5 0 0 1-10 0V7zM12 16v5" />,
+  projects: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />,
   ai: <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" />,
   tools: <><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>,
   activity: <path d="M3 12h4l3-8 4 16 3-8h4" />
 };
 
 const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<readonly [Tab, string]>]> = [
-  ["Workspace", [["overview", "Overview"], ["integrations", "Integrations"]]],
+  ["Workspace", [["overview", "Overview"], ["integrations", "Integrations"], ["projects", "Projects"]]],
   ["AI", [["ai", "AI accounts"], ["tools", "Hub tools"]]],
   ["Monitor", [["activity", "Activity"]]]
 ];
