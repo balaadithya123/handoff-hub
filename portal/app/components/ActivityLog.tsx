@@ -16,13 +16,20 @@ export default async function ActivityLog({ token, limit = 30 }: { token: string
   return (
     <div className="shScroll">
       <table className="shTable">
-        <thead><tr><th>When</th><th>Agent</th><th>Event</th><th>Details</th></tr></thead>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Agent</th>
+            <th>Event</th>
+            <th>Details</th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map((e, i) => (
             <tr key={i}>
-              <td className="shMuted">{ago(e.at)}</td>
-              <td>{e.agent || "\u2014"}</td>
-              <td>{human(e.action || "")}</td>
+              <td className="shMuted" style={{ whiteSpace: "nowrap" }}>{ago(e.at)}</td>
+              <td><b>{e.agent || "\u2014"}</b></td>
+              <td><span className="shTag">{human(e.action || "")}</span></td>
               <td className="shMuted">{e.text || ""}</td>
             </tr>
           ))}
