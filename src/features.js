@@ -1,12 +1,23 @@
 // Feature pack added in 0.19.0. All state lives in the per-user project state (store.js),
 // so Claude, ChatGPT and any other connected AI read and write the same data.
 import { z } from 'zod';
-import { project, getState, mutate } from './store.js';
+import { project, getState, mutate, opsProject } from './store.js';
 import { assertOwner } from './owner.js';
 
-export const HUB_VERSION = '0.19.0';
+export const HUB_VERSION = '0.20.0';
 
 const CHANGELOG = [
+  {
+    version: '0.20.0',
+    date: '2026-10-08',
+    changes: [
+      'Optional projects: pass project_id only when the user chose or named a project. Each project is a separate memory pool that never mixes with the normal pool or other projects; with no project named nothing is created or shown',
+      'list_projects now lists only explicit projects as short summaries (the normal pool is not listed, and no projects means an empty list)',
+      'create_project: create a named project when the user asks for one',
+      'move_project: merge one pool into another (preview first, confirm:true to apply); portal_project:true points the portal Overview and approvals at the destination',
+      'Hub operations data (portal Overview, approvals, allowlist log, default health-check target) follows state.meta.ops_project, which defaults to the normal pool'
+    ]
+  },
   {
     version: '0.19.0',
     date: '2026-10-07',
@@ -23,7 +34,7 @@ const CHANGELOG = [
   { version: '0.18.0', date: '2026-10-06', changes: ['Portal link flow, connected_apps, app_list_tools, app_call_tool, owner-only GitHub/Vercel tools'] }
 ];
 
-const projectId = z.string().min(1).optional().describe('Optional project identifier within your private account. If omitted, uses your own default project; it is never shared with another user.');
+const projectId = z.string().min(1).optional().describe('Optional. Leave this out unless the user chose or named a project (for example "save this to my X project"); then pass that project id from list_projects. Omitted means the normal private memory pool. Projects never mix with each other or with the normal pool, and are never shared with another user.');
 const agentName = z.string().min(1).describe('Name of the calling AI agent, e.g. claude or chatgpt');
 const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
 const norm = s => String(s).trim().toLowerCase();
@@ -65,11 +76,12 @@ function gateEnabled(action) {
 }
 
 // Call before a gated action. Returns null when the gate is off, or the consumed approval id.
+// Approvals live in the portal project (state.meta.ops_project, normal pool unless designated).
 export async function requireApproval(userId, gate, approvalId, expectedAction) {
   if (!gateEnabled(gate)) return null;
   if (!approvalId) throw new Error(`${gate} requires an approved approval_id. Call request_approval with action "${expectedAction}", have it approved with decide_approval, then pass approval_id.`);
   return mutate(userId, state => {
-    const a = (project(state, 'default').approvals || []).find(x => x.id === approvalId);
+    const a = (project(state, opsProject(state)).approvals || []).find(x => x.id === approvalId);
     if (!a) throw new Error(`No approval found with id ${approvalId}`);
     if (a.status !== 'approved') throw new Error(`Approval ${approvalId} is ${a.status}, not approved`);
     if (a.used) throw new Error(`Approval ${approvalId} was already used`);
@@ -107,6 +119,21 @@ function splitTask(task) {
 function pendingLoad(p, agent) {
   return (p.tasks || []).filter(t => t.to_agent === agent && t.status !== 'done').length;
 }
+
+// Merge two lists without duplicates (by id, else by content), newest first by `key`, capped.
+function mergeList(a = [], b = [], key = 'at', cap = 100) {
+  const seen = new Set();
+  const out = [];
+  for (const x of [...a, ...b]) {
+    const k = x && x.id ? `id:${x.id}` : JSON.stringify(x);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(x);
+  }
+  return out.sort((x, y) => String(y?.[key] ?? '').localeCompare(String(x?.[key] ?? ''))).slice(0, cap);
+}
+
+const slugId = s => String(s).trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
 
 export function registerFeatureTools(server, userId) {
   const tool = (name, description, schema, annotations, handler) =>
@@ -227,7 +254,7 @@ export function registerFeatureTools(server, userId) {
       const list = new Set(state.allowlist[key] || []);
       if (input.action === 'add') list.add(input.value); else list.delete(input.value);
       state.allowlist[key] = [...list];
-      pushEvent(project(state, 'default'), { type: 'allowlist_changed', agent: input.agent ?? 'unknown', action: input.action, kind: input.kind, value: input.value });
+      pushEvent(project(state, opsProject(state)), { type: 'allowlist_changed', agent: input.agent ?? 'unknown', action: input.action, kind: input.kind, value: input.value });
     });
     const merged = await applyRuntimeAllowlist();
     return text({ ok: true, effective: merged });
@@ -309,4 +336,44 @@ export function registerFeatureTools(server, userId) {
     }
     return text({ agents: stats, note: 'Event history keeps the latest 100 events, so events_logged and last_active cover recent activity only.' });
   });
+
+  // ----- 8. optional projects (separate memory pools) -----
+  tool('create_project', 'Create a separate, optional memory pool (project) only when the user asks for one by name. Anything saved with this project_id stays in that pool and never mixes with the normal pool or other projects. Do not create projects on your own.', { name: z.string().min(1).max(80), project_id: z.string().min(1).max(60).optional().describe('Defaults to a lowercase slug of the name'), description: z.string().max(300).optional() }, { title: 'Create a project' }, async input => text(await mutate(userId, state => {
+    const id = input.project_id ?? slugId(input.name);
+    if (!id || id === 'default') return { error: 'Choose a different project name; "default" is the normal pool.' };
+    const existed = Boolean(state.projects[id]);
+    const p = project(state, id);
+    p.name = p.name ?? input.name;
+    p.description = input.description ?? p.description;
+    p.created_at = p.created_at ?? now();
+    return { id: p.id, name: p.name, description: p.description, created: !existed };
+  })));
+
+  tool('move_project', 'Move everything saved in one memory pool into another (merged without duplicates). Use from_project "default" to move the normal pool. Without confirm:true this only previews counts and changes nothing. The source pool is removed afterwards. Set portal_project:true to make the destination the project the portal Overview and approvals read.', { from_project: z.string().min(1), to_project: z.string().min(1), confirm: z.boolean().optional(), portal_project: z.boolean().optional(), agent: z.string().min(1).optional() }, { title: 'Move a project into another', destructive: true }, async input => text(await mutate(userId, state => {
+    const from = input.from_project;
+    const to = input.to_project;
+    const src = state.projects[from];
+    if (!src) return { error: `No project with id ${from}` };
+    if (from === to) return { error: 'from_project and to_project are the same' };
+    const counts = p => ({ memories: (p.memories || []).length, events: (p.events || []).length, tasks: (p.tasks || []).length, health_checks: (p.health_checks || []).length, approvals: (p.approvals || []).length });
+    if (!input.confirm) return { preview: true, from, to, moves: counts(src), note: 'Nothing changed. Call again with confirm:true to move.' };
+    const dst = project(state, to);
+    dst.memories = mergeList(dst.memories, src.memories, 'at', 500);
+    dst.events = mergeList(dst.events, src.events, 'at', 100);
+    dst.tasks = mergeList(dst.tasks, src.tasks, 'created_at', 200);
+    dst.approvals = mergeList(dst.approvals, src.approvals, 'created_at', 100);
+    dst.health_checks = mergeList(dst.health_checks, src.health_checks, 'at', 50);
+    dst.claims = { ...(src.claims || {}), ...(dst.claims || {}) };
+    dst.integrations = { ...(src.integrations || {}), ...(dst.integrations || {}) };
+    dst.agent_profiles = { ...(src.agent_profiles || {}), ...(dst.agent_profiles || {}) };
+    dst.decisions = uniq([...(dst.decisions || []), ...(src.decisions || [])]);
+    dst.blockers = uniq([...(dst.blockers || []), ...(src.blockers || [])]);
+    dst.summary = dst.summary ?? src.summary;
+    dst.last_agent = dst.last_agent ?? src.last_agent;
+    dst.updated_at = now();
+    delete state.projects[from];
+    if (input.portal_project || state.meta?.ops_project === from) { state.meta = state.meta || {}; state.meta.ops_project = to; }
+    pushEvent(dst, { type: 'project_moved', agent: input.agent ?? 'unknown', from, to });
+    return { moved: true, from, to, now_in_destination: counts(dst), portal_project: opsProject(state) };
+  })));
 }
