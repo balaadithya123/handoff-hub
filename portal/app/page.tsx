@@ -19,7 +19,7 @@ const META:Record<Tab,[string,string]>={
   projects:["Projects","Separate memory pools your AI apps can save to. Monitor each one and choose which feeds Overview and Activity."],
   ai:["AI accounts","Link the AI accounts that use your connections."],
   tools:["Hub tools","Allowlist, AI workload, claims, approvals, checks and the handoff brief."],
-  activity:["Activity","What your AI accounts did through the Hub."]
+  activity:["Activity","What your AI accounts did through the Hub, across all projects."]
 };
 
 function Landing(){
@@ -77,7 +77,7 @@ function Landing(){
   );
 }
 
-async function Dashboard({email,token,tab,notice}:{email:string;token:string;tab:Tab;notice:Notice}){
+async function Dashboard({email,token,tab,notice,project}:{email:string;token:string;tab:Tab;notice:Notice;project:string}){
   const connections=await connectionStatus(token).catch(()=>[]);
   const names:Record<string,string>={};
   for(const c of connections){if(c.provider_account_name)names[c.provider]=c.provider_account_name}
@@ -88,7 +88,7 @@ async function Dashboard({email,token,tab,notice}:{email:string;token:string;tab
       :tab==="projects"?<Projects token={token}/>
       :tab==="ai"?<AiAccounts token={token}/>
       :tab==="tools"?<HubTools token={token}/>
-      :tab==="activity"?<section className="shPanel"><ActivityLog token={token} limit={30}/></section>
+      :tab==="activity"?<section className="shPanel"><ActivityLog token={token} limit={30} project={project} filters/></section>
       :<Overview token={token} connected={connections.length}/>}
     </Shell>
   );
@@ -104,9 +104,10 @@ export default async function Home({searchParams}:{searchParams:Promise<Record<s
   const notice:Notice=err?{kind:"error",text:err}:ok?{kind:"ok",text:"Connected "+ok+"."}:null;
   const t=typeof sp.tab==="string"?sp.tab:"";
   const tab:Tab=t==="integrations"||t==="projects"||t==="ai"||t==="tools"||t==="activity"||t==="overview"?t:(notice?"integrations":"overview");
+  const project=typeof sp.project==="string"?sp.project.slice(0,80):"";
 
   return user && token ? (
-    <Dashboard email={user.email} token={token} tab={tab} notice={notice}/>
+    <Dashboard email={user.email} token={token} tab={tab} notice={notice} project={project}/>
   ) : (
     <Landing/>
   );
