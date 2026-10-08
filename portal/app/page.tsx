@@ -6,6 +6,7 @@ import ConnectorDirectory from "./components/ConnectorDirectory";
 import AiAccounts from "./components/AiAccounts";
 import ActivityLog from "./components/ActivityLog";
 import Overview from "./components/Overview";
+import HubTools from "./components/HubTools";
 
 export const dynamic="force-dynamic";
 
@@ -15,6 +16,7 @@ const META:Record<Tab,[string,string]>={
   overview:["Overview","Your Handoff Hub account at a glance."],
   integrations:["Integrations","Connect your tools with their own sign-in. Handoff Hub never sees your passwords."],
   ai:["AI accounts","Link the AI accounts that use your connections."],
+  tools:["Hub tools","Allowlist, AI workload, claims, approvals, checks and the handoff brief."],
   activity:["Activity","What your AI accounts did through the Hub."]
 };
 
@@ -82,6 +84,7 @@ async function Dashboard({email,token,tab,notice}:{email:string;token:string;tab
     <Shell email={email} tab={tab} title={title} sub={sub} notice={notice}>
       {tab==="integrations"?<ConnectorDirectory connected={connections.map(c=>c.provider as string)} names={names}/>
       :tab==="ai"?<AiAccounts token={token}/>
+      :tab==="tools"?<HubTools token={token}/>
       :tab==="activity"?<section className="shPanel"><ActivityLog token={token} limit={30}/></section>
       :<Overview token={token} connected={connections.length}/>}
     </Shell>
@@ -97,7 +100,7 @@ export default async function Home({searchParams}:{searchParams:Promise<Record<s
   const ok=typeof sp.connected==="string"?sp.connected:"";
   const notice:Notice=err?{kind:"error",text:err}:ok?{kind:"ok",text:"Connected "+ok+"."}:null;
   const t=typeof sp.tab==="string"?sp.tab:"";
-  const tab:Tab=t==="integrations"||t==="ai"||t==="activity"||t==="overview"?t:(notice?"integrations":"overview");
+  const tab:Tab=t==="integrations"||t==="ai"||t==="tools"||t==="activity"||t==="overview"?t:(notice?"integrations":"overview");
 
   return user && token ? (
     <Dashboard email={user.email} token={token} tab={tab} notice={notice}/>
