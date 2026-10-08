@@ -2,11 +2,12 @@ import SignOutButton from "./SignOutButton";
 import "./shell.css";
 import "./topbar.css";
 
-export type Tab = "overview" | "integrations" | "ai" | "activity";
+export type Tab = "overview" | "integrations" | "ai" | "tools" | "activity";
 const NAV: ReadonlyArray<readonly [Tab, string, string]> = [
   ["overview", "Overview", "\u25A6"],
   ["integrations", "Integrations", "\u2B21"],
   ["ai", "AI accounts", "\u25CE"],
+  ["tools", "Hub tools", "\u2699"],
   ["activity", "Activity", "\u2261"]
 ];
 
