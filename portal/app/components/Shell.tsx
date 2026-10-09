@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SignOutButton from "./SignOutButton";
 import "./shell.css";
 import "./topbar.css";
@@ -28,10 +29,10 @@ export default function Shell({ email, tab, title, sub, notice, children }: { em
   return (
     <div className="sh">
       <header className="shBar">
-        <a className="shBarBrand" href="/">
+        <Link className="shBarBrand" href="/">
           <span className="shLogo" aria-hidden="true">H</span>
           <b>Handoff Hub</b>
-        </a>
+        </Link>
         <details className="shAccount">
           <summary className="shAccountBtn" aria-label="Account menu">
             <span className="shAvatar" aria-hidden="true">{initial}</span>
@@ -55,10 +56,10 @@ export default function Shell({ email, tab, title, sub, notice, children }: { em
               <div className="shNavGroup" key={group}>
                 <h5 className="shNavHeader">{group}</h5>
                 {items.map(([id, label]) => (
-                  <a key={id} href={"/?tab=" + id} aria-current={tab === id ? "page" : undefined} className={"shNavLink" + (tab === id ? " active" : "")}>
+                  <Link key={id} href={"/?tab=" + id} aria-current={tab === id ? "page" : undefined} className={"shNavLink" + (tab === id ? " active" : "")}>
                     <Icon tab={id} />
                     <span>{label}</span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             ))}
@@ -75,7 +76,7 @@ export default function Shell({ email, tab, title, sub, notice, children }: { em
               {notice.text}
             </div>
           )}
-          <div className="shContent">
+          <div className="shContent" key={tab}>
             {children}
           </div>
         </main>
