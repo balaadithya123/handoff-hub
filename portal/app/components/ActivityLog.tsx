@@ -5,6 +5,7 @@ import { ago, human } from "../../lib/format";
 import { Card } from "./ui/Card";
 import { Badge } from "./ui/Badge";
 import { Table, TableHeader, TableRow, TableHead, TableCell } from "./ui/Table";
+import ActivityExplorer from "./ActivityExplorer";
 
 type Ev = { at: string; agent?: string; action?: string; text?: string; project?: string; project_name?: string };
 type Acct = { projects?: { id: string; name: string }[] };
@@ -24,7 +25,7 @@ export default async function ActivityLog({
   let rows: Ev[] = [];
   let failed = false;
   try {
-    rows = (await rpc<Ev[] | null>("portal_hub_events", { p_token: token, p_limit: limit, p_project: project || null })) ?? [];
+    rows = (await rpc<Ev[] | null>("portal_hub_events", { p_token: token, p_limit: filters ? Math.max(limit, 100) : limit, p_project: project || null })) ?? [];
   } catch {
     failed = true;
   }
@@ -57,39 +58,33 @@ export default async function ActivityLog({
                 PORTAL // AUDIT-STREAM
               </Badge>
               <span className="text-xs text-[#8a8a8a]">•</span>
-              <span className="text-xs font-mono text-[#3ecf8e]">Realtime Telemetry Stream Active</span>
+              <span className="text-xs font-mono text-[#3ecf8e]">Loaded from your Hub events</span>
             </div>
             <h1 className="text-2xl font-semibold text-[#ededed] tracking-tight">Activity & Telemetry Audit</h1>
             <p className="text-xs text-[#a1a1a1] mt-0.5 max-w-2xl">
-              Real-time trace logs, automated AI claims, context synchronization, and webhook events across all connected multi-model runtimes.
+              Everything your AI accounts did through the Hub, across all projects.
             </p>
           </div>
         </div>
       )}
 
-      {/* Telemetry Overview KPI Bar (if in full audit page view) */}
-      {filters && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card
-            eyebrow="Total Ingested (24h)"
-            title={<span className="text-xl font-bold font-mono">48,291</span>}
-            description="+12.4% vs yesterday"
-          />
-          <Card
-            eyebrow="Handoff Success"
-            title={<span className="text-xl font-bold font-mono text-[#3ecf8e]">99.82%</span>}
-            description="0.18% error rate"
-          />
-          <Card
-            eyebrow="Active WebSockets"
-            title={<span className="text-xl font-bold font-mono text-[#5eead4]">14 Live</span>}
-            description="Connected AI clients"
-          />
-          <Card
-            eyebrow="Avg Gateway Latency"
-            title={<span className="text-xl font-bold font-mono">32ms</span>}
-            description="Global edge proxy"
-          />
+      {/* Telemetry KPI bar: real figures from the loaded events */}
+      {filters && !failed && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "Events loaded", value: String(rows.length), note: "most recent, all pools" },
+            { label: "Active agents", value: String(new Set(rows.map((r) => r.agent || "unknown")).size), note: "distinct AI agents" },
+            { label: "Distinct actions", value: String(new Set(rows.map((r) => r.action || "event")).size), note: "Hub tools used" },
+            { label: "Last event", value: rows[0] ? ago(rows[0].at) : "—", note: rows[0] ? human(rows[0].action || "event") : "nothing recorded yet" },
+          ].map((k) => (
+            <div key={k.label} className="p-4 rounded-xl bg-[#0a0a0a] border border-white/[0.08] hover:border-white/[0.16] transition-all flex flex-col gap-3">
+              <span className="font-mono text-[11px] text-[#707070] uppercase tracking-wider">{k.label}</span>
+              <div>
+                <div className="text-xl font-semibold text-[#ededed] font-mono">{k.value}</div>
+                <div className="font-mono text-[11px] text-[#707070] mt-0.5">{k.note}</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -140,6 +135,8 @@ export default async function ActivityLog({
               : "No activity recorded yet. Events appear here when an AI account uses a Hub tool or integration."}
           </p>
         </div>
+      ) : filters ? (
+        <ActivityExplorer rows={rows} />
       ) : (
         <Table>
           <TableHeader>
