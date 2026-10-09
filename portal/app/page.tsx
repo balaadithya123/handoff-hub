@@ -1,3 +1,4 @@
+import type {CSSProperties} from "react";
 import {cookies} from "next/headers";
 import {SESSION_COOKIE,sessionUser} from "../lib/portal";
 import {connectionStatus} from "../lib/connections";
@@ -22,6 +23,9 @@ const META:Record<Tab,[string,string]>={
   activity:["Activity","What your AI accounts did through the Hub, across all projects."]
 };
 
+const APPS=["GitHub","Vercel","Supabase","Notion","Slack","Linear","Figma","Canva","Google Drive","Gmail","Sentry","Jira"];
+const idx=(i:number)=>({"--i":i} as CSSProperties);
+
 function Landing(){
   return (
     <div className="site">
@@ -38,8 +42,11 @@ function Landing(){
       <main className="wrap">
         <section className="landingHero">
           <div>
-            <span className="eyebrow">Secure integrations</span>
-            <h1>Your apps.<br/><span>One secure handoff.</span></h1>
+            <span className="eyebrow"><i className="pulse"/>Secure integrations</span>
+            <h1>
+              <span className="w" style={idx(0)}>Your</span> <span className="w" style={idx(1)}>apps.</span><br/>
+              <span className="w g" style={idx(2)}>One</span> <span className="w g" style={idx(3)}>secure</span> <span className="w g" style={idx(4)}>handoff.</span>
+            </h1>
             <p>Connect the tools you already use to power AI workflows. Authorize directly with each provider and keep credentials isolated to your account.</p>
             <div className="actions">
               <a className="primaryLink" href="/login">Get started</a>
@@ -66,6 +73,14 @@ function Landing(){
             <div className="visualFooter">No provider passwords are sent to Handoff Hub.</div>
           </div>
         </section>
+
+        <div className="marquee" aria-hidden="true">
+          <div className="marqueeTrack">
+            <span>{APPS.map(a=><em key={a} style={{fontStyle:"normal"}}>{a}</em>)}</span>
+            <span>{APPS.map(a=><em key={a} style={{fontStyle:"normal"}}>{a}</em>)}</span>
+          </div>
+        </div>
+
         <section className="stats">
           <div><b>OAuth-first</b><span>Provider-hosted authorization</span></div>
           <div><b>Private by default</b><span>Each account has its own connections</span></div>
