@@ -1,42 +1,100 @@
 "use client";
+
 import { useState } from "react";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { Badge } from "./ui/Badge";
+import { X } from "lucide-react";
 
 type Kind = "github" | "vercel";
 
-/** Add / remove Vercel project ids and GitHub repos the Hub is allowed to act on. */
-export default function AllowlistEditor({ hubId, kind, initial }: { hubId: string; kind: Kind; initial: string[] }) {
+export default function AllowlistEditor({
+  hubId,
+  kind,
+  initial,
+}: {
+  hubId: string;
+  kind: Kind;
+  initial: string[];
+}) {
   const [list, setList] = useState<string[]>(initial);
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const hint = kind === "github" ? "owner/name" : "prj_…";
+  const hint = kind === "github" ? "owner/repository" : "prj_12345";
 
   async function run(action: "add" | "remove", v: string) {
     if (busy || !v.trim()) return;
     setBusy(true);
     setErr("");
-    const r = await fetch("/api/allowlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: hubId, kind, action, value: v.trim() }) }).catch(() => null);
+    const r = await fetch("/api/allowlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: hubId, kind, action, value: v.trim() }),
+    }).catch(() => null);
     const d = r ? await r.json().catch(() => ({})) : {};
     setBusy(false);
-    if (r && r.ok) { setList(d.list ?? []); if (action === "add") setValue(""); }
-    else setErr(d?.error || "Could not update.");
+    if (r && r.ok) {
+      setList(d.list ?? []);
+      if (action === "add") setValue("");
+    } else {
+      setErr(d?.error || "Could not update.");
+    }
   }
 
   return (
-    <div className="shPad">
-      <h3 style={{ margin: "0 0 8px", fontSize: 13 }}>{kind === "github" ? "GitHub repositories" : "Vercel projects"}</h3>
-      {list.length === 0 ? <p className="shMuted">None allowed yet.</p> : (
-        <div style={{ marginBottom: 8 }}>
-          {list.map(v => (
-            <span className="shTag" key={v}>{v}<button type="button" aria-label={"Remove " + v} onClick={() => run("remove", v)} disabled={busy} style={{ marginLeft: 6, border: 0, background: "none", color: "inherit", cursor: "pointer" }}>×</button></span>
+    <div className="p-3.5 rounded-lg bg-[#111] border border-white/10 space-y-3">
+      <h3 className="text-xs font-semibold text-[#ededed]">
+        {kind === "github" ? "GitHub Repositories Allowlist" : "Vercel Projects Allowlist"}
+      </h3>
+
+      {list.length === 0 ? (
+        <p className="text-xs text-[#8a8a8a]">None allowed yet.</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {list.map((v) => (
+            <span
+              key={v}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-[#ededed]"
+            >
+              <span>{v}</span>
+              <button
+                type="button"
+                aria-label={"Remove " + v}
+                onClick={() => run("remove", v)}
+                disabled={busy}
+                className="hover:text-[#ff7b7b] transition-colors p-0.5"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
           ))}
         </div>
       )}
-      <div className="shField">
-        <input value={value} placeholder={hint} aria-label={"Add " + kind} onChange={e => setValue(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); run("add", value); } }} />
-        <button type="button" className="shBtn" onClick={() => run("add", value)} disabled={busy || !value.trim()}>{busy ? "Saving…" : "Add"}</button>
+
+      <div className="flex items-center gap-2 max-w-md">
+        <Input
+          value={value}
+          placeholder={hint}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              run("add", value);
+            }
+          }}
+        />
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => run("add", value)}
+          loading={busy}
+          disabled={busy || !value.trim()}
+        >
+          Add
+        </Button>
       </div>
-      {err && <p className="shErr" role="alert">{err}</p>}
+      {err && <p className="text-xs text-[#ff7b7b]">{err}</p>}
     </div>
   );
 }
