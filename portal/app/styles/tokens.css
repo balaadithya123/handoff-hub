@@ -1,0 +1,120 @@
+/*
+  Handoff Hub design tokens: the single source of truth for colour, spacing,
+  radius, type scale, elevation and motion. lib/tokens.ts mirrors the values
+  that JavaScript needs (spring configs, sparkline colours).
+
+  Contrast: --c-text, --c-text-2 and --c-text-3 all pass WCAG AA (4.5:1) on
+  --c-canvas, --c-surface and --c-surface-2.
+*/
+:root {
+  color-scheme: dark;
+
+  /* Colour: canvas and surfaces */
+  --c-canvas: #000000;
+  --c-surface: #0a0a0a;
+  --c-surface-2: #111111;
+  --c-surface-3: #161616;
+  --c-hover: #1a1a1a;
+  --c-overlay: rgba(0, 0, 0, 0.72);
+
+  /* Colour: hairlines */
+  --c-line: rgba(255, 255, 255, 0.08);
+  --c-line-2: rgba(255, 255, 255, 0.14);
+  --c-line-3: rgba(255, 255, 255, 0.24);
+
+  /* Colour: text */
+  --c-text: #ededed;
+  --c-text-2: #a1a1a1;
+  --c-text-3: #8a8a8a;
+
+  /* Colour: signal (status only, never decoration) */
+  --c-accent: #3ecf8e;
+  --c-accent-2: #5eead4;
+  --c-accent-text: #5be3a6;
+  --c-accent-bg: rgba(62, 207, 142, 0.1);
+  --c-accent-line: rgba(62, 207, 142, 0.3);
+  --c-warn: #f5b14a;
+  --c-warn-bg: rgba(245, 177, 74, 0.1);
+  --c-warn-line: rgba(245, 177, 74, 0.3);
+  --c-bad: #ff7b7b;
+  --c-bad-bg: rgba(255, 107, 107, 0.1);
+  --c-bad-line: rgba(255, 107, 107, 0.32);
+  --c-mute-bg: rgba(255, 255, 255, 0.05);
+  --c-mute-line: rgba(255, 255, 255, 0.1);
+
+  /* Spacing (4px base) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* Radius */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  /* Type scale */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 32px;
+  --fs-4xl: 48px;
+  --fs-5xl: 64px;
+  --ls-tight: -0.02em;
+  --ls-tighter: -0.035em;
+  --ls-display: -0.045em;
+  --ls-eyebrow: 0.08em;
+
+  /* Elevation: tonal layers and glow, not drop shadows */
+  --sh-pop: 0 24px 64px -16px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --sh-glow: 0 0 0 1px var(--c-accent-line), 0 8px 32px -8px rgba(62, 207, 142, 0.18);
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 0.12s;
+  --dur: 0.2s;
+  --dur-slow: 0.35s;
+
+  /* Layout */
+  --sidebar-w: 240px;
+  --sidebar-w-min: 56px;
+  --topbar-h: 52px;
+  --page-max: 1200px;
+  --dock-h: 60px;
+  --z-sidebar: 30;
+  --z-top: 40;
+  --z-dock: 45;
+  --z-overlay: 60;
+  --z-toast: 100;
+
+  /* Legacy aliases: unredesigned pages (for example /connect/setup) still read these */
+  --bg: var(--c-canvas);
+  --bg-surface: var(--c-surface);
+  --bg-subtle: var(--c-surface-2);
+  --bg-hover: var(--c-hover);
+  --border: var(--c-line);
+  --border-strong: var(--c-line-2);
+  --text-main: var(--c-text);
+  --text-muted: var(--c-text-2);
+  --text-soft: var(--c-text-3);
+  --accent: var(--c-accent);
+  --accent2: var(--c-accent-2);
+  --orange: var(--c-accent);
+  --font: var(--font-sans);
+  --mono: var(--font-mono);
+}
