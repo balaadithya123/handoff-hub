@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const points = [
   "Sign in once, connect every tool you use",
-  "Authorize on each provider's own page",
+  "Authorize on each provider's own OAuth page",
   "We never ask for third-party passwords or API keys",
 ];
 
@@ -31,7 +31,7 @@ export default async function LoginPage() {
               One account.<br />
               <span>Every connection.</span>
             </h1>
-            <p>Link your development, design and deployment tools to Handoff Hub in a few clicks.</p>
+            <p>Link your development, design, and deployment tools to Handoff Hub in a few clicks.</p>
             <ul className="points">
               {points.map((p) => (
                 <li key={p}><span className="tick">✓</span>{p}</li>
