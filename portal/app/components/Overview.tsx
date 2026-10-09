@@ -1,17 +1,25 @@
 import Link from "next/link";
 import { Plug, Bot, FolderKanban, Activity, ArrowRight, CheckCircle2, ChevronRight, Zap, ShieldCheck } from "lucide-react";
-import { getAiApps, getProjects, getConnections } from "../../lib/data";
+import { getAiApps, getProjects, getConnections, getHubOverview } from "../../lib/data";
+import { ago } from "../../lib/format";
 import ActivityLog from "./ActivityLog";
 import { Card } from "./ui/Card";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 
 export default async function Overview({ token, connected }: { token: string; connected: number }) {
-  const [aiData, projectsData, connectionsData] = await Promise.all([
+  const [aiData, projectsData, connectionsData, hubData] = await Promise.all([
     getAiApps(token).catch(() => null),
     getProjects(token).catch(() => null),
     getConnections(token).catch(() => []),
+    getHubOverview(token).catch(() => null),
   ]);
+
+  // Latest Hub health check across linked hubs (real data, no placeholder figures).
+  const checks = (hubData?.hubs ?? []).flatMap((h) => h.health ?? []).filter((c) => c.at);
+  checks.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const lastCheck = checks[0];
+  const issues = lastCheck?.anomalies?.length ?? 0;
 
   const accts = aiData?.accounts ?? [];
   const clientCount = accts.reduce((n, a) => n + (a.clients?.length ?? 0), 0);
@@ -131,17 +139,21 @@ export default async function Overview({ token, connected }: { token: string; co
         {/* KPI 4 */}
         <Card
           glow
-          eyebrow="Cluster Health"
+          eyebrow="Hub Health"
           title={
             <div className="flex items-baseline justify-between mt-1">
-              <span className="text-2xl font-bold text-[#ededed] font-mono">99.98%</span>
-              <Badge variant="green" dot={false}>32ms</Badge>
+              <span className="text-2xl font-bold text-[#ededed] font-mono">
+                {!lastCheck ? "No checks" : issues === 0 ? "Healthy" : `${issues} issue${issues === 1 ? "" : "s"}`}
+              </span>
+              {lastCheck?.version ? <Badge variant={issues === 0 ? "green" : "amber"} dot={false}>v{lastCheck.version}</Badge> : null}
             </div>
           }
         >
           <div className="flex items-center justify-between text-[11px] text-[#8a8a8a] pt-2 border-t border-white/5">
-            <span>Gateway Proxy</span>
-            <span className="text-[#3ecf8e]">Operational</span>
+            <span>Last health check</span>
+            <span className={issues === 0 && lastCheck ? "text-[#3ecf8e]" : "text-[#8a8a8a]"}>
+              {lastCheck?.at ? ago(lastCheck.at) : "run one from Hub tools"}
+            </span>
           </div>
         </Card>
       </div>
