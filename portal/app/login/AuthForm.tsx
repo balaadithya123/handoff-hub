@@ -2,6 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Card } from "../components/ui/Card";
 
 type Mode = "login" | "signup";
 
@@ -48,50 +51,72 @@ export default function AuthForm() {
   }
 
   return (
-    <form className="authCard" onSubmit={submit} noValidate>
-      <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
-      <p className="sub">
-        {mode === "login" ? "Sign in with your email and password." : "Choose an email and a password of 8+ characters."}
-      </p>
+    <Card className="p-6 space-y-4 shadow-2xl">
+      <div>
+        <h2 className="text-xl font-bold text-[#ededed]">
+          {mode === "login" ? "Welcome Back" : "Create Your Account"}
+        </h2>
+        <p className="text-xs text-[#a1a1a1] mt-1">
+          {mode === "login"
+            ? "Sign in with your email and password."
+            : "Choose an email and a password of 8+ characters."}
+        </p>
+      </div>
 
-      <label>
-        Email
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          autoFocus
-        />
-      </label>
-
-      <label>
-        Password
-        <div className="pw">
-          <input
-            type={showPw ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={mode === "login" ? "Your password" : "At least 8 characters"}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
+      <form onSubmit={submit} className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-[#a1a1a1] block">Email Address</label>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            autoFocus
           />
-          <button type="button" className="eye" onClick={() => setShowPw(!showPw)}>
-            {showPw ? "Hide" : "Show"}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-[#a1a1a1] block">Password</label>
+          <div className="relative">
+            <Input
+              type={showPw ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={mode === "login" ? "Your password" : "At least 8 characters"}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw(!showPw)}
+              className="absolute right-2 top-2 text-[11px] font-mono text-[#8a8a8a] hover:text-[#ededed] px-1.5 py-0.5 rounded bg-white/5"
+            >
+              {showPw ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-2.5 rounded-lg border border-[#ff7b7b]/30 bg-[#ff7b7b]/10 text-xs text-[#ff7b7b]">
+            {error}
+          </div>
+        )}
+
+        <Button variant="primary" type="submit" loading={busy} className="w-full">
+          {mode === "login" ? "Sign In" : "Create Account"}
+        </Button>
+
+        <div className="text-center pt-2 text-xs text-[#8a8a8a]">
+          {mode === "login" ? "New to Handoff Hub?" : "Already have an account?"}{" "}
+          <button
+            type="button"
+            onClick={swap}
+            className="text-[#3ecf8e] font-semibold hover:underline bg-transparent border-0 p-0"
+          >
+            {mode === "login" ? "Create an account" : "Sign in"}
           </button>
         </div>
-      </label>
-
-      {error && <div className="notice error" role="alert">{error}</div>}
-
-      <button className="primary" type="submit" disabled={busy}>
-        {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
-      </button>
-
-      <p className="swap">
-        {mode === "login" ? "New here?" : "Already have an account?"}{" "}
-        <button type="button" onClick={swap}>{mode === "login" ? "Create an account" : "Sign in"}</button>
-      </p>
-    </form>
+      </form>
+    </Card>
   );
 }
