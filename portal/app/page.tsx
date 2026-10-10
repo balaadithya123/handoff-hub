@@ -1,6 +1,5 @@
-import type { CSSProperties } from "react";
 import { cookies } from "next/headers";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SESSION_COOKIE, sessionUser } from "../lib/portal";
 import { connectionStatus } from "../lib/connections";
 import Shell, { type Tab } from "./components/Shell";
@@ -11,8 +10,7 @@ import ActivityLog from "./components/ActivityLog";
 import Overview from "./components/Overview";
 import HubTools from "./components/HubTools";
 import Projects from "./components/Projects";
-import { Badge } from "./components/ui/Badge";
-import { Button } from "./components/ui/Button";
+import { hrefForTab } from "../lib/nav";
 
 export const dynamic = "force-dynamic";
 
@@ -42,15 +40,20 @@ async function Dashboard({
 }) {
   const connections = await connectionStatus(token).catch(() => []);
   const names: Record<string, string> = {};
+  const expiredMap: Record<string, boolean> = {};
+  const now = Date.now();
   for (const c of connections) {
     if (c.provider_account_name) names[c.provider] = c.provider_account_name;
+    if (c.expires_at && new Date(c.expires_at).getTime() < now) {
+      expiredMap[c.provider] = true;
+    }
   }
   const [title, sub] = META[tab];
 
   return (
     <Shell email={email} tab={tab} title={title} sub={sub} notice={notice}>
       {tab === "integrations" ? (
-        <ConnectorDirectory connected={connections.map((c) => c.provider as string)} names={names} />
+        <ConnectorDirectory connected={connections.map((c) => c.provider as string)} names={names} expiredMap={expiredMap} />
       ) : tab === "projects" ? (
         <Projects token={token} />
       ) : tab === "ai" ? (
@@ -75,21 +78,24 @@ export default async function Home({
   const token = jar.get(SESSION_COOKIE)?.value;
   const user = await sessionUser(token);
   const sp = (await searchParams) || {};
+
+  if (!user || !token) {
+    return <Landing signedIn={false} />;
+  }
+
+  // Redirect legacy `/?tab=...` query routes to real URL path
+  if (sp.tab && typeof sp.tab === "string") {
+    redirect(hrefForTab(sp.tab));
+  }
+
   const err = typeof sp.connection_error === "string" ? sp.connection_error : "";
   const ok = typeof sp.connected === "string" ? sp.connected : "";
   const notice: Notice = err ? { kind: "error", text: err } : ok ? { kind: "ok", text: "Connected " + ok + "." } : null;
-  const t = typeof sp.tab === "string" ? sp.tab : "";
-  const tab: Tab =
-    t === "integrations" || t === "projects" || t === "ai" || t === "tools" || t === "activity" || t === "overview"
-      ? t
-      : notice
-      ? "integrations"
-      : "overview";
-  const project = typeof sp.project === "string" ? sp.project.slice(0, 80) : "";
 
-  return user && token ? (
-    <Dashboard email={user.email} token={token} tab={tab} notice={notice} project={project} />
-  ) : (
-    <Landing />
-  );
+  if (!notice) {
+    redirect("/overview");
+  }
+
+  const project = typeof sp.project === "string" ? sp.project.slice(0, 80) : "";
+  return <Dashboard email={user.email} token={token} tab="integrations" notice={notice} project={project} />;
 }

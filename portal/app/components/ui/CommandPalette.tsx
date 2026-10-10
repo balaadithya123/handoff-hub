@@ -53,18 +53,19 @@ export function CommandPalette({ open, onOpenChange, customActions = [] }: Comma
         onClick={() => onOpenChange(false)}
       />
 
-      <div className="relative w-full max-w-xl rounded-xl bg-[#0e0e0e] border border-white/15 shadow-2xl z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center px-4 py-3 border-b border-white/10 gap-3">
+      <div className="relative w-full max-w-xl rounded-xl bg-[#0e0e0e] border border-white/12 shadow-2xl z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center px-4 py-3 border-b border-white/8 gap-3">
           <Search className="w-4 h-4 text-[#a1a1a1] shrink-0" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search commands, pages, or tools... (⌘K)"
-            className="w-full bg-transparent text-sm text-[#ededed] placeholder-[#707070] outline-none"
+            className="w-full bg-transparent text-sm text-[#ededed] placeholder-[#707070] outline-none focus:outline-none"
           />
           <button
             onClick={() => onOpenChange(false)}
+            aria-label="Close command palette"
             className="p-1 text-[#a1a1a1] hover:text-[#ededed] rounded transition-colors"
           >
             <X className="w-4 h-4" />
@@ -74,8 +75,8 @@ export function CommandPalette({ open, onOpenChange, customActions = [] }: Comma
         <div className="max-h-80 overflow-y-auto p-2 space-y-3">
           {/* Navigation group */}
           <div>
-            <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-[#8a8a8a]">
-              Navigation
+            <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-[#707070]">
+              PORTAL // NAVIGATION
             </div>
             {filteredNav.length === 0 ? (
               <div className="px-3 py-2 text-xs text-[#707070]">No navigation results</div>

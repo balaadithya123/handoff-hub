@@ -56,9 +56,11 @@ const initials = (n: string) =>
 export default function ConnectorDirectory({
   connected,
   names,
+  expiredMap = {},
 }: {
   connected: string[];
   names: Record<string, string>;
+  expiredMap?: Record<string, boolean>;
 }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
@@ -152,8 +154,8 @@ export default function ConnectorDirectory({
               onClick={() => setCat(c)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                 cat === c
-                  ? "bg-white text-black font-semibold shadow-sm"
-                  : "bg-[#111] text-[#a1a1a1] hover:text-[#ededed] hover:bg-[#181818] border border-white/10"
+                  ? "bg-[#60eca8] text-[#0a0a0a] font-semibold shadow-sm"
+                  : "bg-[#121212] text-[#a1a1a1] hover:text-[#ededed] hover:bg-[#181818] border border-white/8"
               }`}
             >
               <span>{c}</span>
@@ -229,7 +231,7 @@ export default function ConnectorDirectory({
                 </div>
 
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-                  <ConnectionButton provider={id} connected={isConnected} available={live} />
+                  <ConnectionButton provider={id} connected={isConnected} available={live} expired={Boolean(expiredMap[id])} />
                   <span className="text-[11px] text-[#8a8a8a] flex items-center gap-0.5 group-hover:text-[#ededed] transition-colors">
                     Details <ChevronRight className="w-3.5 h-3.5" />
                   </span>
@@ -311,7 +313,7 @@ export default function ConnectorDirectory({
             </div>
 
             <div className="pt-4 border-t border-white/10">
-              <ConnectionButton provider={selectedApp[0]} connected={selectedIsConnected} available={selectedApp[4]} />
+              <ConnectionButton provider={selectedApp[0]} connected={selectedIsConnected} available={selectedApp[4]} expired={Boolean(expiredMap[selectedApp[0]])} />
             </div>
           </div>
         )}

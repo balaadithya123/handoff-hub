@@ -4,7 +4,6 @@ import { createClient, getClient, createAuthCode, consumeAuthCode, issueTokens, 
 const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com'];
 
 function baseUrl(){if(process.env.PUBLIC_BASE_URL)return process.env.PUBLIC_BASE_URL.replace(/\/$/,'');if(process.env.VERCEL_PROJECT_PRODUCTION_URL)return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;return 'http://localhost:3000';}
-function protectedResource(base,req){const path=req.query?.resource_path;return path==='api/mcp'?`${base}/api/mcp`:`${base}/mcp`;}
 function allowedRedirectHosts(){const extra=(process.env.OAUTH_ALLOWED_REDIRECT_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);return [...DEFAULT_REDIRECT_HOSTS,...extra];}
 function redirectUriAllowed(uri){try{const u=new URL(uri);if(u.protocol!=='https:'||u.username||u.password||u.hash)return false;const host=u.hostname.toLowerCase();return allowedRedirectHosts().some(h=>host===h||host.endsWith(`.${h}`));}catch{return false;}}
 function routeOf(req){const q=req.query?.route;if(typeof q==='string')return q;const raw=String(req.url||'').split('?')[0];if(raw.includes('oauth-protected-resource'))return'resource';if(raw.includes('oauth-authorization-server')||raw.includes('openid-configuration'))return'metadata';if(raw.endsWith('/register'))return'register';if(raw.endsWith('/authorize'))return'authorize';if(raw.endsWith('/token'))return'token';return null;}
@@ -12,27 +11,59 @@ function cors(res){res.setHeader('Access-Control-Allow-Origin','*');res.setHeade
 function bodyOf(req){const b=req.body;if(!b)return{};if(typeof b==='string'){try{return JSON.parse(b);}catch{return Object.fromEntries(new URLSearchParams(b));}}if(Buffer.isBuffer(b))return Object.fromEntries(new URLSearchParams(b.toString('utf8')));return b;}
 const str=v=>typeof v==='string'?v:'';const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function oauthError(res,status,error,error_description){res.setHeader('Cache-Control','no-store');return res.status(status).json({error,error_description});}
-function page(res,status,title,inner){res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Frame-Options','DENY');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title></head><body><main>${inner}</main></body></html>`);}
+
+const CSS = `
+:root{color-scheme:dark;--bg:#000000;--card:#0a0a0a;--sub:#121212;--fg:#ededed;--mut:#a1a1a1;--soft:#707070;--line:rgba(255,255,255,.08);--line-mid:rgba(255,255,255,.16);--acc:#60eca8;--acc-hover:#3ecf8e;--err:#ff7b7b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font-family:Geist,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;display:grid;place-items:center;padding:24px}
+a{color:var(--acc);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{width:100%;max-width:440px}
+.brand{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;letter-spacing:-.02em;margin-bottom:24px;color:var(--fg)}
+.logo{width:32px;height:32px;border-radius:8px;background:#2a2a2a;border:1px solid var(--line);color:var(--acc);display:grid;place-items:center;font-weight:700;font-size:15px}
+.chip{display:inline-block;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);margin-bottom:8px}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:32px 28px}
+h1{margin:0 0 8px;font-size:22px;letter-spacing:-.03em;font-weight:600;color:var(--fg)}
+p{margin:0 0 16px;color:var(--mut);font-size:13px;line-height:1.6}
+p strong{color:var(--fg);font-weight:600}
+label{display:block;font-size:12px;color:var(--mut);font-weight:500;margin-bottom:6px}
+input[type=email],input[type=password],input[type=text]{display:block;width:100%;height:40px;margin-bottom:16px;padding:0 12px;border-radius:8px;border:1px solid var(--line-mid);background:var(--sub);color:var(--fg);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+#otp{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;text-align:center;letter-spacing:.4em;font-size:18px}
+.btns{display:flex;gap:10px;margin-top:16px}
+.btn-approve{flex:1;height:40px;border:0;border-radius:8px;background:var(--acc);color:#0a0a0a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-approve:hover{background:var(--acc-hover)}
+.btn-deny{height:40px;padding:0 16px;border:1px solid var(--line-mid);border-radius:8px;background:var(--sub);color:var(--mut);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:colors .2s}
+.btn-deny:hover{color:var(--fg);border-color:var(--mut)}
+.err-msg{padding:10px 12px;border-radius:8px;background:rgba(255,123,123,.1);border:1px solid rgba(255,123,123,.3);color:var(--err);font-size:12px;margin-bottom:16px}
+.portal-link{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--mut)}
+.foot{margin-top:24px;text-align:center;color:var(--soft);font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px}
+`;
+
+function page(res,status,title,inner){
+  res.setHeader('Content-Type','text/html; charset=utf-8');
+  res.setHeader('Cache-Control','no-store');
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");
+  return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style></head><body><main class="wrap"><div class="brand"><span class="logo">H</span>Handoff Hub</div><section class="card">${inner}</section><p class="foot">HANDOFF HUB // OAUTH 2.0 PROTOCOL</p></main></body></html>`);
+}
+
 async function validateAuthRequest(p){if(p.response_type!=='code')return{error:'Only response_type=code is supported.'};const client=await getClient(p.client_id);if(!client)return{error:'Unknown client. Remove and re-add the connector so it registers again.'};if(!client.redirect_uris.includes(p.redirect_uri)||!redirectUriAllowed(p.redirect_uri))return{error:'Redirect address is not registered for this client.'};if(p.code_challenge_method!=='S256'||!/^[A-Za-z0-9_-]{43,128}$/.test(p.code_challenge))return{error:'PKCE (S256) is required.'};return{client};}
 
 const oauthFields=['response_type','client_id','redirect_uri','state','code_challenge','code_challenge_method','scope','resource'];
 function hiddenFields(p){return oauthFields.map(k=>`<input type="hidden" name="${k}" value="${esc(p[k]||'')}">`).join('');}
+
 function emailForm(p,client,error,step='email',email='',extra={}){
-  const host=new URL(p.redirect_uri).hostname;
-  const common=`<h1>Connect to Handoff Hub</h1><p><strong>${esc(client.client_name||'An app')}</strong> wants access to your Handoff Hub.</p>${error?`<p>${esc(error)}</p>`:''}`;
+  const common=`<span class="chip">OAUTH // AUTHORIZATION</span><h1>Connect to Handoff Hub</h1><p><strong>${esc(client.client_name||'An app')}</strong> wants access to your Handoff Hub tools and memory pools.</p>${error?`<div class="err-msg">${esc(error)}</div>`:''}`;
+  const portalRef=`<p class="portal-link"><a href="https://handoff-portal.vercel.app" target="_blank" rel="noopener">Manage integrations in the portal &rarr;</a></p>`;
+
   if(step==='otp'){
-    const gate=extra.gate?`<p>This AI app is already connected to your Hub. Choose one:</p><label for="unlock">Adding a different account? Enter your unlock code</label><input id="unlock" name="unlock" type="password" autocomplete="off"><label><input type="checkbox" name="replace" value="1"> Same account reconnecting: replace the old connection</label>`:'';
-    return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code</label><input id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" value="${esc(extra.otp||'')}" required>${gate}<button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Verify & approve</button></form>`;
+    const gate=extra.gate?`<p style="margin-top:12px;font-size:12px;">This AI app is already connected. Choose one:</p><label for="unlock">Adding a different account? Enter your unlock code</label><input id="unlock" name="unlock" type="password" autocomplete="off"><label style="display:flex;align-items:center;gap:6px;margin-bottom:12px;"><input type="checkbox" name="replace" value="1"> Reconnecting same account: replace old connection</label>`:'';
+    return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code</label><input id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" value="${esc(extra.otp||'')}" required>${gate}<div class="btns"><button class="btn-deny" name="decision" value="deny" type="submit" formnovalidate>Deny</button><button class="btn-approve" name="decision" value="approve" type="submit">Verify &amp; Approve</button></div></form>${portalRef}`;
   }
-  return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="send_email"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required><button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Send verification code</button></form>`;
+  return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="send_email"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><div class="btns"><button class="btn-deny" name="decision" value="deny" type="submit" formnovalidate>Deny</button><button class="btn-approve" name="decision" value="approve" type="submit">Send Code</button></div></form>${portalRef}`;
 }
-async function supabaseAuth(path,body){
-  const url=process.env.SUPABASE_URL, key=process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if(!url||!key) return {ok:false,status:500,error:'Supabase authentication is not configured on the server.'};
-  const r=await fetch(`${url}/auth/v1/${path}`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
-  return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
-}
+
 async function sendOtpEmail(email,code){
   const key=process.env.RESEND_API_KEY;
   if(!key)return{ok:false,error:'Email delivery is not configured on the server.'};
@@ -55,7 +86,6 @@ async function lookupUser(email){
   const rows=await r.json();
   return rows?.[0]?.id||null;
 }
-// Limits how many accounts of the same AI app (for example two Claude accounts) can use one Hub account. Fails closed.
 async function gateClient(userId,clientId,unlock,replace,apply){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!key)return{ok:false,error:'Could not check your account limit. Try again.'};
@@ -89,14 +119,6 @@ async function ensureHubOwner(verifiedUserId){
   const r=await fetch(`${url}/rest/v1/handoff_state`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({id:verifiedUserId,user_id:verifiedUserId,state:{projects:{},memories:[],events:[]},version:0,updated_at:new Date().toISOString()})});
   return r.ok||r.status===409;
 }
-async function hubOwnerId(verifiedUserId){
-  const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if(!url||!key||!verifiedUserId)return null;
-  const r=await fetch(`${url}/rest/v1/handoff_state?user_id=eq.${encodeURIComponent(verifiedUserId)}&select=user_id&limit=1`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
-  if(!r.ok)return null;
-  const rows=await r.json();
-  return rows?.[0]?.user_id||null;
-}
 function redirectWith(res,redirect_uri,params){const u=new URL(redirect_uri);for(const[k,v]of Object.entries(params))if(v)u.searchParams.set(k,v);res.setHeader('Cache-Control','no-store');return res.redirect(302,u.toString());}
 
 export default async function handler(req,res){
@@ -117,7 +139,7 @@ export default async function handler(req,res){
     if(route==='authorize'){
       const source=req.method==='POST'?bodyOf(req):req.query||Object.fromEntries(new URL(req.url,'http://x').searchParams);
       const p=Object.fromEntries(oauthFields.map(k=>[k,str(source[k])]));
-      const v=await validateAuthRequest(p);if(v.error)return page(res,400,'Cannot connect',`<h1>Cannot connect</h1><p>${esc(v.error)}</p>`);
+      const v=await validateAuthRequest(p);if(v.error)return page(res,400,'Cannot connect',`<span class="chip">OAUTH // ERROR</span><h1>Cannot connect</h1><p>${esc(v.error)}</p>`);
       if(req.method==='GET')return page(res,200,'Connect to Handoff Hub',emailForm(p,v.client));
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
       const form=bodyOf(req);
@@ -139,7 +161,6 @@ export default async function handler(req,res){
         const rows=await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&code_hash=eq.${encodeURIComponent(expectedHash)}&consumed_at=is.null&expires_at=gt.${encodeURIComponent(now)}&select=id&limit=1`);
         const row=rows.ok&&Array.isArray(rows.data)?rows.data[0]:null;
         if(!row)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
-        // Account limit: a second account of the same AI app needs an unlock code (or replaces the old connection). Checked before the code is used up.
         const known=await lookupUser(email);
         if(known){const check=await gateClient(known,p.client_id,unlock,replace,false);if(!check.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,check.error||'Adding another account needs an unlock code.','otp',email,{gate:Boolean(check.needs_unlock),otp}));}
         const consumed=await otpDb(`handoff_email_otps?id=eq.${encodeURIComponent(row.id)}&consumed_at=is.null`,'PATCH',{consumed_at:now});

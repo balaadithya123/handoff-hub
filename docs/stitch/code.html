@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#005434", "surface-hover": "#181818", "surface-bright": "#3a3939", "tertiary": "#ffc7ae", "on-secondary-fixed": "#00201b", "secondary-fixed-dim": "#4ddcc6", "background": "#131313", "surface-tint": "#51df9c", "surface-container-lowest": "#0e0e0e", "primary-fixed-dim": "#51df9c", "on-secondary": "#003730", "on-secondary-container": "#003f37", "on-error": "#690005", "on-tertiary-fixed": "#351000", "canvas": "#000000", "tertiary-container": "#ffa072", "on-surface-variant": "#bbcabe", "signal-red": "#ff6b6b", "secondary": "#4ddcc6", "on-secondary-fixed-variant": "#005047", "on-tertiary-fixed-variant": "#76330d", "on-primary-fixed-variant": "#005233", "surface-container-high": "#2a2a2a", "on-primary": "#003822", "surface-container-highest": "#353534", "on-surface": "#e5e2e1", "on-background": "#e5e2e1", "secondary-fixed": "#6ef9e2", "surface-dim": "#131313", "error": "#ffb4ab", "primary-container": "#3ecf8e", "inverse-primary": "#006c45", "border-hairline": "rgba(255, 255, 255, 0.08)", "border-medium": "rgba(255, 255, 255, 0.16)", "surface-container": "#201f1f", "tertiary-fixed": "#ffdbcc", "inverse-surface": "#e5e2e1", "on-tertiary-container": "#78350f", "primary": "#60eca8", "on-tertiary": "#561f00", "on-primary-fixed": "#002112", "text-muted": "#a1a1a1", "signal-amber": "#f5b14a", "error-container": "#93000a", "primary-fixed": "#71fcb6", "outline-variant": "#3d4a41", "secondary-container": "#00b4a0", "tertiary-fixed-dim": "#ffb694", "on-error-container": "#ffdad6", "text-soft": "#707070", "surface-container-low": "#1c1b1b", "surface-variant": "#353534", "inverse-on-surface": "#313030", "surface": "#0a0a0a", "outline": "#869489", "text-main": "#ededed", "surface-subtle": "#121212" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-md": "1rem", "space-lg": "1.5rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1rem", "margin-mobile": "1rem", "margin": "2rem", "space-xl": "2.5rem" }, "fontFamily": { "headline-sm": ["Geist"], "body-md": ["Geist"], "label-sm": ["Geist"], "headline-xl-mobile": ["Geist"], "headline-md": ["Geist"], "body-sm": ["Geist"], "code-sm": ["JetBrains Mono"], "headline-lg": ["Geist"], "headline-lg-mobile": ["Geist"], "code-md": ["JetBrains Mono"], "body-lead": ["Geist"], "headline-xl": ["Geist"], "label-md": ["Geist"] }, "fontSize": { "headline-sm": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "550" }], "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-xl-mobile": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.03em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.025em", "fontWeight": "550" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "code-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }], "headline-lg": ["30px", { "lineHeight": "36px", "letterSpacing": "-0.035em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.025em", "fontWeight": "600" }], "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "body-lead": ["16px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "headline-xl": ["48px", { "lineHeight": "52px", "letterSpacing": "-0.04em", "fontWeight": "600" }], "label-md": ["13px", { "lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500" }] } } } };</script></head><body class="bg-canvas font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface z-50 flex flex-col justify-between border-r border-border-hairline select-none"><div class="flex flex-col flex-1 min-h-0"><div class="h-16 px-3.5 flex items-center justify-between border-b border-border-hairline"><button class="flex items-center gap-space-sm w-full p-2 rounded-lg bg-surface-subtle/50 hover:bg-surface-subtle border border-border-hairline hover:border-border-medium transition-all group text-left" type="button"><div class="w-7 h-7 rounded-md bg-surface-container-high border border-border-hairline flex items-center justify-center text-primary font-headline-sm text-headline-sm shrink-0 shadow-sm">H</div><div class="flex-1 min-w-0 leading-tight"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">Acme Systems</span><span class="px-1.5 py-0.2 rounded font-code-sm text-[10px] bg-primary/10 text-primary border border-primary/20 leading-none">PROD</span></div><span class="block font-code-sm text-code-sm text-text-soft truncate">prod-cluster-01</span></div><span class="material-symbols-outlined text-text-soft text-base group-hover:text-on-surface transition-colors">unfold_more</span></button></div><div class="flex-1 overflow-y-auto py-space-sm px-space-xs"><div class="px-3 pt-2 pb-1.5 flex items-center justify-between"><span class="font-code-sm text-[10px] text-text-soft uppercase tracking-wider font-semibold">Workspace</span></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-surface-subtle text-primary border-l-2 border-primary font-label-md"><a class="flex items-center justify-between px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-subtle hover:text-on-surface transition-all group" data-path="overview" href="#"><div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-base text-text-soft group-hover:text-primary transition-colors">dashboard</span><span>Overview</span></div></a><a class="flex items-center justify-between px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-subtle hover:text-on-surface transition-all group" data-path="integrations" href="#"><div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-base text-text-soft group-hover:text-primary transition-colors">sync_alt</span><span>Integrations</span></div><span class="px-1.5 py-0.5 rounded-full font-code-sm text-[10px] bg-surface-container-high text-text-muted border border-border-hairline">12 connected</span></a><a class="flex items-center justify-between px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-subtle hover:text-on-surface transition-all group" data-path="projects" href="#"><div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-base text-text-soft group-hover:text-primary transition-colors">folder_open</span><span>Projects</span></div><span class="px-1.5 py-0.5 rounded-full font-code-sm text-[10px] bg-surface-container text-text-soft border border-border-hairline">4</span></a></nav><div class="px-3 pt-4 pb-1.5 flex items-center justify-between"><span class="font-code-sm text-[10px] text-text-soft uppercase tracking-wider font-semibold">AI Engine</span></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-surface-subtle text-primary border-l-2 border-primary font-label-md"><a class="flex items-center justify-between px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-subtle hover:text-on-surface transition-all group" data-path="ai-accounts" href="#"><div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-base text-text-soft group-hover:text-primary transition-colors">smart_toy</span><span>AI Accounts</span></div><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span class="font-code-sm text-[10px] text-primary">Live</span></div></a><a class="flex items-center justify-between px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-subtle hover:text-on-surface transition-all group" data-path="hub-tools" href="#"><div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-base text-text-soft group-hover:text-primary transition-colors">build</span><span>Hub Tools</span></div></a></nav><div class="px-3 pt-4 pb-1.5 flex items-center justify-between"><span class="font-code-sm text-[10px] text-text-soft uppercase tracking-wider font-semibold">Monitor</span></div><nav class="flex flex-col gap-0.5" data-active-classes="bg-surface-subtle text-primary border-l-2 border-primary font-label-md"><a aria-current="page" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all group bg-surface-subtle text-primary border-l-2 border-primary font-label-md" data-path="activity" href="#"><div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-base text-text-soft group-hover:text-primary transition-colors">timeline</span><span>Activity</span></div><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-signal-amber"></span><span class="px-1.5 py-0.5 rounded-full font-code-sm text-[10px] bg-surface-container text-text-muted border border-border-hairline">2.4k</span></div></a></nav></div></div><div class="p-3 border-t border-border-hairline flex flex-col gap-2.5 bg-surface-container-lowest/40"><div class="p-2.5 rounded-lg bg-surface-subtle border border-border-hairline hover:border-border-medium transition-colors"><div class="flex items-center justify-between mb-1.5"><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-primary"></span><span class="font-code-sm text-[10px] text-on-surface font-medium">Cluster Health</span></div><span class="font-code-sm text-code-sm text-primary">99.98%</span></div><div class="flex items-center justify-between text-text-soft font-code-sm text-[10px]"><span>Memory Sync</span><span class="text-on-surface-variant">Active</span></div><div class="flex items-center justify-between text-text-soft font-code-sm text-[10px] mt-0.5"><span>API Quota</span><span class="text-signal-amber">84%</span></div><div class="w-full bg-surface-container-high h-1 rounded-full mt-1.5 overflow-hidden"><div class="bg-primary h-full rounded-full" style="width: 84%"></div></div></div><div class="flex items-center justify-between px-1 text-text-soft font-code-sm text-[11px]"><a class="hover:text-on-surface transition-colors flex items-center gap-1" href="#"><span class="material-symbols-outlined text-xs">menu_book</span><span>Docs &amp; API</span></a><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 rounded bg-surface-container border border-border-hairline text-text-muted">⌘K</kbd></div></div><div class="pt-1 flex items-center justify-between"><button class="flex items-center gap-2.5 flex-1 min-w-0 p-1.5 rounded-lg hover:bg-surface-subtle transition-colors text-left group" type="button"><img alt="Alex M." class="w-7 h-7 rounded-full object-cover border border-border-hairline" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsj3dijIklHa98D9nWQI6YiIqGYfwI8aOAmYkvag3hzBpBLA1eMMVDUKnAicvJQuwV9Lc4T8rlsEazA1a9aUFL8kZJgFjui2_NXX9a6vcQ8i5TpFTGZkH-pIjegricKCc6OAC6Z0VB-iwLVv-rBGGgKYwkMeOVSM0aiPwOSD6vuD3K-rV4u4g9PYg7a4pI4x7ezKvWWiQyaIQpL9Kl6--cc2Dq_pw3Sa9oin8BCuhUCS6Z3-n3NNf2hA"/><div class="flex-1 min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">Alex M.</span><span class="font-code-sm text-[10px] text-text-soft px-1 rounded bg-surface-container">Admin</span></div><span class="block font-code-sm text-[10px] text-text-soft truncate">alex@handoff.sh</span></div></button><button class="p-1.5 rounded-lg text-text-soft hover:text-on-surface hover:bg-surface-subtle border border-transparent hover:border-border-hairline transition-all" title="Collapse rail ( [ )" type="button"><span class="material-symbols-outlined text-base">left_panel_close</span></button></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-canvas/80 backdrop-blur-xl border-b border-border-hairline z-40 px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm min-w-0"><img alt="Handoff Hub Logo" class="h-8 w-auto object-contain mr-space-xs" src="https://lh3.googleusercontent.com/aida/AEtjO1XBFQzGbEG6Ca_88ACHEROs14if0Dkn-ZU4v1MgE-b6TH1LCSdkiLrZanT5UHQl8F_l0LA1qBZRk140wnpLYMoCo4e5I4Y7eynxh3qi8UbVJ4Ro6Ey6O-1111QS2Eus_UXSt_KO4BGguge7c4LEgeX2emQHe_aQoCe5Tb-OmeCxpKb-1S3IuD1Pqwr2E5Nlm_BvscrNZEJwwqwkj86jebcX4RyjFJzf6jxLYUglh3Yn5iZU6HImjioee5jj"/><div class="flex items-center gap-1.5 font-label-md text-label-md text-text-soft overflow-hidden"><span class="hover:text-text-muted transition-colors cursor-pointer">Acme Systems</span><span class="text-border-medium">/</span><span class="hover:text-text-muted transition-colors cursor-pointer">Handoff Hub</span><span class="text-border-medium">/</span><span class="text-on-surface font-headline-sm text-body-sm">Overview</span></div></div><div class="flex items-center gap-space-md shrink-0"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-text-soft text-sm pointer-events-none">search</span><input class="h-9 pl-9 pr-12 w-64 rounded-lg bg-surface border border-border-hairline font-body-sm text-body-sm text-on-surface placeholder:text-text-soft focus:outline-none cursor-pointer hover:border-border-medium transition-colors" placeholder="Search or jump to..." readonly="" type="text"/><kbd class="absolute right-2 font-code-sm text-code-sm text-text-soft bg-surface-container px-1.5 py-0.5 rounded border border-border-hairline">⌘K</kbd></div><div class="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-surface border border-border-hairline"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span><span class="font-code-sm text-code-sm text-primary">All systems operational</span></div><button class="relative p-2 rounded-lg text-text-muted hover:text-on-surface hover:bg-surface-subtle transition-colors border border-border-hairline" type="button"><span class="material-symbols-outlined text-lg leading-none">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-signal-red"></span></button><button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-subtle hover:bg-surface-container border border-border-hairline hover:border-border-medium text-on-surface font-label-md text-label-md transition-all shadow-sm" type="button"><span class="material-symbols-outlined text-sm text-primary">add</span><span>New Claim</span></button><button class="flex items-center gap-space-sm pl-2 pr-1 py-1 rounded-lg hover:bg-surface-subtle transition-colors text-left border border-border-hairline" type="button"><div class="text-right hidden sm:block"><span class="block font-label-sm text-label-sm text-on-surface leading-tight">alex@handoff.sh</span><span class="block font-code-sm text-code-sm text-text-soft leading-tight">Admin</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsj3dijIklHa98D9nWQI6YiIqGYfwI8aOAmYkvag3hzBpBLA1eMMVDUKnAicvJQuwV9Lc4T8rlsEazA1a9aUFL8kZJgFjui2_NXX9a6vcQ8i5TpFTGZkH-pIjegricKCc6OAC6Z0VB-iwLVv-rBGGgKYwkMeOVSM0aiPwOSD6vuD3K-rV4u4g9PYg7a4pI4x7ezKvWWiQyaIQpL9Kl6--cc2Dq_pw3Sa9oin8BCuhUCS6Z3-n3NNf2hA"/></button></div></header><main class="w-full pt-16 bg-canvas min-h-screen px-margin py-margin"><div class="flex flex-col w-full">
+<!-- Top Operational Control Strip -->
+<div class="flex flex-col gap-space-lg mb-space-lg">
+<!-- Header row -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface border border-border-hairline font-code-sm text-[10px] text-text-muted">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            PORTAL // AUDIT-STREAM
+          </span>
+<span class="font-code-sm text-code-sm text-text-soft">•</span>
+<span class="font-code-sm text-[10px] text-primary uppercase tracking-widest font-semibold">Realtime WebSocket Active</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-text-main tracking-tight mt-1">Activity &amp; Telemetry Audit</h1>
+<p class="font-body-sm text-body-sm text-text-muted max-w-3xl">
+          Real-time trace logs, automated AI claims, context synchronization, and webhook events across all connected multi-model runtimes.
+        </p>
+</div>
+<!-- Action Group -->
+<div class="flex flex-wrap items-center gap-2 shrink-0">
+<!-- Live Stream Toggle -->
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border-hairline hover:border-border-medium text-text-main font-label-md text-label-md transition-all group" id="stream-toggle" type="button">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping" id="stream-dot"></span>
+<span id="stream-status-text">Live Stream</span>
+<span class="font-code-sm text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">PAUSE</span>
+</button>
+<!-- Export Dropdown -->
+<div class="relative inline-block text-left" id="export-dropdown-wrapper">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border-hairline hover:border-border-medium text-text-muted hover:text-text-main font-label-md text-label-md transition-all" id="export-btn" type="button">
+<span class="material-symbols-outlined text-sm">ios_share</span>
+<span>Export Logs</span>
+<span class="material-symbols-outlined text-xs text-text-soft">expand_more</span>
+</button>
+<div class="hidden absolute right-0 mt-1 w-44 rounded-lg bg-surface-subtle border border-border-medium shadow-xl z-30 p-1 flex-col gap-0.5" id="export-menu">
+<button class="flex items-center justify-between w-full px-2.5 py-1.5 rounded text-left font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface transition-colors" onclick="alert('Exporting JSON snapshot...')" type="button">
+<span>NDJSON Stream</span>
+<span class="font-code-sm text-[10px] text-text-soft">.jsonl</span>
+</button>
+<button class="flex items-center justify-between w-full px-2.5 py-1.5 rounded text-left font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface transition-colors" onclick="alert('Exporting CSV...')" type="button">
+<span>CSV Spreadsheet</span>
+<span class="font-code-sm text-[10px] text-text-soft">.csv</span>
+</button>
+<button class="flex items-center justify-between w-full px-2.5 py-1.5 rounded text-left font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface transition-colors" onclick="navigator.clipboard.writeText('curl -X GET https://api.handoff.sh/v1/telemetry/stream -H \'Authorization: Bearer sk_live_491\''); alert('cURL command copied!')" type="button">
+<span>Copy cURL Query</span>
+<span class="material-symbols-outlined text-xs">terminal</span>
+</button>
+</div>
+</div>
+<!-- Query API CTA -->
+<a class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-fixed text-on-primary font-label-md text-label-md transition-all shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm font-semibold">terminal</span>
+<span>Query API</span>
+</a>
+</div>
+</div>
+<!-- Bento Telemetry Overview KPI Bar -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+<!-- KPI 1 -->
+<div class="p-4 rounded-xl bg-surface border border-border-hairline hover:border-border-medium transition-all flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-[11px] text-text-soft uppercase tracking-wider">Total Ingested (24h)</span>
+<span class="material-symbols-outlined text-text-soft text-base">cloud_download</span>
+</div>
+<div class="flex items-baseline justify-between">
+<div>
+<div class="font-headline-md text-headline-md text-text-main font-semibold">48,291</div>
+<div class="font-code-sm text-code-sm text-primary flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-xs">arrow_upward</span>
+              +12.4% vs yesterday
+            </div>
+</div>
+<!-- Sparkline Mini Bars -->
+<div class="flex items-end gap-1 h-7 pb-0.5">
+<span class="w-1 bg-surface-container-high h-2.5 rounded-xs"></span>
+<span class="w-1 bg-surface-container-high h-3.5 rounded-xs"></span>
+<span class="w-1 bg-primary/40 h-5 rounded-xs"></span>
+<span class="w-1 bg-primary/60 h-4 rounded-xs"></span>
+<span class="w-1 bg-primary/80 h-6 rounded-xs"></span>
+<span class="w-1 bg-primary h-7 rounded-xs"></span>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="p-4 rounded-xl bg-surface border border-border-hairline hover:border-border-medium transition-all flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-[11px] text-text-soft uppercase tracking-wider">Handoff Success Rate</span>
+<span class="material-symbols-outlined text-text-soft text-base">verified</span>
+</div>
+<div class="flex items-baseline justify-between">
+<div>
+<div class="font-headline-md text-headline-md text-text-main font-semibold">99.82%</div>
+<div class="font-code-sm text-[11px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 inline-block mt-1">
+              0.18% error rate
+            </div>
+</div>
+<!-- Ring chart mini -->
+<svg class="w-8 h-8 -rotate-90 text-primary" viewbox="0 0 36 36">
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="99.8, 100" stroke-width="3"></path>
+</svg>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="p-4 rounded-xl bg-surface border border-border-hairline hover:border-border-medium transition-all flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-[11px] text-text-soft uppercase tracking-wider">p95 Dispatch Latency</span>
+<span class="material-symbols-outlined text-text-soft text-base">speed</span>
+</div>
+<div class="flex items-baseline justify-between">
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-text-main font-semibold">38</span>
+<span class="font-code-sm text-code-sm text-text-soft">ms</span>
+</div>
+<div class="font-code-sm text-code-sm text-text-soft mt-0.5">Target &lt; 50ms (Nominal)</div>
+</div>
+<!-- Latency sparkline -->
+<svg class="w-16 h-6 text-primary overflow-visible" fill="none" viewbox="0 0 64 24">
+<path d="M0 18 Q 8 16, 16 20 T 32 8 T 48 14 T 64 6" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"></path>
+<circle cx="64" cy="6" fill="currentColor" r="2"></circle>
+</svg>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="p-4 rounded-xl bg-surface border border-border-hairline hover:border-border-medium transition-all flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-[11px] text-text-soft uppercase tracking-wider">Active AI Claims</span>
+<span class="w-2 h-2 rounded-full bg-signal-amber animate-pulse"></span>
+</div>
+<div class="flex items-baseline justify-between">
+<div>
+<div class="font-headline-md text-headline-md text-text-main font-semibold">14 <span class="font-body-sm text-body-sm text-text-soft font-normal">locks</span></div>
+<div class="font-code-sm text-[11px] text-text-muted mt-0.5 truncate max-w-[170px]">Claude 3.7 &amp; GPT-4o sync</div>
+</div>
+<span class="px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-surface-container-high text-secondary border border-border-hairline">
+            Locked
+          </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters, Query, & Type Selectors -->
+<div class="flex flex-col gap-3 p-3.5 rounded-xl bg-surface border border-border-hairline mb-space-md">
+<!-- Row 1: Search and Filters -->
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+<!-- Search Input -->
+<div class="relative flex-1 min-w-[280px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-soft text-base pointer-events-none">search</span>
+<input class="w-full h-10 pl-9 pr-12 rounded-lg bg-surface-subtle border border-border-hairline font-body-sm text-body-sm text-text-main placeholder:text-text-soft focus:outline-none focus:border-primary transition-colors" id="audit-search" placeholder="Filter by event ID (#hnd-), model, repository, commit SHA, or actor..." type="text"/>
+<kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 font-code-sm text-[10px] text-text-soft bg-surface px-1.5 py-0.5 rounded border border-border-hairline">⌘F</kbd>
+</div>
+<!-- Dropdown Selectors -->
+<div class="flex flex-wrap items-center gap-2">
+<!-- Provider filter -->
+<div class="relative">
+<select class="h-10 pl-3 pr-8 rounded-lg bg-surface-subtle border border-border-hairline font-body-sm text-body-sm text-text-main appearance-none cursor-pointer focus:outline-none focus:border-primary transition-colors" id="filter-provider">
+<option value="all">All Providers</option>
+<option value="claude">Claude 3.7 Sonnet</option>
+<option value="gpt">GPT-4o (OpenAI)</option>
+<option value="github">GitHub Webhooks</option>
+<option value="supabase">Supabase Vector</option>
+<option value="linear">Linear Sync</option>
+<option value="slack">Slack Bot</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-text-soft text-sm pointer-events-none">unfold_more</span>
+</div>
+<!-- Status filter -->
+<div class="relative">
+<select class="h-10 pl-3 pr-8 rounded-lg bg-surface-subtle border border-border-hairline font-body-sm text-body-sm text-text-main appearance-none cursor-pointer focus:outline-none focus:border-primary transition-colors" id="filter-status">
+<option value="all">All Statuses</option>
+<option value="completed">Completed / Success</option>
+<option value="lock">Active Lock</option>
+<option value="synced">Synced</option>
+<option value="degraded">Degraded / Warning</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-text-soft text-sm pointer-events-none">unfold_more</span>
+</div>
+<!-- Time Range filter -->
+<div class="relative">
+<select class="h-10 pl-3 pr-8 rounded-lg bg-surface-subtle border border-border-hairline font-body-sm text-body-sm text-text-main appearance-none cursor-pointer focus:outline-none focus:border-primary transition-colors" id="filter-timerange">
+<option value="15m">Past 15 Minutes</option>
+<option selected="" value="1h">Past 1 Hour</option>
+<option value="24h">Past 24 Hours</option>
+<option value="7d">Past 7 Days</option>
+<option value="custom">Custom Range...</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-text-soft text-sm pointer-events-none">schedule</span>
+</div>
+<button class="h-10 px-3 rounded-lg bg-surface-subtle hover:bg-surface border border-border-hairline text-text-soft hover:text-text-main font-label-md text-label-md transition-all flex items-center gap-1.5" id="reset-filters" title="Reset filters">
+<span class="material-symbols-outlined text-sm">restart_alt</span>
+<span class="hidden sm:inline">Reset</span>
+</button>
+</div>
+</div>
+<!-- Row 2: Event Type Category Badges & Ingestion telemetry rate -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 pt-2 border-t border-border-hairline">
+<div class="flex flex-wrap items-center gap-1.5" id="category-tabs">
+<button class="cat-pill active px-2.5 py-1 rounded-md font-label-md text-label-md bg-surface-container text-text-main border border-border-medium flex items-center gap-1.5" data-cat="all">
+<span>All Events</span>
+<span class="font-code-sm text-[10px] text-text-soft bg-surface px-1.5 py-0.2 rounded">48.2k</span>
+</button>
+<button class="cat-pill px-2.5 py-1 rounded-md font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface-subtle border border-transparent transition-all flex items-center gap-1.5" data-cat="claims">
+<span>AI Claims &amp; Handoffs</span>
+<span class="font-code-sm text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.2 rounded">18.4k</span>
+</button>
+<button class="cat-pill px-2.5 py-1 rounded-md font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface-subtle border border-transparent transition-all flex items-center gap-1.5" data-cat="webhooks">
+<span>Webhook Syncs</span>
+<span class="font-code-sm text-[10px] text-text-soft bg-surface px-1.5 py-0.2 rounded">14.2k</span>
+</button>
+<button class="cat-pill px-2.5 py-1 rounded-md font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface-subtle border border-transparent transition-all flex items-center gap-1.5" data-cat="inferences">
+<span>Model Inferences</span>
+<span class="font-code-sm text-[10px] text-text-soft bg-surface px-1.5 py-0.2 rounded">11.8k</span>
+</button>
+<button class="cat-pill px-2.5 py-1 rounded-md font-label-md text-label-md text-text-muted hover:text-text-main hover:bg-surface-subtle border border-transparent transition-all flex items-center gap-1.5" data-cat="warnings">
+<span>System Warnings</span>
+<span class="font-code-sm text-[10px] text-signal-amber bg-signal-amber/10 px-1.5 py-0.2 rounded border border-signal-amber/20">12</span>
+</button>
+</div>
+<div class="flex items-center gap-2 text-text-soft font-code-sm text-[11px] self-end md:self-auto">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span>Throughput: <strong class="text-text-main font-semibold">12 events/sec</strong></span>
+<span class="text-border-medium">|</span>
+<span>Buffer: <span class="text-text-muted">4.1 MB</span></span>
+</div>
+</div>
+</div>
+<!-- Master-Detail Split Workspace -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- Left Column: Stream Event Table (8 cols / ~66%) -->
+<div class="lg:col-span-8 flex flex-col rounded-xl bg-surface border border-border-hairline overflow-hidden shadow-sm">
+<!-- Stream Table Header -->
+<div class="grid grid-cols-12 gap-2 px-4 py-2.5 bg-surface-subtle border-b border-border-hairline font-code-sm text-[10px] text-text-soft uppercase tracking-wider select-none">
+<div class="col-span-2">ID / Time</div>
+<div class="col-span-3">Actor / Provider</div>
+<div class="col-span-4">Operation &amp; Target</div>
+<div class="col-span-1 text-right">Latency</div>
+<div class="col-span-2 text-right">Status</div>
+</div>
+<!-- Event Rows Container -->
+<div class="flex flex-col divide-y divide-border-hairline" id="events-stream-list">
+<!-- Row 1: Selected / Inspected Row -->
+<div class="event-row active grid grid-cols-12 gap-2 px-4 py-3 bg-surface-container/60 hover:bg-surface-container cursor-pointer transition-colors border-l-2 border-primary" data-actor="Claude 3.7 Sonnet" data-event-id="hnd-9942" data-type="claims">
+<div class="col-span-2 flex flex-col justify-center">
+<span class="font-code-sm text-code-sm font-semibold text-primary">#hnd-9942</span>
+<span class="font-code-sm text-[10px] text-text-soft">14:32:08.412</span>
+</div>
+<div class="col-span-3 flex items-center gap-2 min-w-0">
+<div class="w-6 h-6 rounded bg-[#2b2b2b] flex items-center justify-center shrink-0 border border-border-hairline">
+<span class="font-code-sm text-[10px] text-primary font-bold">C</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-md text-label-md text-text-main truncate font-medium">Claude 3.7 Sonnet</span>
+<span class="block font-code-sm text-[10px] text-text-soft truncate">Anthropic Cloud</span>
+</div>
+</div>
+<div class="col-span-4 flex flex-col justify-center min-w-0">
+<span class="font-body-sm text-body-sm text-text-main truncate font-medium">Dispatched automated PR handoff brief to Linear cycle</span>
+<span class="font-code-sm text-[11px] text-text-soft truncate">linear:ENG-491 // repo:auth-flow-v2</span>
+</div>
+<div class="col-span-1 flex items-center justify-end font-code-sm text-code-sm text-text-muted">
+            34ms
+          </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-primary/10 text-primary border border-primary/25">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              Completed
+            </span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="event-row grid grid-cols-12 gap-2 px-4 py-3 bg-surface hover:bg-surface-subtle cursor-pointer transition-colors border-l-2 border-transparent" data-actor="GPT-4o" data-event-id="clm-3048" data-type="claims">
+<div class="col-span-2 flex flex-col justify-center">
+<span class="font-code-sm text-code-sm font-semibold text-text-muted hover:text-primary transition-colors">#clm-3048</span>
+<span class="font-code-sm text-[10px] text-text-soft">14:31:55.109</span>
+</div>
+<div class="col-span-3 flex items-center gap-2 min-w-0">
+<div class="w-6 h-6 rounded bg-[#1e2922] flex items-center justify-center shrink-0 border border-border-hairline">
+<span class="font-code-sm text-[10px] text-secondary font-bold">4o</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-md text-label-md text-text-main truncate">GPT-4o</span>
+<span class="block font-code-sm text-[10px] text-text-soft truncate">OpenAI Pipeline</span>
+</div>
+</div>
+<div class="col-span-4 flex flex-col justify-center min-w-0">
+<span class="font-body-sm text-body-sm text-text-main truncate">Acquired optimistic context memory claim lock on core billing schema</span>
+<span class="font-code-sm text-[11px] text-text-soft truncate">file:src/billing/stripe.ts (lines 48-120)</span>
+</div>
+<div class="col-span-1 flex items-center justify-end font-code-sm text-code-sm text-text-muted">
+            18ms
+          </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-secondary/10 text-secondary border border-secondary/25">
+<span class="material-symbols-outlined text-[10px]">lock</span>
+              Lock Active
+            </span>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="event-row grid grid-cols-12 gap-2 px-4 py-3 bg-surface hover:bg-surface-subtle cursor-pointer transition-colors border-l-2 border-transparent" data-actor="Supabase Vector" data-event-id="syn-1204" data-type="inferences">
+<div class="col-span-2 flex flex-col justify-center">
+<span class="font-code-sm text-code-sm font-semibold text-text-muted hover:text-primary transition-colors">#syn-1204</span>
+<span class="font-code-sm text-[10px] text-text-soft">14:30:12.871</span>
+</div>
+<div class="col-span-3 flex items-center gap-2 min-w-0">
+<div class="w-6 h-6 rounded bg-[#1d2720] flex items-center justify-center shrink-0 border border-border-hairline">
+<span class="material-symbols-outlined text-[12px] text-primary">database</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-md text-label-md text-text-main truncate">Supabase Vector</span>
+<span class="block font-code-sm text-[10px] text-text-soft truncate">pgvector-us-east</span>
+</div>
+</div>
+<div class="col-span-4 flex flex-col justify-center min-w-0">
+<span class="font-body-sm text-body-sm text-text-main truncate">Partitioned 14 semantic embeddings into pgvector-us-east</span>
+<span class="font-code-sm text-[11px] text-text-soft truncate">cluster:pgvector-01 // dim:1536</span>
+</div>
+<div class="col-span-1 flex items-center justify-end font-code-sm text-code-sm text-text-muted">
+            112ms
+          </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-surface-container text-text-muted border border-border-hairline">
+<span class="w-1.5 h-1.5 rounded-full bg-text-soft"></span>
+              Synced
+            </span>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="event-row grid grid-cols-12 gap-2 px-4 py-3 bg-surface hover:bg-surface-subtle cursor-pointer transition-colors border-l-2 border-transparent" data-actor="GitHub Webhook" data-event-id="wh-0982" data-type="webhooks">
+<div class="col-span-2 flex flex-col justify-center">
+<span class="font-code-sm text-code-sm font-semibold text-text-muted hover:text-primary transition-colors">#wh-0982</span>
+<span class="font-code-sm text-[10px] text-text-soft">14:28:44.200</span>
+</div>
+<div class="col-span-3 flex items-center gap-2 min-w-0">
+<div class="w-6 h-6 rounded bg-surface-container-high flex items-center justify-center shrink-0 border border-border-hairline">
+<span class="font-code-sm text-[10px] text-text-main font-bold">GH</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-md text-label-md text-text-main truncate">GitHub Webhook</span>
+<span class="block font-code-sm text-[10px] text-text-soft truncate">hook_sha256_e10</span>
+</div>
+</div>
+<div class="col-span-4 flex flex-col justify-center min-w-0">
+<span class="font-body-sm text-body-sm text-text-main truncate">Synchronized pull request review event #284 with AST diff claims</span>
+<span class="font-code-sm text-[11px] text-text-soft truncate">github:handoff-hub/core (PR #284)</span>
+</div>
+<div class="col-span-1 flex items-center justify-end font-code-sm text-code-sm text-text-muted">
+            42ms
+          </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-primary/10 text-primary border border-primary/20">
+<span class="material-symbols-outlined text-[10px]">check</span>
+              Verified
+            </span>
+</div>
+</div>
+<!-- Row 5: Degraded / Fallback -->
+<div class="event-row grid grid-cols-12 gap-2 px-4 py-3 bg-surface hover:bg-surface-subtle cursor-pointer transition-colors border-l-2 border-transparent" data-actor="DeepSeek R1" data-event-id="wrn-0014" data-type="warnings">
+<div class="col-span-2 flex flex-col justify-center">
+<span class="font-code-sm text-code-sm font-semibold text-signal-amber">#wrn-0014</span>
+<span class="font-code-sm text-[10px] text-text-soft">14:26:10.054</span>
+</div>
+<div class="col-span-3 flex items-center gap-2 min-w-0">
+<div class="w-6 h-6 rounded bg-[#2e2315] flex items-center justify-center shrink-0 border border-signal-amber/30">
+<span class="font-code-sm text-[10px] text-signal-amber font-bold">DS</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-md text-label-md text-text-main truncate">DeepSeek R1</span>
+<span class="block font-code-sm text-[10px] text-text-soft truncate">Inference Fallback</span>
+</div>
+</div>
+<div class="col-span-4 flex flex-col justify-center min-w-0">
+<span class="font-body-sm text-body-sm text-text-main truncate">Inference rate-limit fallback triggered -&gt; routed to Claude 3.5 Haiku</span>
+<span class="font-code-sm text-[11px] text-text-soft truncate">fallback:api.cluster-02.internal</span>
+</div>
+<div class="col-span-1 flex items-center justify-end font-code-sm text-code-sm text-signal-amber">
+            480ms
+          </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-signal-amber/10 text-signal-amber border border-signal-amber/25">
+<span class="w-1.5 h-1.5 rounded-full bg-signal-amber"></span>
+              Degraded
+            </span>
+</div>
+</div>
+<!-- Row 6 -->
+<div class="event-row grid grid-cols-12 gap-2 px-4 py-3 bg-surface hover:bg-surface-subtle cursor-pointer transition-colors border-l-2 border-transparent" data-actor="Slack Bot" data-event-id="hnd-9938" data-type="webhooks">
+<div class="col-span-2 flex flex-col justify-center">
+<span class="font-code-sm text-code-sm font-semibold text-text-muted hover:text-primary transition-colors">#hnd-9938</span>
+<span class="font-code-sm text-[10px] text-text-soft">14:24:02.115</span>
+</div>
+<div class="col-span-3 flex items-center gap-2 min-w-0">
+<div class="w-6 h-6 rounded bg-surface-container-high flex items-center justify-center shrink-0 border border-border-hairline">
+<span class="material-symbols-outlined text-[12px] text-[#e01e5a]">tag</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-md text-label-md text-text-main truncate">Slack Bot</span>
+<span class="block font-code-sm text-[10px] text-text-soft truncate">Handoff App v1.4</span>
+</div>
+</div>
+<div class="col-span-4 flex flex-col justify-center min-w-0">
+<span class="font-body-sm text-body-sm text-text-main truncate">Dispatched interactive handoff approval card to #agent-handoffs</span>
+<span class="font-code-sm text-[11px] text-text-soft truncate">channel:C0489AB1 // user:alex</span>
+</div>
+<div class="col-span-1 flex items-center justify-end font-code-sm text-code-sm text-text-muted">
+            61ms
+          </div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-code-sm text-[10px] bg-primary/10 text-primary border border-primary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              Completed
+            </span>
+</div>
+</div>
+</div>
+<!-- Stream Footer / Pagination Controls -->
+<div class="flex flex-col sm:flex-row items-center justify-between px-4 py-2.5 bg-surface-subtle border-t border-border-hairline gap-2">
+<div class="flex items-center gap-3 font-code-sm text-[11px] text-text-soft">
+<span>Showing <strong class="text-text-main font-semibold">50</strong> of 48,291 events</span>
+<span class="text-border-medium">•</span>
+<label class="flex items-center gap-1.5 cursor-pointer text-text-muted hover:text-text-main transition-colors">
+<input checked="" class="rounded bg-surface border-border-hairline text-primary focus:ring-0" id="autoscroll-toggle" type="checkbox"/>
+<span>Auto-scroll on ingest</span>
+</label>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm">
+<span class="text-text-soft mr-2">Page 1 of 966</span>
+<button class="p-1.5 rounded bg-surface border border-border-hairline hover:border-border-medium text-text-soft disabled:opacity-40 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="p-1.5 rounded bg-surface border border-border-hairline hover:border-border-medium text-text-main hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Event Detail Payload & Inspector (4 cols / ~34%) -->
+<div class="lg:col-span-4 flex flex-col rounded-xl bg-surface border border-border-hairline overflow-hidden sticky top-20 shadow-md">
+<!-- Detail Header -->
+<div class="flex items-center justify-between px-4 py-3 bg-surface-subtle border-b border-border-hairline">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-code-sm text-code-sm text-text-main font-semibold" id="inspector-title">Event // #hnd-9942</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded hover:bg-surface text-text-soft hover:text-text-main transition-colors flex items-center gap-1 font-code-sm text-[11px]" id="copy-json-btn" title="Copy Raw JSON">
+<span class="material-symbols-outlined text-xs">content_copy</span>
+<span>JSON</span>
+</button>
+<button class="p-1 rounded hover:bg-surface text-text-soft hover:text-text-main transition-colors" title="Close inspector">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+</div>
+<!-- Quick Metrics Grid inside Inspector -->
+<div class="grid grid-cols-2 divide-x divide-y divide-border-hairline bg-surface-container-lowest/50 border-b border-border-hairline">
+<div class="p-3 flex flex-col gap-0.5">
+<span class="font-code-sm text-[10px] text-text-soft uppercase">Trigger Mode</span>
+<span class="font-label-md text-label-md text-text-main font-medium">Automated PR Claim</span>
+</div>
+<div class="p-3 flex flex-col gap-0.5">
+<span class="font-code-sm text-[10px] text-text-soft uppercase">Correlation ID</span>
+<span class="font-code-sm text-code-sm text-primary truncate" title="corr_8f7b2c019a">corr_8f7b2c019a</span>
+</div>
+<div class="p-3 flex flex-col gap-0.5">
+<span class="font-code-sm text-[10px] text-text-soft uppercase">Execution Time</span>
+<span class="font-code-sm text-code-sm text-text-main">34.2 ms</span>
+</div>
+<div class="p-3 flex flex-col gap-0.5">
+<span class="font-code-sm text-[10px] text-text-soft uppercase">Context Ingested</span>
+<span class="font-code-sm text-code-sm text-secondary">1,420 tokens</span>
+</div>
+</div>
+<!-- Timeline Micro-Trace Stepper -->
+<div class="p-3.5 border-b border-border-hairline bg-surface">
+<div class="flex items-center justify-between mb-2">
+<span class="font-code-sm text-[10px] text-text-soft uppercase tracking-wider font-semibold">Sub-Millisecond Trace</span>
+<span class="font-code-sm text-[10px] text-primary">3 / 3 stages ok</span>
+</div>
+<div class="flex flex-col gap-2 font-code-sm text-[11px]">
+<div class="flex items-start gap-2">
+<span class="text-text-soft shrink-0">14:32:08.378</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></span>
+<span class="text-text-main">Optimistic context lock acquired</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-text-soft shrink-0">14:32:08.390</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></span>
+<span class="text-text-main">AST diff vector query executed (4 chunks)</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-text-soft shrink-0">14:32:08.412</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></span>
+<span class="text-text-main">Linear webhook dispatched &amp; ACK received</span>
+</div>
+</div>
+</div>
+<!-- JSON Payload Code Viewer -->
+<div class="flex flex-col bg-[#050505]">
+<div class="flex items-center justify-between px-3.5 py-2 bg-surface-subtle/80 border-b border-border-hairline">
+<span class="font-code-sm text-[10px] text-text-soft uppercase">Payload Snapshot (read-only)</span>
+<span class="font-code-sm text-[10px] text-text-soft">schema v2.4</span>
+</div>
+<div class="p-3.5 font-code-sm text-[12px] leading-relaxed overflow-x-auto text-text-main max-h-[360px] select-text">
+<pre class="m-0"><span class="text-text-soft">{</span>
+  <span class="text-secondary">"event"</span><span class="text-text-soft">:</span> <span class="text-primary">"handoff.pr_brief.dispatched"</span><span class="text-text-soft">,</span>
+  <span class="text-secondary">"actor"</span><span class="text-text-soft">:</span> <span class="text-text-soft">{</span>
+    <span class="text-secondary">"id"</span><span class="text-text-soft">:</span> <span class="text-primary">"claude-3-7-sonnet"</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"type"</span><span class="text-text-soft">:</span> <span class="text-primary">"llm_agent"</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"model_version"</span><span class="text-text-soft">:</span> <span class="text-primary">"20250219"</span>
+  <span class="text-text-soft">},</span>
+  <span class="text-secondary">"context_claim"</span><span class="text-text-soft">:</span> <span class="text-text-soft">{</span>
+    <span class="text-secondary">"claim_id"</span><span class="text-text-soft">:</span> <span class="text-primary">"clm_9942_auth"</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"repository"</span><span class="text-text-soft">:</span> <span class="text-primary">"handoff-hub/core"</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"branch"</span><span class="text-text-soft">:</span> <span class="text-primary">"feat/zero-retention-oauth"</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"linear_ticket"</span><span class="text-text-soft">:</span> <span class="text-primary">"ENG-491"</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"ast_diff_chunks"</span><span class="text-text-soft">:</span> <span class="text-signal-amber">4</span>
+  <span class="text-text-soft">},</span>
+  <span class="text-secondary">"telemetry"</span><span class="text-text-soft">:</span> <span class="text-text-soft">{</span>
+    <span class="text-secondary">"vector_similarity_score"</span><span class="text-text-soft">:</span> <span class="text-signal-amber">0.942</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"tokens_evaluated"</span><span class="text-text-soft">:</span> <span class="text-signal-amber">1420</span><span class="text-text-soft">,</span>
+    <span class="text-secondary">"response_time_ms"</span><span class="text-text-soft">:</span> <span class="text-signal-amber">34.2</span>
+  <span class="text-text-soft">}</span>
+<span class="text-text-soft">}</span></pre>
+</div>
+</div>
+<!-- Action Footer for inspected event -->
+<div class="p-3 bg-surface border-t border-border-hairline flex items-center justify-between gap-2">
+<button class="flex-1 py-1.5 px-3 rounded-lg bg-surface-subtle hover:bg-surface-container border border-border-hairline text-text-main font-label-md text-label-md transition-all text-center" onclick="alert('Navigating to Linear Ticket ENG-491 in connected workspace...')">
+          Open in Linear
+        </button>
+<button class="flex-1 py-1.5 px-3 rounded-lg bg-surface-subtle hover:bg-surface-container border border-border-hairline text-text-main font-label-md text-label-md transition-all text-center" onclick="alert('Replaying event payload in sandbox environment...')">
+          Replay Claim
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Export dropdown toggling
+  const exportBtn = document.getElementById('export-btn');
+  const exportMenu = document.getElementById('export-menu');
+  if (exportBtn && exportMenu) {
+    exportBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('hidden');
+      exportMenu.classList.toggle('flex');
+    });
+    document.addEventListener('click', () => {
+      exportMenu.classList.add('hidden');
+      exportMenu.classList.remove('flex');
+    });
+  }
+
+  // Live stream pause/resume simulation
+  const streamToggle = document.getElementById('stream-toggle');
+  const streamDot = document.getElementById('stream-dot');
+  const streamStatusText = document.getElementById('stream-status-text');
+  let isStreaming = true;
+
+  if (streamToggle) {
+    streamToggle.addEventListener('click', () => {
+      isStreaming = !isStreaming;
+      const badge = streamToggle.querySelector('span:last-child');
+      if (isStreaming) {
+        streamDot.className = 'w-2 h-2 rounded-full bg-primary animate-ping';
+        badge.textContent = 'PAUSE';
+        badge.className = 'font-code-sm text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20';
+        streamStatusText.textContent = 'Live Stream';
+      } else {
+        streamDot.className = 'w-2 h-2 rounded-full bg-text-soft';
+        badge.textContent = 'RESUME';
+        badge.className = 'font-code-sm text-[10px] text-text-soft bg-surface px-1.5 py-0.5 rounded border border-border-hairline';
+        streamStatusText.textContent = 'Paused';
+      }
+    });
+  }
+
+  // Row selection handler & inspector title update
+  const rows = document.querySelectorAll('.event-row');
+  const inspectorTitle = document.getElementById('inspector-title');
+
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      rows.forEach(r => {
+        r.classList.remove('active', 'bg-surface-container/60', 'border-primary');
+        r.classList.add('bg-surface', 'border-transparent');
+      });
+      row.classList.add('active', 'bg-surface-container/60', 'border-primary');
+      row.classList.remove('bg-surface', 'border-transparent');
+
+      const id = row.getAttribute('data-event-id');
+      if (inspectorTitle && id) {
+        inspectorTitle.textContent = `Event // #${id}`;
+      }
+    });
+  });
+
+  // Category filter tabs
+  const catPills = document.querySelectorAll('.cat-pill');
+  catPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      catPills.forEach(p => {
+        p.classList.remove('bg-surface-container', 'border-border-medium');
+        p.classList.add('border-transparent');
+      });
+      pill.classList.add('bg-surface-container', 'border-border-medium');
+      pill.classList.remove('border-transparent');
+
+      const cat = pill.getAttribute('data-cat');
+      rows.forEach(row => {
+        if (cat === 'all' || row.getAttribute('data-type') === cat) {
+          row.style.display = 'grid';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Search input live filtering
+  const searchInput = document.getElementById('audit-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        if (text.includes(q)) {
+          row.style.display = 'grid';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  }
+
+  // Copy JSON Payload to clipboard
+  const copyBtn = document.getElementById('copy-json-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const code = document.querySelector('pre').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const span = copyBtn.querySelector('span:last-child');
+        const orig = span.textContent;
+        span.textContent = 'Copied!';
+        setTimeout(() => { span.textContent = orig; }, 1500);
+      });
+    });
+  }
+
+  // Filter Reset CTA
+  const resetBtn = document.getElementById('reset-filters');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      document.getElementById('filter-provider').selectedIndex = 0;
+      document.getElementById('filter-status').selectedIndex = 0;
+      document.getElementById('filter-timerange').selectedIndex = 1;
+      catPills[0].click();
+      rows.forEach(r => r.style.display = 'grid');
+    });
+  }
+</script></main></div></body></html>

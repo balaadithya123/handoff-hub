@@ -1,9 +1,0 @@
-/* Landing-page nav fixes: stay above content, never overflow, readable on mobile.
-   Dashboard nav styles live in shell.css. */
-.top { z-index: 50; gap: 12px; }
-.top .brand { white-space: nowrap; }
-
-@media (max-width: 820px) {
-  .top { padding: 0 12px; }
-  .top nav { gap: 10px; }
-}

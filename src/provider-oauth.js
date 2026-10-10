@@ -251,8 +251,8 @@ async function consume(p, session, ticket) {
 async function status(session) {
   const id = await account(session);
   if (!id) throw new Error('Not signed in.');
-  const rows = await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&select=provider,provider_account_name,scope,updated_at');
-  if (await vercelConnectAuthorized(id)) { if (!rows.some(r => r.provider === 'vercel')) rows.push({ provider: 'vercel', provider_account_name: null, scope: null, updated_at: new Date().toISOString() }); } else return rows.filter(r => r.provider !== 'vercel');
+  const rows = await rest('provider_connections?account_id=eq.' + encodeURIComponent(id) + '&select=provider,provider_account_name,scope,updated_at,expires_at');
+  if (await vercelConnectAuthorized(id)) { if (!rows.some(r => r.provider === 'vercel')) rows.push({ provider: 'vercel', provider_account_name: null, scope: null, updated_at: new Date().toISOString(), expires_at: null }); } else return rows.filter(r => r.provider !== 'vercel');
   return rows;
 }
 

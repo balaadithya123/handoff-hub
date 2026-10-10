@@ -12,7 +12,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "secondary", size = "md", loading = false, icon, children, disabled, ...props }, ref) => {
-    const base = "inline-flex items-center justify-center font-medium transition-all select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
+    const base = "inline-flex items-center justify-center font-medium transition-all select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60eca8] disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
 
     const sizeClasses = {
       sm: "h-7 px-2.5 text-xs rounded-md gap-1.5",
@@ -21,8 +21,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const variantClasses = {
-      primary: "bg-white text-black hover:bg-neutral-200 active:bg-neutral-300 font-semibold shadow-sm",
-      secondary: "bg-[#111] text-[#ededed] border border-white/10 hover:border-white/20 hover:bg-[#181818]",
+      primary: "bg-[#60eca8] text-[#0a0a0a] hover:bg-[#3ecf8e] active:bg-[#3ecf8e] font-semibold shadow-sm",
+      secondary: "bg-[#121212] text-[#ededed] border border-white/8 hover:border-white/16 hover:bg-[#181818]",
       ghost: "bg-transparent text-[#a1a1a1] hover:text-[#ededed] hover:bg-white/5",
       status: "bg-[#3ecf8e]/10 text-[#3ecf8e] border border-[#3ecf8e]/30 hover:bg-[#3ecf8e]/20",
       danger: "bg-[#ff7b7b]/10 text-[#ff7b7b] border border-[#ff7b7b]/30 hover:bg-[#ff7b7b]/20",

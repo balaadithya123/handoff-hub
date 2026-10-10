@@ -13,9 +13,16 @@ const points = [
   "We never ask for third-party passwords or API keys",
 ];
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string }>;
+}) {
   const jar = await cookies();
-  if (await sessionUser(jar.get(SESSION_COOKIE)?.value)) redirect("/");
+  const params = await searchParams;
+  if (await sessionUser(jar.get(SESSION_COOKIE)?.value)) {
+    redirect(params?.next || "/overview");
+  }
 
   return (
     <div className="min-h-screen bg-black text-[#ededed] font-sans antialiased flex flex-col">
