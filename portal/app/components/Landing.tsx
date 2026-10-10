@@ -25,10 +25,10 @@ const FEATURES = [
   },
 ];
 
-export default function Landing() {
+export default function Landing({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <div className="min-h-screen bg-black text-[#ededed] font-sans antialiased flex flex-col">
-      <PublicHeader />
+      <PublicHeader signedIn={signedIn} />
 
       <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-8 py-12 sm:py-20 space-y-16">
         {/* Hero */}
@@ -52,10 +52,10 @@ export default function Landing() {
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
-                href="/login"
+                href={signedIn ? "/overview" : "/login"}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#60eca8] hover:bg-[#7af0b6] text-[#00210f] text-[13px] font-semibold transition-colors"
               >
-                Get started <ArrowRight className="w-3.5 h-3.5" />
+                {signedIn ? "Open dashboard" : "Get started"} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <Link
                 href="/connect/setup"
@@ -72,7 +72,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Event inspector sample, mirrors the dashboard's detail panel */}
+          {/* Event inspector sample */}
           <div className="lg:col-span-5 rounded-xl bg-[#0a0a0a] border border-white/[0.08] overflow-hidden">
             <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
               <span className="font-mono text-[12px] text-[#60eca8]">Event // Task handed off</span>

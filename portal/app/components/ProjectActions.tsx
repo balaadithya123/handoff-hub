@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, ArrowRightLeft, AlertCircle } from "lucide-react";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
 
 async function call(body: Record<string, unknown>): Promise<{ ok: boolean; error: string }> {
   const r = await fetch("/api/projects", {
@@ -48,19 +50,15 @@ export function PortalSwitch({
 
   return (
     <div className="inline-flex flex-col items-start gap-1">
-      <button
-        type="button"
+      <Button
+        variant={ghost ? "secondary" : "primary"}
+        size="sm"
         onClick={go}
-        disabled={busy}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 ${
-          ghost
-            ? "bg-[#111] hover:bg-white/10 text-[#a1a1a1] hover:text-[#ededed] border border-white/10"
-            : "bg-[#3ecf8e] text-black hover:bg-[#6ee7b7] font-semibold shadow-sm"
-        }`}
+        loading={busy}
+        icon={<ArrowRightLeft className="w-3.5 h-3.5" />}
       >
-        <ArrowRightLeft className="w-3.5 h-3.5" />
-        <span>{busy ? "Switching…" : label}</span>
-      </button>
+        {busy ? "Switching…" : label}
+      </Button>
       {err && <span className="text-[11px] text-[#ff7b7b]">{err}</span>}
     </div>
   );
@@ -92,7 +90,7 @@ export function ProjectCreate({ hubUser }: { hubUser: string }) {
   return (
     <div className="space-y-2 w-full max-w-2xl">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <input
+        <Input
           value={name}
           maxLength={80}
           placeholder="New project name"
@@ -104,9 +102,9 @@ export function ProjectCreate({ hubUser }: { hubUser: string }) {
               submit();
             }
           }}
-          className="px-3 py-2 rounded-lg bg-[#0a0a0a] border border-white/10 text-xs text-[#ededed] placeholder-[#707070] focus:outline-none focus:border-[#3ecf8e] sm:w-48"
+          className="sm:w-48"
         />
-        <input
+        <Input
           value={description}
           maxLength={300}
           placeholder="Description (optional)"
@@ -118,17 +116,19 @@ export function ProjectCreate({ hubUser }: { hubUser: string }) {
               submit();
             }
           }}
-          className="px-3 py-2 rounded-lg bg-[#0a0a0a] border border-white/10 text-xs text-[#ededed] placeholder-[#707070] focus:outline-none focus:border-[#3ecf8e] flex-1"
+          className="flex-1"
         />
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={submit}
+          loading={busy}
           disabled={busy || name.trim() === ""}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-white text-black hover:bg-neutral-200 transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+          icon={<Plus className="w-3.5 h-3.5" />}
+          className="shrink-0 h-9"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span>{busy ? "Creating…" : "Create pool"}</span>
-        </button>
+          {busy ? "Creating…" : "Create pool"}
+        </Button>
       </div>
       {err && (
         <div className="flex items-center gap-1 text-xs text-[#ff7b7b]">

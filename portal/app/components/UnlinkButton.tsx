@@ -1,32 +1,53 @@
 "use client";
-import { useState } from "react";
 
-/** Unlink one AI account. Uses an inline confirm (window.confirm is blocked in some browsers/webviews and made the button look dead). */
+import { useState } from "react";
+import { Button } from "./ui/Button";
+
 export default function UnlinkButton({ id, name }: { id: string; name?: string }) {
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
   async function go() {
     setBusy(true);
     setErr("");
-    const r = await fetch("/api/unlink", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }).catch(() => null);
-    if (r && r.ok) { window.location.reload(); return; }
+    const r = await fetch("/api/unlink", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }).catch(() => null);
+
+    if (r && r.ok) {
+      window.location.reload();
+      return;
+    }
     const d = r ? await r.json().catch(() => ({})) : {};
     setErr(d?.error || "Could not unlink. Try again.");
     setBusy(false);
   }
+
   if (!asking) {
-    return <button type="button" className="shBtn ghost" onClick={() => { setErr(""); setAsking(true); }}>Unlink</button>;
+    return (
+      <Button variant="ghost" size="sm" onClick={() => { setErr(""); setAsking(true); }}>
+        Unlink
+      </Button>
+    );
   }
-  const who = name ? "\"" + name + "\"" : "this AI account";
+
+  const who = name ? `"${name}"` : "this AI account";
+
   return (
-    <div style={{ minWidth: 220 }}>
-      <p className="shMuted" style={{ margin: "0 0 6px" }}>Unlink {who}? It will stop using your connections. Your other accounts are not affected.</p>
-      <div style={{ display: "flex", gap: 6 }}>
-        <button type="button" className="shBtn" onClick={go} disabled={busy}>{busy ? "Unlinking…" : "Yes, unlink"}</button>
-        <button type="button" className="shBtn ghost" onClick={() => setAsking(false)} disabled={busy}>Cancel</button>
+    <div className="space-y-2 min-w-[200px]">
+      <p className="text-xs text-[#a1a1a1]">Unlink {who}? It will stop using your connections.</p>
+      <div className="flex items-center gap-2">
+        <Button variant="danger" size="sm" onClick={go} loading={busy}>
+          Yes, unlink
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setAsking(false)} disabled={busy}>
+          Cancel
+        </Button>
       </div>
-      {err && <p className="shErr" role="alert">{err}</p>}
+      {err && <p className="text-[11px] text-[#ff7b7b]">{err}</p>}
     </div>
   );
 }

@@ -41,7 +41,20 @@ export default function Shell({
   notice: { kind: "error" | "ok"; text: string } | null;
   children: ReactNode;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("handoff_rail_collapsed") === "true";
+    }
+    return false;
+  });
+
+  const toggleCollapsed = (nextState: boolean) => {
+    setCollapsed(nextState);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("handoff_rail_collapsed", String(nextState));
+    }
+  };
+
   const [cmdOpen, setCmdOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -197,8 +210,9 @@ export default function Shell({
               </div>
             )}
             <button
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => toggleCollapsed(!collapsed)}
               title={collapsed ? "Expand rail" : "Collapse rail"}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               className="p-1.5 rounded-lg text-[#707070] hover:text-[#e5e2e1] hover:bg-[#121212] border border-transparent hover:border-white/[0.08] transition-all"
             >
               {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}

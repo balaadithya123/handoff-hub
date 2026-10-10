@@ -1,9 +1,15 @@
 import Link from "next/link";
 
-export default function PublicHeader({ cta = true }: { cta?: boolean }) {
+export default function PublicHeader({
+  cta = true,
+  signedIn = false,
+}: {
+  cta?: boolean;
+  signedIn?: boolean;
+}) {
   return (
     <header className="h-16 px-4 sm:px-8 border-b border-white/[0.08] flex items-center justify-between bg-black/80 backdrop-blur-xl sticky top-0 z-40">
-      <Link href="/" className="flex items-center gap-2.5">
+      <Link href={signedIn ? "/overview" : "/"} className="flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-md bg-[#2a2a2a] border border-white/[0.08] flex items-center justify-center text-[#60eca8] font-semibold text-sm">
           H
         </div>
@@ -21,10 +27,10 @@ export default function PublicHeader({ cta = true }: { cta?: boolean }) {
         </Link>
         {cta && (
           <Link
-            href="/login"
-            className="px-3.5 py-1.5 rounded-lg bg-[#121212] hover:bg-[#201f1f] border border-white/[0.08] hover:border-white/[0.16] text-[#e5e2e1] text-[13px] font-medium transition-all"
+            href={signedIn ? "/overview" : "/login"}
+            className="px-3.5 py-1.5 rounded-lg bg-[#60eca8] hover:bg-[#3ecf8e] text-[#0a0a0a] text-[13px] font-medium transition-all"
           >
-            Sign in
+            {signedIn ? "Open dashboard" : "Sign in"}
           </Link>
         )}
       </nav>

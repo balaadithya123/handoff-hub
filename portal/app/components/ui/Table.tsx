@@ -4,7 +4,7 @@ import { TableHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 
 export function Table({ className = "", children, ...props }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-white/10 bg-[#0a0a0a]">
+    <div className="w-full overflow-x-auto rounded-xl border border-white/8 bg-[#0a0a0a]">
       <table className={`w-full text-left text-xs border-collapse ${className}`} {...props}>
         {children}
       </table>
@@ -14,7 +14,7 @@ export function Table({ className = "", children, ...props }: TableHTMLAttribute
 
 export function TableHeader({ children }: { children: ReactNode }) {
   return (
-    <thead className="bg-[#111] border-b border-white/10 text-[#8a8a8a] font-mono text-[11px] uppercase tracking-wider select-none">
+    <thead className="bg-[#121212] border-b border-white/8 text-[#707070] font-mono text-[11px] uppercase tracking-wider select-none">
       {children}
     </thead>
   );

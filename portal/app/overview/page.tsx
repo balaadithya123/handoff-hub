@@ -9,7 +9,7 @@ export default async function OverviewRoutePage() {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   const user = await sessionUser(token);
-  if (!user || !token) redirect("/login");
+  if (!user || !token) redirect("/login?next=/overview");
 
   return <Home searchParams={Promise.resolve({ tab: "overview" })} />;
 }

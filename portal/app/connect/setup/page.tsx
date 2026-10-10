@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { ArrowLeft, Plug, ShieldCheck } from "lucide-react";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
 
 const providers = [
   {
@@ -20,67 +23,51 @@ const providers = [
 
 export default function ConnectSetup() {
   return (
-    <main style={{ maxWidth: 880, margin: "0 auto", padding: "48px 24px" }}>
-      <Link href="/" style={{ color: "var(--orange)", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
-        &larr; Back to connections
-      </Link>
-      <h1 style={{ fontSize: 32, letterSpacing: "-0.03em", margin: "20px 0 8px", fontWeight: 700, color: "var(--text-main)" }}>
-        Provider setup
-      </h1>
-      <p style={{ color: "var(--text-muted)", lineHeight: 1.6, maxWidth: 760, fontSize: 14 }}>
-        Users never enter provider credentials. Handoff Hub keeps OAuth client credentials and user tokens server-side and performs the provider authorization and token exchange.
-      </p>
-      <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
-        {providers.map((p) => (
-          <section
-            key={p.name}
-            style={{
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              padding: 20,
-              background: "var(--bg-surface)",
-            }}
+    <main className="min-h-screen bg-[#000000] text-[#ededed] font-sans antialiased py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div>
+          <Link
+            href="/integrations"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#a1a1a1] hover:text-[#60eca8] transition-colors mb-6"
           >
-            <b style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)" }}>{p.name}</b>
-            <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "8px 0 12px" }}>
-              One-time app-owner setup: register the OAuth app and add its client ID/secret to Handoff Hub production environment.
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>PORTAL // RETURN TO INTEGRATIONS</span>
+          </Link>
+          <div className="border-b border-white/8 pb-6">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[#707070] block mb-1">
+              DEVELOPER // OAUTH SETUP
+            </span>
+            <h1 className="text-3xl font-semibold text-[#ededed] tracking-tight">Provider OAuth Setup</h1>
+            <p className="text-xs text-[#a1a1a1] mt-1 max-w-2xl">
+              OAuth client credentials and user tokens are stored server-side. Users authorize via provider-hosted login screens.
             </p>
-            <code
-              style={{
-                display: "block",
-                padding: "8px 12px",
-                borderRadius: 4,
-                background: "var(--bg-subtle)",
-                border: "1px solid var(--border)",
-                color: "var(--text-main)",
-                fontSize: 12,
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                wordBreak: "break-all",
-                marginBottom: 12,
-              }}
-            >
-              {p.callback}
-            </code>
-            <p style={{ color: "var(--text-soft)", fontSize: 12, marginBottom: 0 }}>
-              Server variables: {p.vars}
-            </p>
-          </section>
-        ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          {providers.map((p) => (
+            <Card key={p.name} eyebrow="OAUTH 2.0 PKCE" title={p.name}>
+              <div className="space-y-3 mt-2">
+                <p className="text-xs text-[#a1a1a1]">
+                  Register an OAuth app in your developer console and set this callback URL:
+                </p>
+                <div className="p-3 rounded-lg bg-[#121212] border border-white/8 font-mono text-xs text-[#60eca8] select-all break-all">
+                  {p.callback}
+                </div>
+                <div className="text-[11px] font-mono text-[#707070]">
+                  Required Vercel env vars: <span className="text-[#a1a1a1]">{p.vars}</span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <Card eyebrow="CUSTOM DOMAINS" title="Vercel & OAuth Production Hostnames">
+          <p className="text-xs text-[#a1a1a1] leading-relaxed mt-2">
+            The canonical production host <code className="text-[#60eca8]">https://handoff-portal.vercel.app</code> and backend host <code className="text-[#60eca8]">https://handoff-mcp.vercel.app</code> are pre-configured. Custom domains do not require changes to the internal token router.
+          </p>
+        </Card>
       </div>
-      <section
-        style={{
-          marginTop: 24,
-          padding: 20,
-          border: "1px solid var(--border)",
-          borderRadius: 6,
-          background: "var(--bg-surface)",
-        }}
-      >
-        <b style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)" }}>Custom domain: optional</b>
-        <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: "8px 0 0" }}>
-          The HTTPS Vercel production hostname can be used as the callback. A custom domain is not inherently required, although each provider&apos;s app/review policies still apply.
-        </p>
-      </section>
     </main>
   );
 }

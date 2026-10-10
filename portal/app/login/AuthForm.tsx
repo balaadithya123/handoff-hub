@@ -37,7 +37,9 @@ export default function AuthForm() {
         setBusy(false);
         return;
       }
-      router.replace("/");
+      const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const nextPath = params?.get("next") || "/overview";
+      router.replace(nextPath);
       router.refresh();
     } catch {
       setError("Could not reach the server. Check your connection.");

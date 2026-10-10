@@ -13,7 +13,7 @@ export default async function ActivityRoutePage({
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   const user = await sessionUser(token);
-  if (!user || !token) redirect("/login");
+  if (!user || !token) redirect("/login?next=/activity");
 
   const sp = (await searchParams) || {};
   const project = typeof sp.project === "string" ? sp.project : "";
