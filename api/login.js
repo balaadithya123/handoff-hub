@@ -64,6 +64,9 @@ var c=document.querySelector('.card');if(c)c.addEventListener('pointermove',func
 window.addEventListener('pageshow',function(){document.documentElement.classList.remove('busy');document.querySelectorAll('button.loading').forEach(function(b){b.classList.remove('loading');b.disabled=false})});
 `;
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = email => typeof email === 'string' && email.length <= 254 && EMAIL_RE.test(email);
+
 const okIcon='<div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>';
 const errIcon='<div class="ok err"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></div>';
 const btn=label=>`<button class="btn"><span class="t">${label}</span><i class="spin"></i></button>`;
@@ -90,6 +93,9 @@ export default async function handler(req,res){
  if(req.method==='GET')return html(res,'Handoff Hub Login',`<h1>Welcome back</h1><p class="sub">Sign in with your authorised email and we'll send you a one-time code.</p><form method="post"><input type="hidden" name="action" value="send"><label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>${btn('Send verification code')}</form>`);
  if(req.method!=='POST')return res.status(405).end();
  const b=body(req),email=str(b.email).trim().toLowerCase();
+ if((b.action==='send'||b.action==='verify')&&!isValidEmail(email)){
+  return html(res,'Invalid email',`${errIcon}<h1>Invalid email</h1><p class="sub">Please enter a valid email address.</p>${retry}`,400);
+ }
  if(b.action==='send'){
   const r=await auth('otp',{email,create_user:true});
   if(!r.ok)return html(res,'Could not send',`${errIcon}<h1>Could not send the code</h1><p class="sub">${esc(r.error||'Could not send the code.')}</p>${retry}`,502);
