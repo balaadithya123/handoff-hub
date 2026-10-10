@@ -1,5 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Brain, Plug, ShieldCheck } from "lucide-react";
+import { ArrowRight, Brain, Plug, ShieldCheck, Terminal, Check } from "lucide-react";
 import PublicHeader from "./PublicHeader";
 
 const APPS = ["GitHub", "Vercel", "Supabase", "Notion", "Canva", "Slack", "Linear", "Figma", "Google Drive", "Gmail", "Sentry", "Jira"];
@@ -25,7 +28,24 @@ const FEATURES = [
   },
 ];
 
+const TRACE_STEPS = [
+  { title: "Decision saved to project memory", agent: "claude", payload: '{\n  "action": "save_memory",\n  "agent": "claude",\n  "key": "arch_decision",\n  "project": "my-project"\n}' },
+  { title: "Task handed to the next assistant", agent: "claude -> chatgpt", payload: '{\n  "action": "hand_off_task",\n  "agent": "claude",\n  "to": "chatgpt",\n  "project": "my-project"\n}' },
+  { title: "Context brief picked up on the other side", agent: "chatgpt", payload: '{\n  "action": "get_context_brief",\n  "agent": "chatgpt",\n  "status": "ready",\n  "project": "my-project"\n}' },
+];
+
 export default function Landing({ signedIn = false }: { signedIn?: boolean }) {
+  const [activeStep, setActiveStep] = useState(1);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveStep((prev) => (prev % TRACE_STEPS.length) + 1);
+    }, 3200);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentTrace = TRACE_STEPS[activeStep - 1];
+
   return (
     <div className="min-h-screen bg-black text-[#ededed] font-sans antialiased flex flex-col">
       <PublicHeader signedIn={signedIn} />
@@ -72,46 +92,85 @@ export default function Landing({ signedIn = false }: { signedIn?: boolean }) {
             </div>
           </div>
 
-          {/* Event inspector sample */}
-          <div className="lg:col-span-5 rounded-xl bg-[#0a0a0a] border border-white/[0.08] overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
-              <span className="font-mono text-[12px] text-[#60eca8]">Event // Task handed off</span>
-              <span className="px-1.5 rounded font-mono text-[10px] bg-white/5 text-[#a1a1a1] border border-white/[0.08] leading-4">
-                EXAMPLE
+          {/* Animated Hero Event Inspector / Codebox */}
+          <div className="lg:col-span-5 rounded-xl bg-[#0a0a0a] border border-white/[0.08] hover:border-[#60eca8]/40 transition-all duration-500 shadow-2xl hover:shadow-[0_0_30px_-5px_rgba(96,236,168,0.15)] overflow-hidden group">
+            {/* Header bar */}
+            <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between bg-[#121212]/50">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#60eca8] animate-ping" />
+                <span className="font-mono text-[12px] text-[#60eca8] font-medium">Event // Task handed off</span>
+              </div>
+              <span className="px-1.5 py-0.5 rounded font-mono text-[10px] bg-white/5 text-[#a1a1a1] border border-white/[0.08]">
+                LIVE STREAM
               </span>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-white/[0.08] border-b border-white/[0.08]">
-              <div className="p-3">
+
+            {/* From / To section */}
+            <div className="grid grid-cols-2 divide-x divide-white/[0.08] border-b border-white/[0.08] bg-[#0a0a0a]">
+              <div className="p-3 space-y-0.5">
                 <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider">From</span>
-                <span className="block text-[13px] text-[#ededed]">Claude</span>
+                <span className="block text-[13px] font-medium text-[#ededed]">Claude 3.7 Sonnet</span>
               </div>
-              <div className="p-3">
+              <div className="p-3 space-y-0.5">
                 <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider">To</span>
-                <span className="block text-[13px] text-[#ededed]">ChatGPT</span>
+                <span className="block text-[13px] font-medium text-[#ededed]">ChatGPT o3-mini</span>
               </div>
             </div>
-            <div className="p-3 border-b border-white/[0.08] space-y-2">
-              <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider">Trace</span>
-              {["Decision saved to project memory", "Task handed to the next assistant", "Context brief picked up on the other side"].map(
-                (t, i) => (
-                  <div key={t} className="flex items-start gap-2.5 text-[13px] text-[#ededed]">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#60eca8] shrink-0" />
-                    <span>
-                      <span className="font-mono text-[11px] text-[#707070] mr-2">0{i + 1}</span>
-                      {t}
-                    </span>
-                  </div>
-                )
-              )}
+
+            {/* Interactive Trace Steps */}
+            <div className="p-3 border-b border-white/[0.08] space-y-2 bg-[#0a0a0a]">
+              <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider mb-2">
+                Pipeline Trace (Cycle {activeStep}/3)
+              </span>
+              {TRACE_STEPS.map((step, idx) => {
+                const isActive = idx + 1 === activeStep;
+                return (
+                  <button
+                    key={step.title}
+                    onClick={() => setActiveStep(idx + 1)}
+                    className={`w-full text-left flex items-start gap-2.5 p-2 rounded-lg transition-all duration-300 ${
+                      isActive
+                        ? "bg-[#121212] border border-[#60eca8]/30 text-[#ededed]"
+                        : "bg-transparent border border-transparent text-[#707070] hover:text-[#a1a1a1]"
+                    }`}
+                  >
+                    <span
+                      className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
+                        isActive ? "bg-[#60eca8] shadow-[0_0_8px_#60eca8]" : "bg-[#2a2a2a]"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                      <span className="text-[12px] font-medium truncate">
+                        <span className="font-mono text-[10px] text-[#707070] mr-2">0{idx + 1}</span>
+                        {step.title}
+                      </span>
+                      {isActive && (
+                        <span className="font-mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-[#60eca8]/10 text-[#60eca8] border border-[#60eca8]/20 shrink-0">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="p-3">
-              <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider mb-1.5">Payload</span>
-              <pre className="font-mono text-[11px] leading-relaxed text-[#60eca8] bg-black border border-white/[0.08] rounded-lg p-3 overflow-x-auto">{`{
-  "action": "hand_off_task",
-  "agent": "claude",
-  "to": "chatgpt",
-  "project": "my-project"
-}`}</pre>
+
+            {/* Animated Code Payload Box */}
+            <div className="p-3 relative bg-black/60">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-mono text-[10px] text-[#707070] uppercase tracking-wider flex items-center gap-1.5">
+                  <Terminal className="w-3 h-3 text-[#60eca8]" />
+                  Payload Stream
+                </span>
+                <span className="font-mono text-[10px] text-[#707070]">JSON // S256</span>
+              </div>
+              <div className="relative rounded-lg overflow-hidden border border-white/[0.08] bg-[#000000]">
+                {/* Subtle top scanline accent */}
+                <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#60eca8] to-transparent opacity-60 animate-pulse" />
+                <pre className="font-mono text-[11px] leading-relaxed text-[#60eca8] p-3 overflow-x-auto min-h-[120px] transition-all duration-300">
+                  {currentTrace.payload}
+                </pre>
+              </div>
             </div>
           </div>
         </section>
