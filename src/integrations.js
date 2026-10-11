@@ -138,14 +138,18 @@ export async function githubCommitFiles({ repository, files, message, branch = D
   const baseCommit = await githubApiFetch(`/repos/${repository}/git/commits/${baseCommitSha}`);
   const baseTreeSha = baseCommit.tree.sha;
 
-  const treeEntries = [];
-  for (const file of files) {
-    const blob = await githubApiFetch(`/repos/${repository}/git/blobs`, {
-      method: 'POST',
-      body: JSON.stringify({ content: file.content, encoding: 'utf-8' })
-    });
-    treeEntries.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
-  }
+  // Performance optimization: Upload git blobs concurrently with Promise.all
+  // instead of sequentially awaiting each API call in a loop.
+  // Reduces multi-file commit network latency from O(N * T) to O(T).
+  const treeEntries = await Promise.all(
+    files.map(async file => {
+      const blob = await githubApiFetch(`/repos/${repository}/git/blobs`, {
+        method: 'POST',
+        body: JSON.stringify({ content: file.content, encoding: 'utf-8' })
+      });
+      return { path: file.path, mode: '100644', type: 'blob', sha: blob.sha };
+    })
+  );
 
   const newTree = await githubApiFetch(`/repos/${repository}/git/trees`, {
     method: 'POST',
