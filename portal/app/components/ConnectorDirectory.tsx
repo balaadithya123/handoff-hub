@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Search, Plug, CheckCircle2, ShieldCheck, ChevronRight, ExternalLink } from "lucide-react";
 import ConnectionButton from "./ConnectionButton";
 import { Sheet } from "./ui/Sheet";
 import { Badge } from "./ui/Badge";
 import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
+import "./landing/landing.css";
 
 // [id, name, category, description, live]
 const APPS: ReadonlyArray<readonly [string, string, string, string, boolean]> = [
@@ -53,6 +54,13 @@ const initials = (n: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+/** Feeds the shared spot-fx spotlight (--mouse-x / --mouse-y), same as the dashboard Card. */
+function track(e: MouseEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mouse-x", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--mouse-y", `${e.clientY - r.top}px`);
+}
+
 export default function ConnectorDirectory({
   connected,
   names,
@@ -85,6 +93,15 @@ export default function ConnectorDirectory({
 
   const selectedIsConnected = selectedAppId ? on.has(selectedAppId) : false;
   const selectedAccountName = selectedAppId && selectedIsConnected ? names[selectedAppId] : null;
+
+  /** Enter or Space on the card itself opens the details; keys pressed on the inner button are left alone. */
+  const openOnKey = (id: string) => (e: KeyboardEvent<HTMLElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setSelectedAppId(id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -119,8 +136,13 @@ export default function ConnectorDirectory({
             {connectedApps.map(([id, name, group]) => (
               <div
                 key={id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${name} details`}
                 onClick={() => setSelectedAppId(id)}
-                className="p-3 rounded-lg bg-[#0a0a0a] border border-white/10 hover:border-[#3ecf8e]/40 transition-colors cursor-pointer flex items-center justify-between group"
+                onKeyDown={openOnKey(id)}
+                onMouseMove={track}
+                className="spot-fx p-3 rounded-lg bg-[#0a0a0a] border border-white/10 hover:border-[#3ecf8e]/40 transition-colors cursor-pointer flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-[#ededed]">
@@ -150,6 +172,7 @@ export default function ConnectorDirectory({
             <button
               key={c}
               onClick={() => setCat(c)}
+              aria-pressed={cat === c}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                 cat === c
                   ? "bg-white text-black font-semibold shadow-sm"
@@ -169,6 +192,7 @@ export default function ConnectorDirectory({
           <Input
             icon={<Search className="w-3.5 h-3.5 text-[#8a8a8a]" />}
             placeholder="Search integrations..."
+            aria-label="Search integrations"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -192,8 +216,13 @@ export default function ConnectorDirectory({
             return (
               <div
                 key={id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${name} details`}
                 onClick={() => setSelectedAppId(id)}
-                className={`p-4 rounded-xl bg-[#0a0a0a] border transition-all flex flex-col justify-between gap-4 cursor-pointer group ${
+                onKeyDown={openOnKey(id)}
+                onMouseMove={track}
+                className={`spot-fx p-4 rounded-xl bg-[#0a0a0a] border transition-all flex flex-col justify-between gap-4 cursor-pointer group ${
                   isConnected
                     ? "border-[#3ecf8e]/30 hover:border-[#3ecf8e]/60 bg-[#3ecf8e]/[0.02]"
                     : "border-white/10 hover:border-white/25"
