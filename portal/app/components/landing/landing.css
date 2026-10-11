@@ -24,6 +24,20 @@
   box-shadow: 0 0 0 1px rgba(62, 207, 142, 0.3), 0 8px 32px -8px rgba(62, 207, 142, 0.12);
 }
 
+/* Spotlight overlay only (no surface/border), for components that already style themselves, such as the dashboard Card */
+.spot-fx { position: relative; }
+.spot-fx::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 0), rgba(255, 255, 255, 0.04), transparent 60%);
+}
+.spot-fx:hover::before { opacity: 1; }
+
 .btn-press { transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
 .btn-press:hover { transform: scale(0.99); }
 .btn-press:active { transform: scale(0.97); }

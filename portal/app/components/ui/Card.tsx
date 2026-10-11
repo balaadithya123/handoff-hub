@@ -1,6 +1,7 @@
 "use client";
 
-import { HTMLAttributes, ReactNode } from "react";
+import { HTMLAttributes, MouseEvent, ReactNode } from "react";
+import "../landing/landing.css";
 
 export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   eyebrow?: string;
@@ -10,12 +11,31 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title">
   glow?: boolean;
 }
 
-export function Card({ eyebrow, title, description, action, glow = false, className = "", children, ...props }: CardProps) {
+/** Dashboard bento card with the Stitch cursor-tracking spotlight (--mouse-x / --mouse-y). */
+export function Card({
+  eyebrow,
+  title,
+  description,
+  action,
+  glow = false,
+  className = "",
+  children,
+  onMouseMove,
+  ...props
+}: CardProps) {
+  const track = (e: MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mouse-x", `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty("--mouse-y", `${e.clientY - r.top}px`);
+    onMouseMove?.(e);
+  };
+
   return (
     <div
-      className={`relative rounded-xl bg-[#0a0a0a] border border-white/10 p-5 transition-all overflow-hidden ${
+      className={`spot-fx relative rounded-xl bg-[#0a0a0a] border border-white/10 p-5 transition-[border-color,box-shadow] duration-200 overflow-hidden ${
         glow ? "hover:border-[#3ecf8e]/40 hover:shadow-[0_0_24px_-4px_rgba(62,207,142,0.15)]" : "hover:border-white/20"
       } ${className}`}
+      onMouseMove={track}
       {...props}
     >
       {(eyebrow || title || action) && (

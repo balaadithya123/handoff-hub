@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useEffect, useRef, useState, ReactNode } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -44,6 +44,33 @@ export default function Shell({
   const [collapsed, setCollapsed] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Tablet widths (768-1023px) start with the 56px icon rail; desktop gets the full 256px rail.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
+    const apply = () => setCollapsed(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  // Close the account menu on outside click or Escape.
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [userMenuOpen]);
 
   const initial = (email || "?").charAt(0).toUpperCase();
 
@@ -258,9 +285,11 @@ export default function Shell({
             <span>Connect</span>
           </Link>
 
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
+              aria-haspopup="menu"
+              aria-expanded={userMenuOpen}
               className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-lg hover:bg-[#121212] transition-colors border border-white/[0.08]"
             >
               <div className="text-right hidden md:block leading-tight">
@@ -288,7 +317,7 @@ export default function Shell({
       </header>
 
       {/* Main content */}
-      <main className={`dash-main flex-1 pt-16 transition-[padding] duration-200 ${padL} pb-20 md:pb-8`}>
+      <main className={`dash-main flex-1 pt-16 transition-[padding] duration-200 ${padL} pb-24 md:pb-8`}>
         <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 md:py-8 space-y-6">
           {notice && (
             <div
@@ -306,7 +335,10 @@ export default function Shell({
       </main>
 
       {/* Mobile Bottom Navigation Dock */}
-      <nav className="fixed bottom-0 left-0 right-0 h-14 bg-[#0a0a0a]/90 backdrop-blur-lg border-t border-white/10 z-40 flex items-center justify-around md:hidden px-2">
+      <nav
+        aria-label="Primary"
+        className="fixed bottom-0 left-0 right-0 min-h-14 pb-[env(safe-area-inset-bottom)] bg-[#0a0a0a]/90 backdrop-blur-lg border-t border-white/10 z-40 flex items-center justify-around md:hidden px-2"
+      >
         {NAV.map((item) => {
           const IconComponent = getIcon(item.id);
           const isActive = tab === item.id;
@@ -314,10 +346,12 @@ export default function Shell({
             <Link
               key={item.id}
               href={hrefForTab(item.id)}
-              className={`flex flex-col items-center justify-center p-1 gap-0.5 text-[10px] font-medium ${
-                isActive ? "text-[#3ecf8e]" : "text-[#8a8a8a]"
+              aria-current={isActive ? "page" : undefined}
+              className={`relative flex flex-col items-center justify-center px-1.5 py-1.5 gap-0.5 text-[10px] font-medium transition-colors ${
+                isActive ? "text-[#3ecf8e]" : "text-[#8a8a8a] hover:text-[#ededed]"
               }`}
             >
+              {isActive && <span className="absolute -top-px left-2 right-2 h-px bg-[#3ecf8e]" />}
               <IconComponent className="w-4 h-4" />
               <span>{item.label.split(" ")[0]}</span>
             </Link>
