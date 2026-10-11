@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Brain, Plug, ShieldCheck } from "lucide-react";
+import { ArrowRight, Brain, LockKeyhole, Plug, ShieldCheck, Activity, GitBranch } from "lucide-react";
 import PublicHeader from "./PublicHeader";
 
 const APPS = ["GitHub", "Vercel", "Supabase", "Notion", "Canva", "Slack", "Linear", "Figma", "Google Drive", "Gmail", "Sentry", "Jira"];
@@ -27,16 +27,16 @@ const FEATURES = [
 
 export default function Landing({ signedIn = false }: { signedIn?: boolean }) {
   return (
-    <div className="min-h-screen bg-black text-[#ededed] font-sans antialiased flex flex-col">
+    <div className="min-h-screen bg-[#070908] text-[#edf2ef] font-sans antialiased flex flex-col">
       <PublicHeader signedIn={signedIn} />
 
-      <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-8 py-12 sm:py-20 space-y-16">
+      <main className="relative flex-1 w-full max-w-[1240px] mx-auto px-4 sm:px-8 pb-16"><div aria-hidden className="pointer-events-none absolute top-0 right-[-15%] w-[60%] h-[520px] opacity-20 blur-3xl" style={{ background: "radial-gradient(ellipse at center, #1c7650 0%, transparent 68%)" }} />
         {/* Hero */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        <section className="relative grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center pt-14 sm:pt-20 pb-14 sm:pb-20">
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#0a0a0a] border border-white/[0.08] font-mono text-[11px] text-[#bbcabe]">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#0b100d] border border-white/[0.08] font-mono text-[11px] text-[#bbcabe]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#60eca8] animate-pulse" />
-              <span>PORTAL // CONTEXT-HANDOFF</span>
+              <span>CONTEXT THAT MOVES WITH YOU</span>
             </div>
 
             <h1 className="text-[40px] sm:text-[52px] leading-[1.05] font-semibold tracking-[-0.04em] text-[#ededed]">
@@ -66,9 +66,9 @@ export default function Landing({ signedIn = false }: { signedIn?: boolean }) {
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 pt-4 border-t border-white/[0.08] font-mono text-[11px] text-[#707070]">
-              <span>OAuth 2.0 + PKCE</span>
-              <span>Account-isolated tokens</span>
-              <span>No third-party passwords</span>
+              <span>Provider sign-in</span>
+              <span>Account-scoped access</span>
+              <span>Reusable context</span>
             </div>
           </div>
 
@@ -137,7 +137,7 @@ export default function Landing({ signedIn = false }: { signedIn?: boolean }) {
 
         {/* Integrations */}
         <section className="space-y-4">
-          <span className="font-mono text-[11px] text-[#707070] uppercase tracking-wider">Works with</span>
+          <span className="font-mono text-[11px] text-[#707070] uppercase tracking-wider">YOUR WORKFLOW, CONNECTED</span>
           <div className="flex flex-wrap gap-2">
             {APPS.map((a) => (
               <span
