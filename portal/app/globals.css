@@ -5,6 +5,24 @@
 @theme {
   --font-sans: "Geist", Inter, ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-canvas: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-subtle: #121212;
+  --color-surface-hover: #171717;
+  --color-surface-container: #1f1f1f;
+  --color-surface-container-high: #282828;
+  --color-border-hairline: rgba(255, 255, 255, 0.08);
+  --color-border-medium: rgba(255, 255, 255, 0.16);
+  --color-primary: #3ecf8e;
+  --color-primary-fixed: #71fcb6;
+  --color-primary-container: #2ea872;
+  --color-secondary: #4ddcc6;
+  --color-signal-amber: #f5b14a;
+  --color-signal-red: #ff6b6b;
+  --color-text-main: #ededed;
+  --color-text-muted: #a1a1a1;
+  --color-text-soft: #707070;
 }
 
 :root {
@@ -93,3 +111,103 @@ a { color: inherit; }
   .dash-main h1 { font-size: 24px; line-height: 30px; letter-spacing: -0.025em; }
 }
 .dash-main .font-mono, .dash-main table { font-variant-numeric: tabular-nums; }
+
+/* Landing Page Specific Utilities and Animations */
+.grid-bg {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+.radial-mask {
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%);
+}
+.mask-linear {
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+@keyframes auraDrift {
+  0%, 100% { transform: translate(-50%, -10%) scale(1); opacity: 0.22; }
+  50% { transform: translate(-46%, -4%) scale(1.08); opacity: 0.32; }
+}
+.animate-aura {
+  animation: auraDrift 14s ease-in-out infinite;
+}
+
+@keyframes beamFlow {
+  0% { transform: translateX(-100%); opacity: 0; }
+  40% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(200%); opacity: 0; }
+}
+.animate-beam {
+  animation: beamFlow 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.faq-answer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+.faq-item.active .faq-answer {
+  max-height: 180px;
+  opacity: 1;
+}
+.faq-item.active .faq-icon {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .animate-marquee, .animate-aura, .animate-beam {
+    animation: none !important;
+  }
+}
+
+/* Material Symbols font class helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
