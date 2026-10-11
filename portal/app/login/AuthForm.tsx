@@ -65,9 +65,13 @@ export default function AuthForm() {
 
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-[#a1a1a1] block">Email Address</label>
+          <label htmlFor="auth-email" className="text-xs font-medium text-[#a1a1a1] block">
+            Email Address
+          </label>
           <Input
+            id="auth-email"
             type="email"
+            className="h-10 text-[13px]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -77,10 +81,14 @@ export default function AuthForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-[#a1a1a1] block">Password</label>
+          <label htmlFor="auth-password" className="text-xs font-medium text-[#a1a1a1] block">
+            Password
+          </label>
           <div className="relative">
             <Input
+              id="auth-password"
               type={showPw ? "text" : "password"}
+              className="h-10 text-[13px] pr-14"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={mode === "login" ? "Your password" : "At least 8 characters"}
@@ -89,7 +97,9 @@ export default function AuthForm() {
             <button
               type="button"
               onClick={() => setShowPw(!showPw)}
-              className="absolute right-2 top-2 text-[11px] font-mono text-[#8a8a8a] hover:text-[#ededed] px-1.5 py-0.5 rounded bg-white/5"
+              aria-label={showPw ? "Hide password" : "Show password"}
+              aria-pressed={showPw}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-mono text-[#8a8a8a] hover:text-[#ededed] px-1.5 py-0.5 rounded bg-white/5"
             >
               {showPw ? "Hide" : "Show"}
             </button>
@@ -97,7 +107,10 @@ export default function AuthForm() {
         </div>
 
         {error && (
-          <div className="p-2.5 rounded-lg border border-[#ff7b7b]/30 bg-[#ff7b7b]/10 text-xs text-[#ff7b7b]">
+          <div
+            role="alert"
+            className="p-2.5 rounded-lg border border-[#ff7b7b]/30 bg-[#ff7b7b]/10 text-xs text-[#ff7b7b]"
+          >
             {error}
           </div>
         )}
