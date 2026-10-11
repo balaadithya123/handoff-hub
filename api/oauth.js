@@ -14,19 +14,24 @@ const str=v=>typeof v==='string'?v:'';const esc=s=>String(s).replace(/[&<>"']/g,
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail=email=>typeof email==='string'&&email.length<=254&&EMAIL_RE.test(email);
 function oauthError(res,status,error,error_description){res.setHeader('Cache-Control','no-store');return res.status(status).json({error,error_description});}
-function page(res,status,title,inner){res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Frame-Options','DENY');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title></head><body><main>${inner}</main></body></html>`);}
+
+// Consent / sign-in page styling (Obsidian Signal: black canvas, hairline borders, green accent, white primary button).
+const PAGE_CSS=`:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0}body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#000;color:#ededed;font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}main{width:100%;max-width:420px;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:28px}.brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.02em;color:#a1a1a1;margin-bottom:22px}.dot{width:8px;height:8px;border-radius:50%;background:#3ecf8e;box-shadow:0 0 0 3px rgba(62,207,142,.15)}h1{margin:0 0 6px;font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-.01em;color:#fff}.sub{margin:0 0 18px;color:#a1a1a1}.sub strong{color:#fff;font-weight:600}.note{margin:0 0 16px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid}.note.err{background:rgba(255,92,92,.08);border-color:rgba(255,92,92,.35);color:#ffb4b4}.note.info{background:rgba(62,207,142,.08);border-color:rgba(62,207,142,.3);color:#9be7c4}label{display:block;margin:14px 0 6px;font-size:13px;font-weight:500;color:#d4d4d4}label em{font-style:normal;color:#8a8a8a;font-weight:400}input[type=email],input[type=password],input[type=text]{width:100%;height:40px;padding:0 12px;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:8px;font:inherit;outline:none}input:focus-visible{border-color:#3ecf8e;box-shadow:0 0 0 1px #3ecf8e}input#otp{letter-spacing:.35em;font-variant-numeric:tabular-nums;font-size:18px;text-align:center}fieldset{margin:18px 0 0;padding:14px;border:1px solid #1f1f1f;border-radius:10px;background:#050505}legend{padding:0 6px;font-size:13px;font-weight:600;color:#fff}.opt{display:flex;gap:10px;align-items:flex-start;margin:6px 0;padding:10px 12px;border:1px solid #1f1f1f;border-radius:8px;cursor:pointer;background:#0a0a0a}.opt:has(input:checked){border-color:#3ecf8e;background:rgba(62,207,142,.06)}.opt input{margin:4px 0 0;accent-color:#3ecf8e}.opt span{display:flex;flex-direction:column}.opt b{font-weight:600;color:#fff;font-size:14px}.opt small{color:#8a8a8a;font-size:12.5px;line-height:1.4}.actions{display:flex;flex-direction:row-reverse;gap:10px;margin-top:22px}button{flex:1;height:40px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;border:1px solid transparent}button.primary{flex:2;background:#fff;color:#000}button.primary:hover{background:#e6e6e6}button.ghost{background:transparent;color:#d4d4d4;border-color:#2a2a2a}button.ghost:hover{background:#111}button:focus-visible{outline:2px solid #3ecf8e;outline-offset:2px}.foot{margin:18px 0 0;font-size:12.5px;color:#7a7a7a}`;
+function page(res,status,title,inner){res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Frame-Options','DENY');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main><div class="brand"><span class="dot"></span>Handoff Hub</div>${inner}</main></body></html>`);}
+const failPage=(res,status,message)=>page(res,status,'Cannot connect',`<h1>Cannot connect</h1><div class="note err" role="alert">${esc(message)}</div><p class="foot">Go back to the app you were connecting and start the connection again.</p>`);
 async function validateAuthRequest(p){if(p.response_type!=='code')return{error:'Only response_type=code is supported.'};const client=await getClient(p.client_id);if(!client)return{error:'Unknown client. Remove and re-add the connector so it registers again.'};if(!client.redirect_uris.includes(p.redirect_uri)||!redirectUriAllowed(p.redirect_uri))return{error:'Redirect address is not registered for this client.'};if(p.code_challenge_method!=='S256'||!/^[A-Za-z0-9_-]{43,128}$/.test(p.code_challenge))return{error:'PKCE (S256) is required.'};return{client};}
 
 const oauthFields=['response_type','client_id','redirect_uri','state','code_challenge','code_challenge_method','scope','resource'];
 function hiddenFields(p){return oauthFields.map(k=>`<input type="hidden" name="${k}" value="${esc(p[k]||'')}">`).join('');}
+// NOTE: the primary (approve) button is first in the DOM so pressing Enter approves instead of denying; CSS (row-reverse) shows Deny on the left.
 function emailForm(p,client,error,step='email',email='',extra={}){
-  const host=new URL(p.redirect_uri).hostname;
-  const common=`<h1>Connect to Handoff Hub</h1><p><strong>${esc(client.client_name||'An app')}</strong> wants access to your Handoff Hub.</p>${error?`<p>${esc(error)}</p>`:''}`;
+  const name=esc(client.client_name||'An app');
+  const head=`<h1>Connect to Handoff Hub</h1><p class="sub"><strong>${name}</strong> wants access to your Handoff Hub.</p>${error?`<div class="note ${extra.info?'info':'err'}" role="alert">${esc(error)}</div>`:''}`;
   if(step==='otp'){
-    const gate=extra.gate?`<p>This AI app is already connected to your Hub. Choose one:</p><label for="unlock">Adding a different account? Enter your unlock code</label><input id="unlock" name="unlock" type="password" autocomplete="off"><label><input type="checkbox" name="replace" value="1"> Same account reconnecting: replace the old connection</label>`:'';
-    return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code</label><input id="otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" value="${esc(extra.otp||'')}" required>${gate}<button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Verify & approve</button></form>`;
+    const gate=extra.gate?`<fieldset><legend>${name} is already connected to your Hub</legend><label class="opt"><input type="radio" name="mode" value="replace" required${extra.mode==='replace'?' checked':''}><span><b>Replace the old connection</b><small>Same account reconnecting. The old connection is signed out.</small></span></label><label class="opt"><input type="radio" name="mode" value="add" required${extra.mode==='add'?' checked':''}><span><b>Add as another account</b><small>Keeps both connected. Needs your unlock code.</small></span></label><label for="unlock">Unlock code <em>(only for adding another account)</em></label><input id="unlock" name="unlock" type="password" autocomplete="off"></fieldset>`:'';
+    return head+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code sent to ${esc(email)}</label><input id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" value="${esc(extra.otp||'')}" required>${gate}<div class="actions"><button class="primary" name="decision" value="approve" type="submit">Verify &amp; approve</button><button class="ghost" name="decision" value="deny" type="submit" formnovalidate>Deny</button></div></form>`;
   }
-  return common+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="send_email"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required><button name="decision" value="deny" type="submit" formnovalidate>Deny</button><button name="decision" value="approve" type="submit">Send verification code</button></form>`;
+  return head+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="send_email"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required><div class="actions"><button class="primary" name="decision" value="approve" type="submit">Send verification code</button><button class="ghost" name="decision" value="deny" type="submit" formnovalidate>Deny</button></div></form>`;
 }
 async function supabaseAuth(path,body){
   const url=process.env.SUPABASE_URL, key=process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -119,7 +124,7 @@ export default async function handler(req,res){
     if(route==='authorize'){
       const source=req.method==='POST'?bodyOf(req):req.query||Object.fromEntries(new URL(req.url,'http://x').searchParams);
       const p=Object.fromEntries(oauthFields.map(k=>[k,str(source[k])]));
-      const v=await validateAuthRequest(p);if(v.error)return page(res,400,'Cannot connect',`<h1>Cannot connect</h1><p>${esc(v.error)}</p>`);
+      const v=await validateAuthRequest(p);if(v.error)return failPage(res,400,v.error);
       if(req.method==='GET')return page(res,200,'Connect to Handoff Hub',emailForm(p,v.client));
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
       const form=bodyOf(req);
@@ -134,29 +139,40 @@ export default async function handler(req,res){
         const saved=await otpDb('handoff_email_otps','POST',{email,code_hash:crypto.createHash('sha256').update(code).digest('hex'),expires_at:new Date(Date.now()+10*60*1000).toISOString()});
         const sent=await sendOtpEmail(email,code);
         if(!saved.ok||!sent.ok)return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,'Could not send the verification email. Please try again later.'));
-        return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email));
+        return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email,{info:true}));
       }
       if(form.action==='verify_email'){
         const otp=str(form.otp).trim();
-        const unlock=str(form.unlock).trim().slice(0,64),replace=form.replace==='1';
+        // The replace choice arrives as mode=replace|add (radio); form.replace==='1' is kept so an older cached page still works.
+        const mode=str(form.mode)==='replace'||form.replace==='1'?'replace':str(form.mode)==='add'?'add':'';
+        const replace=mode==='replace';
+        const unlock=replace?'':str(form.unlock).trim().slice(0,64);
         const now=new Date().toISOString();
         const expectedHash=crypto.createHash('sha256').update(otp).digest('hex');
         const rows=await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&code_hash=eq.${encodeURIComponent(expectedHash)}&consumed_at=is.null&expires_at=gt.${encodeURIComponent(now)}&select=id&limit=1`);
         const row=rows.ok&&Array.isArray(rows.data)?rows.data[0]:null;
-        if(!row)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email));
+        if(!row)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email,{mode}));
         // Account limit: a second account of the same AI app needs an unlock code (or replaces the old connection). Checked before the code is used up.
         const known=await lookupUser(email);
-        if(known){const check=await gateClient(known,p.client_id,unlock,replace,false);if(!check.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,check.error||'Adding another account needs an unlock code.','otp',email,{gate:Boolean(check.needs_unlock),otp}));}
+        if(known){
+          const check=await gateClient(known,p.client_id,unlock,replace,false);
+          if(!check.ok){
+            let msg=check.error||'Adding another account needs an unlock code.';
+            if(check.needs_unlock&&!mode)msg='Choose one: replace the old connection, or add this as another account with your unlock code.';
+            else if(check.needs_unlock&&mode==='add'&&!unlock)msg='Enter your unlock code to add another account.';
+            return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,msg,'otp',email,{gate:Boolean(check.needs_unlock),otp,mode}));
+          }
+        }
         const consumed=await otpDb(`handoff_email_otps?id=eq.${encodeURIComponent(row.id)}&consumed_at=is.null`,'PATCH',{consumed_at:now});
         if(!consumed.ok)return page(res,409,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code was already used. Please request a new code.','otp',email));
         const userId=await findOrCreateUser(email);
         if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Could not create your Handoff Hub account. Please try again.','otp',email));
         const applied=await gateClient(userId,p.client_id,unlock,replace,true);
-        if(!applied.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,applied.error||'Adding another account needs an unlock code.','email'));
+        if(!applied.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,(applied.error||'Adding another account needs an unlock code.')+' Request a new code to try again.','email'));
         const code=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code,state:p.state});
       }
-      return page(res,400,'Connect to Handoff Hub',emailForm(p,v.client,'Start by requesting an email verification code.'));
+      return page(res,400,'Connect to Handoff Hub',emailForm(p,v.client,'Start by requesting an email verification code.','email','',{info:true}));
     }
     if(route==='token'){
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
@@ -172,5 +188,11 @@ export default async function handler(req,res){
       return oauthError(res,400,'unsupported_grant_type','Use authorization_code or refresh_token.');
     }
     return res.status(404).json({error:'Not found'});
-  }catch(error){console.error('OAuth request failed:',error);if(!res.headersSent)return res.status(500).json({error:'server_error'});}
+  }catch(error){
+    console.error('OAuth request failed:',error);
+    if(res.headersSent)return;
+    // The sign-in page must never show a bare error code: render a readable page instead of JSON.
+    if(route==='authorize')return failPage(res,500,'Something went wrong on our side while connecting. Please go back and try again; if it keeps happening, request a new verification code.');
+    return res.status(500).json({error:'server_error'});
+  }
 }
