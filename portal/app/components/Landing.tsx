@@ -47,20 +47,19 @@ export default function Landing() {
             </div>
 
             <h1 className="text-[32px] sm:text-[48px] leading-[36px] sm:leading-[52px] font-semibold tracking-[-0.03em] sm:tracking-[-0.04em] text-[#ededed]">
-              Context that follows
+              One context.
               <br />
-              <span className="text-[#707070]">every AI you use.</span>
+              <span className="text-[#3ecf8e]">Every AI you use.</span>
             </h1>
 
             <p className="text-[16px] leading-[26px] tracking-[-0.01em] text-[#a1a1a1] max-w-xl">
-              Save decisions once, pass tasks between assistants, and pick up exactly where the last session stopped.
-              Connect your tools with their own sign-in and keep everything scoped to your account.
+              Your work should move with you. Save decisions once, hand tasks between assistants, and continue without repeating context. Connect tools through their own secure sign-in, with access isolated to your account.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/login"
-                className="btn-press inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white hover:bg-[#eaeaea] text-black text-[13px] font-semibold"
+                className="btn-press inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ecf8e] hover:bg-[#51df9c] text-[#002112] text-[13px] font-semibold"
               >
                 Get started <ArrowRight className="w-3.5 h-3.5" />
               </Link>
