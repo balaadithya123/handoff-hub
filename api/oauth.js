@@ -40,12 +40,18 @@ async function supabaseAuth(path,body){
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
 }
+// Sender is configurable. Resend's shared test sender (onboarding@resend.dev) only delivers to the Resend account owner's own address,
+// so any other recipient is rejected with 403 until a domain is verified at resend.com/domains and RESEND_FROM is set to an address on it.
 async function sendOtpEmail(email,code){
   const key=process.env.RESEND_API_KEY;
   if(!key)return{ok:false,error:'Email delivery is not configured on the server.'};
-  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Handoff Hub <onboarding@resend.dev>',to:[email],subject:'Your Handoff Hub verification code',html:`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Handoff Hub</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`})});
+  const from=(process.env.RESEND_FROM||'').trim()||'Handoff Hub <onboarding@resend.dev>';
+  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[email],subject:'Your Handoff Hub verification code',html:`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Handoff Hub</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`})});
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
-  return{ok:r.ok,status:r.status,data,error:data?.message||data?.error||null};
+  const error=data?.message||data?.error||null;
+  const sandbox=!r.ok&&r.status===403&&/testing emails|verify a domain/i.test(String(error||''));
+  if(!r.ok)console.error('OTP email send failed',{status:r.status,name:data?.name,message:error,from,sandbox});
+  return{ok:r.ok,status:r.status,data,error,sandbox};
 }
 async function otpDb(path,method='GET',body){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -138,7 +144,13 @@ export default async function handler(req,res){
         await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&consumed_at=is.null`,'DELETE');
         const saved=await otpDb('handoff_email_otps','POST',{email,code_hash:crypto.createHash('sha256').update(code).digest('hex'),expires_at:new Date(Date.now()+10*60*1000).toISOString()});
         const sent=await sendOtpEmail(email,code);
-        if(!saved.ok||!sent.ok)return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,'Could not send the verification email. Please try again later.'));
+        if(!saved.ok)console.error('OTP save failed',{status:saved.status});
+        if(!saved.ok||!sent.ok){
+          // Do not leave a usable code behind when the email never went out.
+          if(saved.ok)await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&consumed_at=is.null`,'DELETE');
+          const msg=sent.sandbox?'Handoff Hub cannot email verification codes to this address yet: email delivery is still in test mode and only reaches the owner email. Use the owner email, or finish the email sender setup first.':'Could not send the verification email. Please try again later.';
+          return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,msg));
+        }
         return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email,{info:true}));
       }
       if(form.action==='verify_email'){
