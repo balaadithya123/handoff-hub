@@ -13,6 +13,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
     "@vercel/connect": "2.4.0",
+    "nodemailer": "6.9.16",
     "zod": "3.25.76"
   }
 }

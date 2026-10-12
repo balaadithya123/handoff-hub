@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
 import { createClient, getClient, createAuthCode, consumeAuthCode, issueTokens, rotateRefreshToken, countClients } from '../src/oauth-store.js';
 
 const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com'];
@@ -40,18 +41,39 @@ async function supabaseAuth(path,body){
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
 }
-// Sender is configurable. Resend's shared test sender (onboarding@resend.dev) only delivers to the Resend account owner's own address,
-// so any other recipient is rejected with 403 until a domain is verified at resend.com/domains and RESEND_FROM is set to an address on it.
-async function sendOtpEmail(email,code){
+const OTP_SUBJECT='Your Handoff Hub verification code';
+const otpHtml=code=>`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Handoff Hub</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`;
+// Gmail SMTP (GMAIL_USER + GMAIL_APP_PASSWORD, a Google app password) can email any address and needs no domain.
+// Returns null when Gmail is not configured so the caller can fall back to Resend.
+async function sendViaGmail(email,code){
+  const user=(process.env.GMAIL_USER||'').trim(),pass=(process.env.GMAIL_APP_PASSWORD||'').replace(/\s+/g,'');
+  if(!user||!pass)return null;
+  try{
+    const transport=nodemailer.createTransport({host:'smtp.gmail.com',port:465,secure:true,auth:{user,pass},connectionTimeout:10000,socketTimeout:15000});
+    await transport.sendMail({from:`Handoff Hub <${user}>`,to:email,subject:OTP_SUBJECT,html:otpHtml(code),text:`Your Handoff Hub verification code is ${code}. It expires in 10 minutes.`});
+    return{ok:true,provider:'gmail'};
+  }catch(e){
+    console.error('Gmail OTP send failed',{code:e?.code,responseCode:e?.responseCode,message:e?.message});
+    return{ok:false,provider:'gmail',error:e?.message||'Gmail send failed'};
+  }
+}
+// Resend fallback. Its shared test sender (onboarding@resend.dev) only delivers to the Resend account owner's own address,
+// so any other recipient gets 403 until a domain is verified at resend.com/domains and RESEND_FROM is set to an address on it.
+async function sendViaResend(email,code){
   const key=process.env.RESEND_API_KEY;
   if(!key)return{ok:false,error:'Email delivery is not configured on the server.'};
   const from=(process.env.RESEND_FROM||'').trim()||'Handoff Hub <onboarding@resend.dev>';
-  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[email],subject:'Your Handoff Hub verification code',html:`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Handoff Hub</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`})});
+  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[email],subject:OTP_SUBJECT,html:otpHtml(code)})});
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   const error=data?.message||data?.error||null;
   const sandbox=!r.ok&&r.status===403&&/testing emails|verify a domain/i.test(String(error||''));
-  if(!r.ok)console.error('OTP email send failed',{status:r.status,name:data?.name,message:error,from,sandbox});
-  return{ok:r.ok,status:r.status,data,error,sandbox};
+  if(!r.ok)console.error('Resend OTP send failed',{status:r.status,name:data?.name,message:error,from,sandbox});
+  return{ok:r.ok,status:r.status,data,error,sandbox,provider:'resend'};
+}
+async function sendOtpEmail(email,code){
+  const gmail=await sendViaGmail(email,code);
+  if(gmail?.ok)return gmail;
+  return await sendViaResend(email,code);
 }
 async function otpDb(path,method='GET',body){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
