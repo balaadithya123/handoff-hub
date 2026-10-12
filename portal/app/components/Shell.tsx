@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, ReactNode } from "react";
 import Link from "next/link";
+import Logo from "./Logo";
 import {
   LayoutDashboard,
   Plug,
@@ -112,9 +113,7 @@ export default function Shell({
               title="Handoff Hub"
               className="flex items-center gap-2.5 w-full p-2 rounded-lg bg-[#121212]/60 hover:bg-[#121212] border border-white/[0.08] hover:border-white/[0.16] transition-all group text-left"
             >
-              <div className="w-7 h-7 rounded-md bg-[#2a2a2a] border border-white/[0.08] flex items-center justify-center text-[#60eca8] font-semibold text-sm shrink-0">
-                H
-              </div>
+              <Logo size={30} className="shrink-0" />
               {!collapsed && (
                 <>
                   <div className="flex-1 min-w-0 leading-tight">
@@ -240,9 +239,7 @@ export default function Shell({
       >
         <div className="flex items-center gap-2 min-w-0">
           <Link href="/overview" className="md:hidden flex items-center gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-md bg-[#2a2a2a] border border-white/[0.08] flex items-center justify-center text-[#60eca8] font-semibold text-sm">
-              H
-            </div>
+            <Logo size={30} />
           </Link>
           <div className="flex items-center gap-1.5 text-[13px] text-[#707070] overflow-hidden">
             <span className="hidden sm:inline">Handoff Hub</span>

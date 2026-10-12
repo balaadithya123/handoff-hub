@@ -42,7 +42,7 @@ export default async function Overview({ token, connected }: { token: string; co
             <span className="text-xs font-mono text-[#3ecf8e]">Multi-model Telemetry Sync</span>
           </div>
           <h1 className="text-2xl font-semibold text-[#ededed] tracking-tight">Overview</h1>
-          <p className="text-xs text-[#a1a1a1] mt-0.5">
+          <p className="text-sm text-[#a1a1a1] mt-1">
             Real-time status of your connected integrations, AI runtimes, memory pools, and activity.
           </p>
         </div>
