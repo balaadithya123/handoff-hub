@@ -7,8 +7,10 @@ export type Ev = { at: string; agent?: string; action?: string; text?: string; p
 
 const human = (s: string) => (s || "event").replace(/[_-]+/g, " ").replace(/^./, (c) => c.toUpperCase());
 
+// Performance optimization: Use Date.parse(iso) directly instead of new Date(iso)
+// to avoid unnecessary V8 object allocation overhead during list rendering.
 function ago(iso: string) {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
   if (!Number.isFinite(s)) return "";
   if (s < 60) return "just now";
   const m = Math.floor(s / 60);
@@ -18,8 +20,8 @@ function ago(iso: string) {
 }
 
 function clock(iso: string) {
-  const d = new Date(iso);
-  return Number.isFinite(d.getTime()) ? d.toISOString().slice(11, 23) : "";
+  const t = Date.parse(iso);
+  return Number.isFinite(t) ? new Date(t).toISOString().slice(11, 23) : "";
 }
 
 function initials(name: string) {
@@ -37,16 +39,27 @@ export default function ActivityExplorer({ rows }: { rows: Ev[] }) {
   const agents = useMemo(() => Array.from(new Set(rows.map((r) => r.agent || "unknown"))).sort(), [rows]);
   const actions = useMemo(() => Array.from(new Set(rows.map((r) => r.action || "event"))).sort(), [rows]);
 
+  // Performance optimization: Single-pass filtering in a loop avoids 4 array iterations
+  // (map + 3 filter stages) and temporary array allocations per row ([r.agent, r.action...]).
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return rows
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) => (agent === "all" || (r.agent || "unknown") === agent))
-      .filter(({ r }) => (action === "all" || (r.action || "event") === action))
-      .filter(({ r }) =>
-        !needle ||
-        [r.agent, r.action, r.text, r.project, r.project_name].some((v) => (v || "").toLowerCase().includes(needle))
-      );
+    const out: { r: Ev; i: number }[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (agent !== "all" && (r.agent || "unknown") !== agent) continue;
+      if (action !== "all" && (r.action || "event") !== action) continue;
+      if (needle) {
+        const match =
+          (r.agent && r.agent.toLowerCase().includes(needle)) ||
+          (r.action && r.action.toLowerCase().includes(needle)) ||
+          (r.text && r.text.toLowerCase().includes(needle)) ||
+          (r.project && r.project.toLowerCase().includes(needle)) ||
+          (r.project_name && r.project_name.toLowerCase().includes(needle));
+        if (!match) continue;
+      }
+      out.push({ r, i });
+    }
+    return out;
   }, [rows, q, agent, action]);
 
   const active = sel !== null && rows[sel] ? rows[sel] : null;
