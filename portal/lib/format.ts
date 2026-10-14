@@ -12,8 +12,9 @@ function getDTF(locales: string | string[], options: Intl.DateTimeFormatOptions)
   return dtf;
 }
 
+// Performance optimization: Date.parse(iso) directly avoids allocating new Date object wrappers.
 export function ago(iso: string) {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
   if (!Number.isFinite(s)) return "";
   if (s < 60) return "just now";
   const m = Math.floor(s / 60);
