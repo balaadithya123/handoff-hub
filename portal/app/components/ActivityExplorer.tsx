@@ -37,16 +37,27 @@ export default function ActivityExplorer({ rows }: { rows: Ev[] }) {
   const agents = useMemo(() => Array.from(new Set(rows.map((r) => r.agent || "unknown"))).sort(), [rows]);
   const actions = useMemo(() => Array.from(new Set(rows.map((r) => r.action || "event"))).sort(), [rows]);
 
+  // Performance optimization: Single-pass filter loop avoids O(N) object allocations and multiple array passes
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return rows
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) => (agent === "all" || (r.agent || "unknown") === agent))
-      .filter(({ r }) => (action === "all" || (r.action || "event") === action))
-      .filter(({ r }) =>
-        !needle ||
-        [r.agent, r.action, r.text, r.project, r.project_name].some((v) => (v || "").toLowerCase().includes(needle))
-      );
+    const result: { r: Ev; i: number }[] = [];
+    const len = rows.length;
+    for (let i = 0; i < len; i++) {
+      const r = rows[i];
+      if (agent !== "all" && (r.agent || "unknown") !== agent) continue;
+      if (action !== "all" && (r.action || "event") !== action) continue;
+      if (needle) {
+        const match =
+          Boolean(r.agent && r.agent.toLowerCase().includes(needle)) ||
+          Boolean(r.action && r.action.toLowerCase().includes(needle)) ||
+          Boolean(r.text && r.text.toLowerCase().includes(needle)) ||
+          Boolean(r.project && r.project.toLowerCase().includes(needle)) ||
+          Boolean(r.project_name && r.project_name.toLowerCase().includes(needle));
+        if (!match) continue;
+      }
+      result.push({ r, i });
+    }
+    return result;
   }, [rows, q, agent, action]);
 
   const active = sel !== null && rows[sel] ? rows[sel] : null;
