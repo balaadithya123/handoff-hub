@@ -22,8 +22,8 @@ async function rest(path, { method = 'GET', body, prefer } = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-export async function createClient({ client_name, redirect_uris }) {
-  const client_id = randomToken('hhc_', 16);
+export async function createClient({ client_name, redirect_uris, id_prefix = 'hhc_' }) {
+  const client_id = randomToken(id_prefix, 16);
   await rest('oauth_clients', { method: 'POST', prefer: 'return=minimal', body: { client_id, client_name: client_name || null, redirect_uris } });
   return { client_id, client_name: client_name || null, redirect_uris };
 }

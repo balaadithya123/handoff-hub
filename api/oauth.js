@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { createClient, getClient, ensureClient, createAuthCode, consumeAuthCode, issueTokens, rotateRefreshToken, countClients } from '../src/oauth-store.js';
 
-const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com', 'oauth-redirect.googleusercontent.com', 'vertexaisearch.cloud.google.com'];
+const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com', 'oauth-redirect.googleusercontent.com', 'oauth-redirect-sandbox.googleusercontent.com', 'oauth-redirect-test.googleusercontent.com', 'vertexaisearch.cloud.google.com'];
 
 function baseUrl(){if(process.env.PUBLIC_BASE_URL)return process.env.PUBLIC_BASE_URL.replace(/\/$/,'');if(process.env.VERCEL_PROJECT_PRODUCTION_URL)return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;return 'http://localhost:3000';}
 function protectedResource(base,req){const path=req.query?.resource_path;return path==='api/mcp'?`${base}/api/mcp`:`${base}/mcp`;}
@@ -10,7 +10,10 @@ function allowedRedirectHosts(){const extra=(process.env.OAUTH_ALLOWED_REDIRECT_
 function redirectUriAllowed(uri){try{const u=new URL(uri);if(u.protocol!=='https:'||u.username||u.password||u.hash)return false;const host=u.hostname.toLowerCase();return allowedRedirectHosts().some(h=>host===h||host.endsWith(`.${h}`));}catch{return false;}}
 // Pre-registered client for apps that cannot use dynamic registration and ask for a client ID and secret (Google custom MCP).
 // Configure OAUTH_STATIC_CLIENT_ID and OAUTH_STATIC_CLIENT_SECRET; redirect URIs are limited to Google hosts.
-const STATIC_REDIRECT_HOSTS=['oauth-redirect.googleusercontent.com','vertexaisearch.cloud.google.com'];
+const STATIC_REDIRECT_HOSTS=['oauth-redirect.googleusercontent.com','oauth-redirect-sandbox.googleusercontent.com','oauth-redirect-test.googleusercontent.com','vertexaisearch.cloud.google.com'];
+// Clients registered with client_secret_post get an id starting "hhk_" and a secret derived from the static secret (no schema change needed).
+const SECRET_CLIENT_PREFIX='hhk_';
+const derivedSecret=client_id=>{const s=staticClientConfig();return s?'hhd_'+crypto.createHmac('sha256',s.secret).update('client-secret:'+client_id).digest('hex'):null;};
 function staticClientConfig(){const id=(process.env.OAUTH_STATIC_CLIENT_ID||'').trim(),secret=process.env.OAUTH_STATIC_CLIENT_SECRET||'';return id&&secret?{id,secret}:null;}
 function staticRedirectAllowed(uri){try{return redirectUriAllowed(uri)&&STATIC_REDIRECT_HOSTS.includes(new URL(uri).hostname.toLowerCase());}catch{return false;}}
 const digest=v=>crypto.createHash('sha256').update(String(v)).digest();
@@ -169,10 +172,13 @@ export default async function handler(req,res){
       // Logged before any validation so a rejected registration always leaves a trace (body keys and redirect URI origins only, never secrets).
       console.log('oauth/register',JSON.stringify({ct:String(req.headers?.['content-type']||'').slice(0,60),keys:Object.keys(b),redirect_uris_type:Array.isArray(raw)?'array':typeof raw,method:b.token_endpoint_auth_method,uris:uris.map(u=>{try{const x=new URL(u);return x.origin+x.pathname.slice(0,40)}catch{return 'invalid'}})}));
       if((await countClients())>=20)return oauthError(res,429,'registration_limit_reached','Too many registered OAuth clients.');
-      if(!uris.length||uris.length>5)return oauthError(res,400,'invalid_redirect_uri','Provide 1-5 redirect_uris.');
+      if(!uris.length||uris.length>10)return oauthError(res,400,'invalid_redirect_uri','Provide 1-10 redirect_uris.');
       if(!uris.every(redirectUriAllowed)){console.log('oauth/register rejected: redirect host not allowed');return oauthError(res,400,'invalid_redirect_uri','Redirect URI host is not allowed for this server.');}
-      const client=await createClient({client_name:str(b.client_name).slice(0,100),redirect_uris:uris});
-      return res.status(201).json({client_id:client.client_id,client_name:client.client_name,redirect_uris:client.redirect_uris,grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:'none'});
+      const wantsSecret=/^client_secret_(post|basic)$/.test(str(b.token_endpoint_auth_method))&&!!staticClientConfig();
+      const client=await createClient({client_name:str(b.client_name).slice(0,100),redirect_uris:uris,id_prefix:wantsSecret?SECRET_CLIENT_PREFIX:'hhc_'});
+      const out={client_id:client.client_id,client_name:client.client_name,redirect_uris:client.redirect_uris,grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:'none'};
+      if(wantsSecret){out.client_secret=derivedSecret(client.client_id);out.client_secret_expires_at=0;out.token_endpoint_auth_method=str(b.token_endpoint_auth_method);}
+      return res.status(201).json(out);
     }
     if(route==='authorize'){
       const source=req.method==='POST'?bodyOf(req):req.query||Object.fromEntries(new URL(req.url,'http://x').searchParams);
@@ -274,6 +280,7 @@ export default async function handler(req,res){
       const b=bodyOf(req),creds=clientCredentials(req,b),client_id=creds.client_id,client=await resolveClient(client_id);if(!client)return oauthError(res,401,'invalid_client','Unknown client_id.');
       res.setHeader('Cache-Control','no-store');
       if(client.static&&!secretMatches(creds.client_secret,staticClientConfig().secret))return oauthError(res,401,'invalid_client','Client authentication failed.');
+      if(!client.static&&client_id.startsWith(SECRET_CLIENT_PREFIX)){const want=derivedSecret(client_id);if(!want||!secretMatches(creds.client_secret,want))return oauthError(res,401,'invalid_client','Client authentication failed.');}
       if(b.grant_type==='authorization_code'){
         const row=await consumeAuthCode(str(b.code));if(!row||row.client_id!==client_id||row.redirect_uri!==str(b.redirect_uri))return oauthError(res,400,'invalid_grant','Authorization code is invalid, expired or already used.');
         const challenge=crypto.createHash('sha256').update(str(b.code_verifier)).digest('base64url'),a=Buffer.from(challenge),c=Buffer.from(row.code_challenge);
