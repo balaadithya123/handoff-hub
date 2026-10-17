@@ -19,8 +19,8 @@ export const dynamic = "force-dynamic";
 type Notice = { kind: "error" | "ok"; text: string } | null;
 
 const META: Record<Tab, [string, string]> = {
-  overview: ["Overview", "Your Handoff Hub account at a glance."],
-  integrations: ["Integrations", "Connect your tools with their own sign-in. Handoff Hub never sees your passwords."],
+  overview: ["Overview", "Your Axon account at a glance."],
+  integrations: ["Integrations", "Connect your tools with their own sign-in. Axon never sees your passwords."],
   projects: ["Projects & Pools", "Separate memory pools your AI apps can save to."],
   ai: ["AI Accounts", "Link the AI accounts that use your connections."],
   tools: ["Hub Tools & Controls", "Allowlist, workload, claims, approvals, health checks and context brief."],
