@@ -45,6 +45,7 @@
     "route_task",
     "agent_stats",
     "create_project",
-    "move_project"
+    "move_project",
+    "plan_task"
   ]
 }
