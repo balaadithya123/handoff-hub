@@ -10,17 +10,17 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 
 export function Badge({ variant = "green", dot = true, pulse = false, className = "", children, ...props }: BadgeProps) {
   const variantClasses = {
-    green: "bg-[#3ecf8e]/10 text-[#5be3a6] border-[#3ecf8e]/30",
-    amber: "bg-[#f5b14a]/10 text-[#f5b14a] border-[#f5b14a]/30",
-    red: "bg-[#ff7b7b]/10 text-[#ff7b7b] border-[#ff7b7b]/30",
-    grey: "bg-white/5 text-[#a1a1a1] border-white/10",
+    green: "bg-[rgba(107,158,255,0.12)] text-[#93b4ff] border-[rgba(107,158,255,0.28)]",
+    amber: "bg-[rgba(212,165,116,0.1)] text-[#d4a574] border-[rgba(212,165,116,0.28)]",
+    red: "bg-[rgba(224,112,112,0.1)] text-[#e07070] border-[rgba(224,112,112,0.28)]",
+    grey: "bg-white/5 text-[#a3a3a3] border-white/10",
   };
 
   const dotClasses = {
-    green: "bg-[#3ecf8e]",
-    amber: "bg-[#f5b14a]",
-    red: "bg-[#ff7b7b]",
-    grey: "bg-[#8a8a8a]",
+    green: "bg-[#6b9eff]",
+    amber: "bg-[#d4a574]",
+    red: "bg-[#e07070]",
+    grey: "bg-[#737373]",
   };
 
   return (
