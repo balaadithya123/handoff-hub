@@ -1,5 +1,5 @@
 /**
- * Axon mark — two nodes joined by a link. Flat, simple, monochrome.
+ * Axon mark — linked nodes. Clean 2D, works at 16–48px.
  */
 export default function Logo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
@@ -13,10 +13,11 @@ export default function Logo({ size = 32, className = "" }: { size?: number; cla
       role="img"
       aria-label="Axon"
     >
-      <rect width="32" height="32" rx="9" fill="#141414" />
-      <circle cx="11" cy="16" r="3.1" fill="#f6f5f2" />
-      <circle cx="21" cy="16" r="3.1" fill="#f6f5f2" />
-      <path d="M14 16h4" stroke="#f6f5f2" strokeWidth="1.8" strokeLinecap="round" />
+      <rect width="32" height="32" rx="8" fill="#0f0f0f" />
+      <circle cx="10.5" cy="16" r="4" fill="#f6f5f2" />
+      <circle cx="21.5" cy="16" r="4" fill="#f6f5f2" />
+      <path d="M14.5 16h3" stroke="#f6f5f2" strokeWidth="2.25" strokeLinecap="round" />
+      <circle cx="21.5" cy="16" r="5.75" stroke="#f6f5f2" strokeWidth="1.15" opacity="0.35" />
     </svg>
   );
 }

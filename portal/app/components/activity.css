@@ -2,8 +2,8 @@
   margin-top: 24px;
   border: 1px solid var(--border);
   background-color: var(--bg-surface);
-  border-radius: 6px;
-  padding: 16px 20px;
+  border-radius: 16px;
+  padding: 18px 20px;
 }
 
 .feedHead {
@@ -20,9 +20,9 @@
 .feedHead h2 {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-main);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .feedHead span {
@@ -33,7 +33,7 @@
 .feedEmpty {
   color: var(--text-muted);
   font-size: 13px;
-  margin: 12px 0;
+  margin: 16px 0;
   text-align: center;
 }
 
@@ -46,7 +46,7 @@
 .feedItem {
   display: flex;
   gap: 12px;
-  padding: 10px 0;
+  padding: 12px 0;
   border-top: 1px solid var(--border);
 }
 
@@ -59,12 +59,12 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-top: 5px;
-  background-color: var(--orange);
+  margin-top: 6px;
+  background-color: var(--c-ok, #2f6fe0);
 }
 
 .feedItem.connect .feedDot {
-  background-color: var(--pill-green-text);
+  background-color: var(--c-ok, #2f6fe0);
 }
 
 .feedBody {
@@ -78,7 +78,6 @@
   gap: 8px;
   flex-wrap: wrap;
   font-size: 13px;
-  text-transform: capitalize;
 }
 
 .feedTop b {
@@ -88,30 +87,28 @@
 
 .feedWho {
   font-size: 11px;
-  text-transform: none;
   color: var(--text-muted);
   background-color: var(--bg-subtle);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 2px 6px;
+  border-radius: 999px;
+  padding: 2px 8px;
 }
 
 .feedTop time {
   margin-left: auto;
   color: var(--text-soft);
   font-size: 11px;
-  text-transform: none;
 }
 
 .feedBody p {
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 @media (max-width: 860px) {
   .feed {
-    padding: 12px 14px;
+    padding: 14px 16px;
   }
 }
