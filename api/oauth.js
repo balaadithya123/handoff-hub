@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { createClient, getClient, ensureClient, createAuthCode, consumeAuthCode, issueTokens, rotateRefreshToken, countClients } from '../src/oauth-store.js';
 
-const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com', 'oauth-redirect.googleusercontent.com', 'oauth-redirect-sandbox.googleusercontent.com', 'oauth-redirect-test.googleusercontent.com', 'vertexaisearch.cloud.google.com'];
+const DEFAULT_REDIRECT_HOSTS = ['chatgpt.com', 'openai.com', 'claude.ai', 'claude.com', 'oauth-redirect.googleusercontent.com', 'oauth-redirect-sandbox.googleusercontent.com', 'oauth-redirect-test.googleusercontent.com', 'vertexaisearch.cloud.google.com', 'grok.com'];
 
 function baseUrl(){if(process.env.PUBLIC_BASE_URL)return process.env.PUBLIC_BASE_URL.replace(/\/$/,'');if(process.env.VERCEL_PROJECT_PRODUCTION_URL)return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;return 'http://localhost:3000';}
 function protectedResource(base,req){const path=req.query?.resource_path;return path==='api/mcp'?`${base}/api/mcp`:`${base}/mcp`;}
@@ -187,7 +187,7 @@ export default async function handler(req,res){
       const p=Object.fromEntries(oauthFields.map(k=>[k,pick(source[k]).trim()]));
       p.response_type=p.response_type.toLowerCase()||'code';
       const v=await validateAuthRequest(p);
-      if(v.error){console.log('oauth/authorize rejected',JSON.stringify({method:req.method,reason:v.error,ct:String(req.headers?.['content-type']||'').slice(0,60),keys:Object.keys(source||{}),response_type_raw:source?.response_type===undefined?'<missing>':JSON.stringify(source.response_type).slice(0,60),client_prefix:String(p.client_id).slice(0,4),redirect_host:(()=>{try{return new URL(p.redirect_uri).hostname}catch{return 'invalid'}})(),pkce_method:p.code_challenge_method,challenge_len:p.code_challenge.length}));return failPage(res,400,v.error);}
+      if(v.error){console.log('oauth/authorize rejected',JSON.stringify({method:req.method,reason:v.error,ct:String(req.headers?.['content-type']||'').slice(0,60),keys:Object.keys(source||{}),response_type_raw:source?.response_type===undefined?'<missing>':JSON.stringify(source.response_type).slice(0,60),client_prefix:String(p.client_id).slice(0,4),url_has_query:String(req.url||'').includes('?'),ua:String(req.headers?.['user-agent']||'').slice(0,80),fetch:[req.headers?.['sec-fetch-site'],req.headers?.['sec-fetch-mode'],req.headers?.['sec-fetch-dest']].join('/'),referer:(()=>{try{return new URL(req.headers?.referer).origin}catch{return ''}})(),redirect_host:(()=>{try{return new URL(p.redirect_uri).hostname}catch{return 'invalid'}})(),pkce_method:p.code_challenge_method,challenge_len:p.code_challenge.length}));return failPage(res,400,v.error);}
       if(req.method==='GET')return page(res,200,'Connect to Handoff Hub',emailForm(p,v.client));
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
       const form=bodyOf(req);
