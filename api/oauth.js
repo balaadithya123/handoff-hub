@@ -159,6 +159,7 @@ export default async function handler(req,res){
       if((await countClients())>=20)return oauthError(res,429,'registration_limit_reached','Too many registered OAuth clients.');
       const b=bodyOf(req),uris=Array.isArray(b.redirect_uris)?b.redirect_uris.filter(u=>typeof u==='string'):[];
       if(!uris.length||uris.length>5)return oauthError(res,400,'invalid_redirect_uri','Provide 1-5 redirect_uris.');
+      console.log('oauth/register',JSON.stringify({keys:Object.keys(b),method:b.token_endpoint_auth_method,uris:uris.map(u=>{try{const x=new URL(u);return x.origin+x.pathname.slice(0,40)}catch{return 'invalid'}})}));
       if(!uris.every(redirectUriAllowed))return oauthError(res,400,'invalid_redirect_uri','Redirect URI host is not allowed for this server.');
       const client=await createClient({client_name:str(b.client_name).slice(0,100),redirect_uris:uris});
       return res.status(201).json({client_id:client.client_id,client_name:client.client_name,redirect_uris:client.redirect_uris,grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:'none'});
