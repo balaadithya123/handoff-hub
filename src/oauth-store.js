@@ -28,6 +28,13 @@ export async function createClient({ client_name, redirect_uris }) {
   return { client_id, client_name: client_name || null, redirect_uris };
 }
 
+// Pre-registered (static) clients, e.g. Google's custom MCP flow, need a real row because
+// oauth_codes and oauth_tokens reference oauth_clients. Inserting is idempotent.
+export async function ensureClient({ client_id, client_name, redirect_uris }) {
+  await rest('oauth_clients?on_conflict=client_id', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { client_id, client_name: client_name || null, redirect_uris: redirect_uris || [] } });
+  return getClient(client_id);
+}
+
 // Registration cap is checked as countClients() >= 20 in api/oauth.js; the 180 offset makes
 // the effective cap 200 stored clients. The raw count is logged to diagnose failed registrations.
 export async function countClients() {
