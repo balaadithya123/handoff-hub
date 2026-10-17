@@ -1,225 +1,194 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, RotateCcw, X, Copy } from "lucide-react";
+import { Search, Copy, X, Clock } from "lucide-react";
+import { ago, human } from "../../lib/format";
 
-export type Ev = { at: string; agent?: string; action?: string; text?: string; project?: string; project_name?: string };
-
-const human = (s: string) => (s || "event").replace(/[_-]+/g, " ").replace(/^./, (c) => c.toUpperCase());
-
-function ago(iso: string) {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (!Number.isFinite(s)) return "";
-  if (s < 60) return "just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return m + "m ago";
-  const h = Math.floor(m / 60);
-  return h < 24 ? h + "h ago" : Math.floor(h / 24) + "d ago";
-}
-
-function clock(iso: string) {
-  const d = new Date(iso);
-  return Number.isFinite(d.getTime()) ? d.toISOString().slice(11, 23) : "";
-}
-
-function initials(name: string) {
-  const parts = name.replace(/[^a-zA-Z0-9 ]/g, " ").trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? "")).toUpperCase();
-}
+type Ev = {
+  at: string;
+  agent?: string;
+  action?: string;
+  text?: string;
+  project?: string;
+  project_name?: string;
+};
 
 export default function ActivityExplorer({ rows }: { rows: Ev[] }) {
   const [q, setQ] = useState("");
   const [agent, setAgent] = useState("all");
-  const [action, setAction] = useState("all");
-  const [sel, setSel] = useState<number | null>(rows.length ? 0 : null);
+  const [sel, setSel] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const agents = useMemo(() => Array.from(new Set(rows.map((r) => r.agent || "unknown"))).sort(), [rows]);
-  const actions = useMemo(() => Array.from(new Set(rows.map((r) => r.action || "event"))).sort(), [rows]);
+  const agents = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.agent || "unknown"))).sort(),
+    [rows]
+  );
 
   const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return rows
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) => (agent === "all" || (r.agent || "unknown") === agent))
-      .filter(({ r }) => (action === "all" || (r.action || "event") === action))
-      .filter(({ r }) =>
-        !needle ||
-        [r.agent, r.action, r.text, r.project, r.project_name].some((v) => (v || "").toLowerCase().includes(needle))
-      );
-  }, [rows, q, agent, action]);
+    const query = q.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (agent !== "all" && (r.agent || "unknown") !== agent) return false;
+      if (!query) return true;
+      const hay = `${r.agent || ""} ${r.action || ""} ${r.text || ""} ${r.project_name || ""} ${r.project || ""}`.toLowerCase();
+      return hay.includes(query);
+    });
+  }, [rows, q, agent]);
 
-  const active = sel !== null && rows[sel] ? rows[sel] : null;
-  const reset = () => {
-    setQ("");
-    setAgent("all");
-    setAction("all");
-  };
+  const active = sel != null ? filtered[sel] : null;
 
-  const selectCls =
-    "h-10 pl-3 pr-8 rounded-lg bg-[#121212] border border-white/[0.08] text-[13px] text-[#ededed] appearance-none cursor-pointer focus:outline-none focus:border-[#60eca8] transition-colors";
+  async function copyJson() {
+    if (!active) return;
+    await navigator.clipboard.writeText(JSON.stringify(active, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-[#0a0a0a] border border-white/[0.08]">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#707070] pointer-events-none" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Filter by agent, action, project or text..."
-              className="w-full h-10 pl-9 pr-3 rounded-lg bg-[#121212] border border-white/[0.08] text-[13px] text-[#ededed] placeholder:text-[#707070] focus:outline-none focus:border-[#60eca8] transition-colors"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select value={agent} onChange={(e) => setAgent(e.target.value)} className={selectCls} aria-label="Agent">
-              <option value="all">All agents</option>
-              {agents.map((a) => (
-                <option key={a} value={a}>{a}</option>
-              ))}
-            </select>
-            <select value={action} onChange={(e) => setAction(e.target.value)} className={selectCls} aria-label="Action">
-              <option value="all">All actions</option>
-              {actions.map((a) => (
-                <option key={a} value={a}>{human(a)}</option>
-              ))}
-            </select>
-            <button
-              onClick={reset}
-              className="h-10 px-3 rounded-lg bg-[#121212] hover:bg-[#181818] border border-white/[0.08] text-[#707070] hover:text-[#ededed] text-[13px] font-medium transition-all flex items-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Reset</span>
-            </button>
-          </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 min-w-0">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a988f]" />
+          <input
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setSel(null);
+            }}
+            placeholder="Search agent, action, or text"
+            className="h-11 w-full rounded-full border border-[#e7e4dc] bg-white pl-10 pr-4 text-sm text-[#141414] outline-none placeholder:text-[#9a988f] focus:border-[#141414]"
+          />
         </div>
-        <div className="pt-2 border-t border-white/[0.08] flex items-center gap-2 font-mono text-[11px] text-[#707070]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#60eca8] animate-pulse" />
-          <span>
-            Showing <strong className="text-[#ededed] font-semibold">{filtered.length}</strong> of {rows.length} events
-          </span>
-        </div>
+        <select
+          value={agent}
+          onChange={(e) => {
+            setAgent(e.target.value);
+            setSel(null);
+          }}
+          aria-label="Agent"
+          className="h-11 shrink-0 rounded-full border border-[#e7e4dc] bg-white px-4 text-sm text-[#141414] outline-none focus:border-[#141414]"
+        >
+          <option value="all">All agents</option>
+          {agents.map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Master / detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        <div className="lg:col-span-8 rounded-xl bg-[#0a0a0a] border border-white/[0.08] overflow-hidden">
-          <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2.5 bg-[#121212] border-b border-white/[0.08] font-mono text-[10px] text-[#707070] uppercase tracking-wider select-none">
-            <div className="col-span-2">Time</div>
-            <div className="col-span-3">Agent</div>
-            <div className="col-span-5">Operation</div>
-            <div className="col-span-2 text-right">Action</div>
-          </div>
-          {filtered.length === 0 ? (
-            <div className="p-8 text-center text-[13px] text-[#a1a1a1]">No events match these filters.</div>
-          ) : (
-            <div className="flex flex-col divide-y divide-white/[0.08]">
-              {filtered.map(({ r, i }) => {
-                const on = i === sel;
-                return (
+      <p className="text-xs text-[#9a988f]">
+        {filtered.length} of {rows.length} events
+      </p>
+
+      <div className="overflow-hidden rounded-2xl border border-[#e7e4dc] bg-white">
+        {filtered.length === 0 ? (
+          <p className="px-5 py-12 text-center text-sm text-[#6f6e68]">No events match these filters.</p>
+        ) : (
+          <ul className="divide-y divide-[#e7e4dc]">
+            {filtered.map((r, i) => {
+              const isActive = sel === i;
+              return (
+                <li key={`${r.at}-${i}`}>
                   <button
-                    key={i}
-                    onClick={() => setSel(i)}
-                    className={`text-left grid grid-cols-12 gap-2 px-4 py-3 border-l-2 transition-colors ${
-                      on ? "bg-[#201f1f]/60 border-[#60eca8]" : "bg-[#0a0a0a] hover:bg-[#121212] border-transparent"
+                    type="button"
+                    onClick={() => setSel(isActive ? null : i)}
+                    className={`flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors sm:px-5 ${
+                      isActive ? "bg-[#efeee9]" : "hover:bg-[#f6f5f2]"
                     }`}
                   >
-                    <div className="col-span-12 md:col-span-2 flex md:flex-col justify-center gap-2 md:gap-0">
-                      <span className={`font-mono text-[12px] font-semibold ${on ? "text-[#60eca8]" : "text-[#a1a1a1]"}`}>
-                        {ago(r.at)}
-                      </span>
-                      <span className="font-mono text-[10px] text-[#707070]">{clock(r.at)}</span>
-                    </div>
-                    <div className="col-span-12 md:col-span-3 flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded bg-[#1e2922] border border-white/[0.08] flex items-center justify-center shrink-0 font-mono text-[10px] font-bold text-[#60eca8]">
-                        {initials(r.agent || "?")}
-                      </div>
-                      <div className="min-w-0">
-                        <span className="block text-[13px] font-medium text-[#ededed] truncate">{r.agent || "—"}</span>
-                        <span className="block font-mono text-[10px] text-[#707070] truncate">
-                          {r.project_name || r.project || "default pool"}
+                    <span className="mt-1.5 flex size-2 shrink-0 rounded-full bg-[#2f6fe0]" />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-sm font-medium text-[#141414]">
+                          {human(r.action || "event")}
                         </span>
-                      </div>
-                    </div>
-                    <div className="col-span-12 md:col-span-5 flex items-center min-w-0">
-                      <span className="text-[13px] text-[#ededed] truncate">{r.text || "—"}</span>
-                    </div>
-                    <div className="col-span-12 md:col-span-2 flex items-center md:justify-end">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full font-mono text-[10px] bg-[#60eca8]/10 text-[#60eca8] border border-[#60eca8]/25">
-                        {human(r.action || "event")}
+                        <span className="rounded-full bg-[#efeee9] px-2 py-0.5 text-[11px] text-[#6f6e68]">
+                          {r.agent || "unknown"}
+                        </span>
+                        {(r.project_name || r.project) && (
+                          <span className="text-[11px] text-[#9a988f]">
+                            {r.project_name || r.project}
+                          </span>
+                        )}
                       </span>
-                    </div>
+                      {r.text ? (
+                        <span className="mt-1 block truncate text-xs text-[#6f6e68]">{r.text}</span>
+                      ) : null}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1 text-[11px] text-[#9a988f]">
+                      <Clock className="h-3 w-3" />
+                      {ago(r.at)}
+                    </span>
                   </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
-        {/* Detail panel */}
-        <div className="lg:col-span-4 rounded-xl bg-[#0a0a0a] border border-white/[0.08] overflow-hidden lg:sticky lg:top-20">
-          {!active ? (
-            <div className="p-8 text-center text-[13px] text-[#a1a1a1]">Select an event to inspect it.</div>
-          ) : (
-            <>
-              <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
-                <span className="font-mono text-[12px] text-[#60eca8]">Event // {human(active.action || "event")}</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => {
-                      navigator.clipboard?.writeText(JSON.stringify(active, null, 2)).then(() => {
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 1200);
-                      });
-                    }}
-                    className="px-2 py-1 rounded font-mono text-[11px] text-[#a1a1a1] hover:text-[#ededed] hover:bg-[#121212] flex items-center gap-1 transition-colors"
-                  >
-                    <Copy className="w-3 h-3" />
-                    {copied ? "Copied" : "JSON"}
-                  </button>
-                  <button
-                    onClick={() => setSel(null)}
-                    aria-label="Close"
-                    className="p-1 rounded text-[#707070] hover:text-[#ededed] hover:bg-[#121212] transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+      {active && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-[#141414]/30" onClick={() => setSel(null)}>
+          <aside
+            className="flex h-full w-full max-w-md flex-col bg-[#f6f5f2] shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#e7e4dc] px-5 py-4">
+              <h2 className="text-base font-semibold text-[#141414]">
+                {human(active.action || "event")}
+              </h2>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={copyJson}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs text-[#6f6e68] hover:bg-[#efeee9] hover:text-[#141414]"
+                >
+                  <Copy className="h-3 w-3" />
+                  {copied ? "Copied" : "JSON"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSel(null)}
+                  aria-label="Close"
+                  className="rounded-full p-1.5 text-[#6f6e68] hover:bg-[#efeee9] hover:text-[#141414]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <div className="grid grid-cols-2 divide-x divide-white/[0.08] border-b border-white/[0.08]">
-                <div className="p-3">
-                  <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider">Agent</span>
-                  <span className="block text-[13px] text-[#ededed] truncate">{active.agent || "—"}</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Agent</p>
+                  <p className="mt-1 truncate text-sm text-[#141414]">{active.agent || "—"}</p>
                 </div>
-                <div className="p-3">
-                  <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider">Pool</span>
-                  <span className="block text-[13px] text-[#ededed] truncate">
+                <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Pool</p>
+                  <p className="mt-1 truncate text-sm text-[#141414]">
                     {active.project_name || active.project || "default"}
-                  </span>
+                  </p>
                 </div>
               </div>
-              <div className="p-3 border-b border-white/[0.08]">
-                <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider">Recorded at</span>
-                <span className="block font-mono text-[12px] text-[#bbcabe]">{active.at}</span>
+              <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
+                <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Recorded</p>
+                <p className="mt-1 font-mono text-xs text-[#6f6e68]">{active.at}</p>
               </div>
-              <div className="p-3 border-b border-white/[0.08]">
-                <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider mb-1">Details</span>
-                <p className="text-[13px] text-[#ededed] leading-relaxed break-words">{active.text || "—"}</p>
+              <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
+                <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Details</p>
+                <p className="mt-1 text-sm leading-relaxed text-[#141414] break-words">
+                  {active.text || "—"}
+                </p>
               </div>
-              <div className="p-3">
-                <span className="block font-mono text-[10px] text-[#707070] uppercase tracking-wider mb-1.5">
-                  Payload (read-only)
-                </span>
-                <pre className="font-mono text-[11px] leading-relaxed text-[#60eca8] bg-[#000] border border-white/[0.08] rounded-lg p-3 overflow-x-auto max-h-72">
+              <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
+                <p className="mb-2 text-[10px] uppercase tracking-wider text-[#9a988f]">Payload</p>
+                <pre className="max-h-64 overflow-auto rounded-lg bg-[#0f0f0f] p-3 font-mono text-[11px] leading-relaxed text-[#e7e4dc]">
                   {JSON.stringify(active, null, 2)}
                 </pre>
               </div>
-            </>
-          )}
+            </div>
+          </aside>
         </div>
-      </div>
+      )}
     </div>
   );
 }
