@@ -1,44 +1,44 @@
 /*
-  Handoff Hub design tokens: the single source of truth for colour, spacing,
-  radius, type scale, elevation and motion. lib/tokens.ts mirrors the values
-  that JavaScript needs (spring configs, sparkline colours).
-
-  Contrast: --c-text, --c-text-2 and --c-text-3 all pass WCAG AA (4.5:1) on
-  --c-canvas, --c-surface and --c-surface-2.
+  Handoff Hub design tokens — neutral grey theme.
+  No neon accents. Status uses a soft blue; primary actions are white.
 */
 :root {
   color-scheme: dark;
 
-  /* Colour: canvas and surfaces */
-  --c-canvas: #000000;
-  --c-surface: #0a0a0a;
-  --c-surface-2: #111111;
-  --c-surface-3: #161616;
-  --c-hover: #1a1a1a;
+  /* Canvas and surfaces */
+  --c-canvas: #090909;
+  --c-surface: #111111;
+  --c-surface-2: #161616;
+  --c-surface-3: #1c1c1c;
+  --c-hover: #222222;
   --c-overlay: rgba(0, 0, 0, 0.72);
 
-  /* Colour: hairlines */
+  /* Hairlines */
   --c-line: rgba(255, 255, 255, 0.08);
   --c-line-2: rgba(255, 255, 255, 0.14);
-  --c-line-3: rgba(255, 255, 255, 0.24);
+  --c-line-3: rgba(255, 255, 255, 0.22);
 
-  /* Colour: text */
-  --c-text: #ededed;
-  --c-text-2: #a1a1a1;
-  --c-text-3: #8a8a8a;
+  /* Text */
+  --c-text: #f5f5f5;
+  --c-text-2: #a3a3a3;
+  --c-text-3: #737373;
 
-  /* Colour: signal (status only, never decoration) */
-  --c-accent: #3ecf8e;
-  --c-accent-2: #5eead4;
-  --c-accent-text: #5be3a6;
-  --c-accent-bg: rgba(62, 207, 142, 0.1);
-  --c-accent-line: rgba(62, 207, 142, 0.3);
-  --c-warn: #f5b14a;
-  --c-warn-bg: rgba(245, 177, 74, 0.1);
-  --c-warn-line: rgba(245, 177, 74, 0.3);
-  --c-bad: #ff7b7b;
-  --c-bad-bg: rgba(255, 107, 107, 0.1);
-  --c-bad-line: rgba(255, 107, 107, 0.32);
+  /* Signal — restrained */
+  --c-accent: #f5f5f5;
+  --c-accent-2: #d4d4d4;
+  --c-accent-text: #e5e5e5;
+  --c-accent-bg: rgba(255, 255, 255, 0.08);
+  --c-accent-line: rgba(255, 255, 255, 0.18);
+  --c-ok: #6b9eff;
+  --c-ok-bg: rgba(107, 158, 255, 0.12);
+  --c-ok-line: rgba(107, 158, 255, 0.28);
+  --c-ok-text: #93b4ff;
+  --c-warn: #d4a574;
+  --c-warn-bg: rgba(212, 165, 116, 0.1);
+  --c-warn-line: rgba(212, 165, 116, 0.28);
+  --c-bad: #e07070;
+  --c-bad-bg: rgba(224, 112, 112, 0.1);
+  --c-bad-line: rgba(224, 112, 112, 0.28);
   --c-mute-bg: rgba(255, 255, 255, 0.05);
   --c-mute-line: rgba(255, 255, 255, 0.1);
 
@@ -62,9 +62,9 @@
   --r-xl: 16px;
   --r-pill: 999px;
 
-  /* Type scale */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Type */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --fs-2xs: 11px;
   --fs-xs: 12px;
   --fs-sm: 13px;
@@ -76,13 +76,13 @@
   --fs-4xl: 48px;
   --fs-5xl: 64px;
   --ls-tight: -0.02em;
-  --ls-tighter: -0.035em;
-  --ls-display: -0.045em;
-  --ls-eyebrow: 0.08em;
+  --ls-tighter: -0.03em;
+  --ls-display: -0.04em;
+  --ls-eyebrow: 0.06em;
 
-  /* Elevation: tonal layers and glow, not drop shadows */
-  --sh-pop: 0 24px 64px -16px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --sh-glow: 0 0 0 1px var(--c-accent-line), 0 8px 32px -8px rgba(62, 207, 142, 0.18);
+  /* Elevation */
+  --sh-pop: 0 24px 64px -16px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --sh-glow: 0 0 0 1px var(--c-line-2);
 
   /* Motion */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -102,7 +102,7 @@
   --z-overlay: 60;
   --z-toast: 100;
 
-  /* Legacy aliases: unredesigned pages (for example /connect/setup) still read these */
+  /* Legacy aliases */
   --bg: var(--c-canvas);
   --bg-surface: var(--c-surface);
   --bg-subtle: var(--c-surface-2);
