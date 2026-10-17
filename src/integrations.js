@@ -42,13 +42,19 @@ function assertAllowedVercelProject(projectId) {
 }
 
 function githubPath(path) {
-  return path.split('/').map(encodeURIComponent).join('/');
+  const normalized = String(path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  const segments = normalized.split('/');
+  if (!normalized || segments.some(s => s === '..' || s === '.')) {
+    throw new Error('Invalid file path: path traversal is not allowed');
+  }
+  return segments.map(encodeURIComponent).join('/');
 }
 
 async function githubFetch(repository, path, options = {}) {
-  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
   assertAllowedRepo(repository);
-  const response = await fetch(`https://api.github.com/repos/${repository}/contents/${githubPath(path)}`, {
+  const safePath = githubPath(path);
+  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
+  const response = await fetch(`https://api.github.com/repos/${repository}/contents/${safePath}`, {
     ...options,
     headers: {
       Accept: 'application/vnd.github+json',
@@ -129,9 +135,10 @@ async function githubApiFetch(path, options = {}) {
 // since the tree is built from the branch's current tree plus these blobs — no per-file
 // sha lookup needed. One network round trip per file for the blob, plus 4 fixed calls.
 export async function githubCommitFiles({ repository, files, message, branch = DEFAULT_GITHUB_BRANCH }) {
-  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
   assertAllowedRepo(repository);
   if (!Array.isArray(files) || !files.length) throw new Error('files must be a non-empty array of { path, content }');
+  files.forEach(f => githubPath(f.path));
+  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
 
   const ref = await githubApiFetch(`/repos/${repository}/git/ref/heads/${encodeURIComponent(branch)}`);
   const baseCommitSha = ref.object.sha;
@@ -143,6 +150,7 @@ export async function githubCommitFiles({ repository, files, message, branch = D
   // Reduces multi-file commit network latency from O(N * T) to O(T).
   const treeEntries = await Promise.all(
     files.map(async file => {
+      githubPath(file.path);
       const blob = await githubApiFetch(`/repos/${repository}/git/blobs`, {
         method: 'POST',
         body: JSON.stringify({ content: file.content, encoding: 'utf-8' })
