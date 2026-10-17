@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
-import { Search, Plug, CheckCircle2, ShieldCheck, ChevronRight, ExternalLink } from "lucide-react";
+import { useMemo, useState, type KeyboardEvent } from "react";
+import { Search, CheckCircle2, ShieldCheck, ChevronRight } from "lucide-react";
 import ConnectionButton from "./ConnectionButton";
 import { Sheet } from "./ui/Sheet";
 import { Badge } from "./ui/Badge";
 import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
-import "./landing/landing.css";
 
 // [id, name, category, description, live]
 const APPS: ReadonlyArray<readonly [string, string, string, string, boolean]> = [
@@ -46,6 +45,19 @@ const APPS: ReadonlyArray<readonly [string, string, string, string, boolean]> = 
   ["zapier", "Zapier", "Automation", "Automated workflows across thousands of web apps.", false],
 ];
 
+/** Stable color per app id so avatars feel intentional, not random on every render. */
+const AVATAR_COLORS = [
+  "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
+  "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#a855f7",
+  "#f43f5e", "#84cc16", "#0ea5e9", "#d946ef", "#10b981",
+];
+
+function avatarColor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
 const initials = (n: string) =>
   n
     .split(/[\s.]+/)
@@ -53,13 +65,6 @@ const initials = (n: string) =>
     .join("")
     .slice(0, 2)
     .toUpperCase();
-
-/** Feeds the shared spot-fx spotlight (--mouse-x / --mouse-y), same as the dashboard Card. */
-function track(e: MouseEvent<HTMLElement>) {
-  const r = e.currentTarget.getBoundingClientRect();
-  e.currentTarget.style.setProperty("--mouse-x", `${e.clientX - r.left}px`);
-  e.currentTarget.style.setProperty("--mouse-y", `${e.clientY - r.top}px`);
-}
 
 export default function ConnectorDirectory({
   connected,
@@ -75,26 +80,40 @@ export default function ConnectorDirectory({
   const on = useMemo(() => new Set(connected), [connected]);
   const cats = useMemo(() => ["All", ...Array.from(new Set(APPS.map((a) => a[2])))], []);
 
-  const rows = APPS.filter(
-    (a) =>
-      (cat === "All" || a[2] === cat) &&
-      (a[1] + " " + a[3] + " " + a[2]).toLowerCase().includes(q.trim().toLowerCase())
+  const query = q.trim().toLowerCase();
+
+  const filtered = useMemo(
+    () =>
+      APPS.filter(
+        (a) =>
+          (cat === "All" || a[2] === cat) &&
+          (a[1] + " " + a[3] + " " + a[2]).toLowerCase().includes(query)
+      ),
+    [cat, query]
   );
 
-  const connectedApps = useMemo(
-    () => APPS.filter(([id]) => on.has(id)),
-    [on]
-  );
+  const connectedApps = useMemo(() => APPS.filter(([id]) => on.has(id)), [on]);
+
+  /** Group filtered rows by category for Grok-style section lists. */
+  const sections = useMemo(() => {
+    if (cat !== "All") return [{ title: cat, rows: filtered }];
+    const map = new Map<string, typeof filtered>();
+    for (const row of filtered) {
+      const list = map.get(row[2]) ?? [];
+      list.push(row);
+      map.set(row[2], list);
+    }
+    return Array.from(map.entries()).map(([title, rows]) => ({ title, rows }));
+  }, [cat, filtered]);
 
   const selectedApp = useMemo(
     () => APPS.find(([id]) => id === selectedAppId),
     [selectedAppId]
   );
-
   const selectedIsConnected = selectedAppId ? on.has(selectedAppId) : false;
-  const selectedAccountName = selectedAppId && selectedIsConnected ? names[selectedAppId] : null;
+  const selectedAccountName =
+    selectedAppId && selectedIsConnected ? names[selectedAppId] : null;
 
-  /** Enter or Space on the card itself opens the details; keys pressed on the inner button are left alone. */
   const openOnKey = (id: string) => (e: KeyboardEvent<HTMLElement>) => {
     if (e.target !== e.currentTarget) return;
     if (e.key === "Enter" || e.key === " ") {
@@ -104,184 +123,211 @@ export default function ConnectorDirectory({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="green" dot>
-              {connected.length} CONNECTED
-            </Badge>
-            <span className="text-xs text-[#8a8a8a]">•</span>
-            <span className="text-xs font-mono text-[#8a8a8a]">{APPS.length} Total Directory</span>
-          </div>
-          <h1 className="text-2xl font-semibold text-[#ededed] tracking-tight">Integrations</h1>
-          <p className="text-xs text-[#a1a1a1] mt-0.5 max-w-2xl">
-            Authorize your external tools via OAuth. Handoff Hub stores access tokens securely and never receives your provider passwords.
-          </p>
-        </div>
+    <div className="space-y-8">
+      {/* Title — Grok marketplace style */}
+      <div className="space-y-1">
+        <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[#ededed]">
+          Integrations
+        </h1>
+        <p className="text-sm text-[#a1a1a1] max-w-xl">
+          Connect tools via OAuth. Handoff Hub stores tokens securely and never sees your passwords.
+        </p>
       </div>
 
-      {/* Connected Integrations Banner (if any) */}
-      {connectedApps.length > 0 && (
-        <div className="rounded-xl border border-[#3ecf8e]/30 bg-[#3ecf8e]/5 p-4 space-y-3">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#5be3a6]">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#3ecf8e]" />
-              <span>ACTIVE CONNECTIONS ({connectedApps.length})</span>
-            </div>
-            <span className="text-[11px] font-mono text-[#8a8a8a]">Ready for AI Workflows</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {connectedApps.map(([id, name, group]) => (
-              <div
-                key={id}
-                role="button"
-                tabIndex={0}
-                aria-label={`${name} details`}
-                onClick={() => setSelectedAppId(id)}
-                onKeyDown={openOnKey(id)}
-                onMouseMove={track}
-                className="spot-fx p-3 rounded-lg bg-[#0a0a0a] border border-white/10 hover:border-[#3ecf8e]/40 transition-colors cursor-pointer flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-[#ededed]">
-                    {initials(name)}
-                  </div>
-                  <div>
-                    <span className="block text-xs font-semibold text-[#ededed] group-hover:text-[#3ecf8e] transition-colors">
-                      {name}
-                    </span>
-                    <span className="block text-[10px] text-[#8a8a8a]">
-                      {names[id] ? "As " + names[id] : group}
-                    </span>
-                  </div>
-                </div>
-                <Badge variant="green">Active</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Directory Controls: Category Filters & Search */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0">
-          {cats.map((c) => (
+      {/* Category pills — solid active like Grok */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+        {cats.map((c) => {
+          const active = cat === c;
+          const count = c === "All" ? APPS.length : APPS.filter((a) => a[2] === c).length;
+          return (
             <button
               key={c}
               onClick={() => setCat(c)}
-              aria-pressed={cat === c}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
-                cat === c
-                  ? "bg-white text-black font-semibold shadow-sm"
-                  : "bg-[#111] text-[#a1a1a1] hover:text-[#ededed] hover:bg-[#181818] border border-white/10"
+              aria-pressed={active}
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+                active
+                  ? "bg-white text-black"
+                  : "bg-[#141414] text-[#a1a1a1] border border-white/10 hover:text-[#ededed] hover:bg-[#1a1a1a]"
               }`}
             >
-              <span>{c}</span>
-              <span className="ml-1.5 text-[10px] font-mono opacity-70">
-                {c === "All" ? APPS.length : APPS.filter((a) => a[2] === c).length}
+              {c}
+              <span className={`ml-1.5 text-[11px] font-mono ${active ? "opacity-60" : "opacity-50"}`}>
+                {count}
               </span>
             </button>
-          ))}
-        </div>
-
-        {/* Search Input */}
-        <div className="w-full md:w-64 shrink-0">
-          <Input
-            icon={<Search className="w-3.5 h-3.5 text-[#8a8a8a]" />}
-            placeholder="Search integrations..."
-            aria-label="Search integrations"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
+          );
+        })}
       </div>
 
-      {/* Integrations Grid */}
-      {rows.length === 0 ? (
-        <div className="p-12 text-center rounded-xl border border-dashed border-white/10 bg-[#0a0a0a]">
-          <p className="text-sm text-[#a1a1a1]">No integrations found matching &ldquo;{q}&rdquo;.</p>
-          <Button variant="ghost" size="sm" onClick={() => { setQ(""); setCat("All"); }} className="mt-3">
+      {/* Search */}
+      <div className="max-w-2xl">
+        <Input
+          icon={<Search className="w-4 h-4 text-[#707070]" />}
+          placeholder="Search by name or category…"
+          aria-label="Search integrations"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="h-11 rounded-full bg-[#111] border-white/10 text-sm pl-10"
+        />
+      </div>
+
+      {/* Featured — connected apps as large icon cards */}
+      {connectedApps.length > 0 && cat === "All" && !query && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[#ededed]">Connected</h2>
+            <Badge variant="green" dot>
+              {connectedApps.length} active
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {connectedApps.map(([id, name, group]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setSelectedAppId(id)}
+                onKeyDown={openOnKey(id)}
+                className="group flex flex-col items-center gap-3 p-5 rounded-2xl bg-[#0f0f0f] border border-white/[0.08] hover:border-[#3ecf8e]/40 transition-all text-center"
+              >
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold text-white shadow-lg"
+                  style={{ backgroundColor: avatarColor(id) }}
+                >
+                  {initials(name)}
+                </div>
+                <div className="min-w-0 w-full">
+                  <span className="block text-sm font-semibold text-[#ededed] truncate group-hover:text-[#3ecf8e] transition-colors">
+                    {name}
+                  </span>
+                  <span className="block text-[11px] text-[#707070] truncate mt-0.5">
+                    {names[id] ? `as ${names[id]}` : group}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Category sections — Grok list rows, two columns */}
+      {filtered.length === 0 ? (
+        <div className="py-16 text-center rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a]">
+          <p className="text-sm text-[#a1a1a1]">No integrations match “{q}”.</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setQ("");
+              setCat("All");
+            }}
+            className="mt-3"
+          >
             Clear filters
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows.map(([id, name, group, desc, live]) => {
-            const isConnected = on.has(id);
-            const accountName = isConnected && names[id] ? names[id] : null;
+        <div className="space-y-10">
+          {sections.map(({ title, rows }) => (
+            <section key={title} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-[#ededed]">{title}</h2>
+                {cat === "All" && (
+                  <button
+                    type="button"
+                    onClick={() => setCat(title)}
+                    className="text-xs text-[#707070] hover:text-[#ededed] transition-colors"
+                  >
+                    View all
+                  </button>
+                )}
+              </div>
 
-            return (
-              <div
-                key={id}
-                role="button"
-                tabIndex={0}
-                aria-label={`${name} details`}
-                onClick={() => setSelectedAppId(id)}
-                onKeyDown={openOnKey(id)}
-                onMouseMove={track}
-                className={`spot-fx p-4 rounded-xl bg-[#0a0a0a] border transition-all flex flex-col justify-between gap-4 cursor-pointer group ${
-                  isConnected
-                    ? "border-[#3ecf8e]/30 hover:border-[#3ecf8e]/60 bg-[#3ecf8e]/[0.02]"
-                    : "border-white/10 hover:border-white/25"
-                }`}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#111] border border-white/10 flex items-center justify-center font-bold text-xs text-[#ededed] group-hover:scale-105 transition-transform">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1">
+                {rows.map(([id, name, , desc, live]) => {
+                  const isConnected = on.has(id);
+                  const accountName = isConnected && names[id] ? names[id] : null;
+
+                  return (
+                    <div
+                      key={id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${name} details`}
+                      onClick={() => setSelectedAppId(id)}
+                      onKeyDown={openOnKey(id)}
+                      className="group flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-xl hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                        style={{ backgroundColor: avatarColor(id) }}
+                      >
                         {initials(name)}
                       </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-[#ededed] group-hover:text-[#3ecf8e] transition-colors">
-                          {name}
-                        </h3>
-                        <span className="text-[10px] font-mono text-[#8a8a8a]">{group}</span>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-[#ededed] truncate group-hover:text-[#3ecf8e] transition-colors">
+                            {name}
+                          </span>
+                          {isConnected && (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#3ecf8e] shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-xs text-[#707070] line-clamp-1 mt-0.5">
+                          {accountName ? `Connected as ${accountName}` : desc}
+                        </p>
+                      </div>
+
+                      <div
+                        className="shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {isConnected ? (
+                          <ConnectionButton provider={id} connected available={live} />
+                        ) : live ? (
+                          <a
+                            href={`/api/connect/${id}`}
+                            className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium bg-[#1a1a1a] border border-white/10 text-[#ededed] hover:bg-white hover:text-black transition-colors"
+                          >
+                            Add
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#555] border border-white/5">
+                            Soon
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div>
-                      {isConnected ? (
-                        <Badge variant="green">Connected</Badge>
-                      ) : live ? (
-                        <Badge variant="grey">Not connected</Badge>
-                      ) : (
-                        <Badge variant="grey" dot={false}>Coming soon</Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-[#a1a1a1] line-clamp-2 leading-relaxed">
-                    {accountName ? "Connected as " + accountName : desc}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-                  <ConnectionButton provider={id} connected={isConnected} available={live} />
-                  <span className="text-[11px] text-[#8a8a8a] flex items-center gap-0.5 group-hover:text-[#ededed] transition-colors">
-                    Details <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </section>
+          ))}
         </div>
       )}
 
-      {/* Integration Detail Side-Sheet Drawer */}
+      {/* Detail side sheet */}
       <Sheet
         open={Boolean(selectedApp)}
-        onOpenChange={(open) => { if (!open) setSelectedAppId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAppId(null);
+        }}
         title={
           selectedApp ? (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#111] border border-white/10 flex items-center justify-center font-bold text-sm text-[#ededed]">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                style={{ backgroundColor: avatarColor(selectedApp[0]) }}
+              >
                 {initials(selectedApp[1])}
               </div>
               <div>
-                <span className="text-base font-semibold text-[#ededed] block">{selectedApp[1]}</span>
-                <span className="text-xs font-mono text-[#8a8a8a] block">{selectedApp[2]}</span>
+                <span className="text-base font-semibold text-[#ededed] block">
+                  {selectedApp[1]}
+                </span>
+                <span className="text-xs font-mono text-[#8a8a8a] block">
+                  {selectedApp[2]}
+                </span>
               </div>
             </div>
           ) : null
@@ -298,16 +344,18 @@ export default function ConnectorDirectory({
                   <div className="p-3.5 rounded-xl border border-[#3ecf8e]/30 bg-[#3ecf8e]/10 text-xs text-[#5be3a6] space-y-1">
                     <div className="font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-[#3ecf8e]" />
-                      <span>Genuinely Connected</span>
+                      <span>Connected</span>
                     </div>
                     {selectedAccountName && (
-                      <p className="text-[11px] text-[#a1a1a1]">Account: {selectedAccountName}</p>
+                      <p className="text-[11px] text-[#a1a1a1]">
+                        Account: {selectedAccountName}
+                      </p>
                     )}
                   </div>
                 ) : selectedApp[4] ? (
                   <div className="p-3.5 rounded-xl border border-white/10 bg-[#111] text-xs text-[#a1a1a1] space-y-1">
                     <span className="font-semibold text-[#ededed]">Not connected yet</span>
-                    <p className="text-[11px]">Click below to authorize via official OAuth.</p>
+                    <p className="text-[11px]">Authorize via official OAuth below.</p>
                   </div>
                 ) : (
                   <div className="p-3.5 rounded-xl border border-white/10 bg-[#111] text-xs text-[#8a8a8a]">
@@ -326,7 +374,7 @@ export default function ConnectorDirectory({
 
             <div className="space-y-2">
               <span className="text-[10px] font-mono uppercase tracking-wider text-[#8a8a8a]">
-                OAuth Security Policy
+                OAuth Security
               </span>
               <div className="p-3 rounded-lg bg-[#111] border border-white/10 text-xs text-[#a1a1a1] space-y-2">
                 <div className="flex items-center gap-2 text-[#3ecf8e]">
@@ -334,13 +382,17 @@ export default function ConnectorDirectory({
                   <span className="font-medium text-[#ededed]">Server-side OAuth 2.0 PKCE</span>
                 </div>
                 <p className="text-[11px] leading-relaxed">
-                  Tokens are stored with encrypted storage at rest and automatically refreshed. Your account password is never exposed.
+                  Tokens are encrypted at rest and refreshed automatically. Your provider password is never exposed.
                 </p>
               </div>
             </div>
 
             <div className="pt-4 border-t border-white/10">
-              <ConnectionButton provider={selectedApp[0]} connected={selectedIsConnected} available={selectedApp[4]} />
+              <ConnectionButton
+                provider={selectedApp[0]}
+                connected={selectedIsConnected}
+                available={selectedApp[4]}
+              />
             </div>
           </div>
         )}
