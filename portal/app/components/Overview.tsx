@@ -34,12 +34,6 @@ export default async function Overview({ token, connected }: { token: string; co
   const clientCount = accts.reduce((n, a) => n + (a.clients?.length ?? 0), 0);
   const totalProjects = (projectsData?.accounts ?? []).reduce((n, a) => n + (a.projects?.length ?? 0), 0);
 
-  const pendingTasks = (hubData?.hubs ?? []).reduce((n, h) => {
-    const tasks = Array.isArray(h.tasks) ? h.tasks : [];
-    return n + tasks.filter((t: { status?: string }) => t.status !== "done").length;
-  }, 0);
-  const taskActive = pendingTasks > 0;
-
   const steps = [
     { label: "Connect an integration", done: connected > 0, href: "/integrations", cta: "Manage integrations" },
     { label: "Link an AI account (Claude / ChatGPT)", done: accts.length > 0, href: "/ai", cta: "Link account" },
@@ -49,33 +43,31 @@ export default async function Overview({ token, connected }: { token: string; co
 
   return (
     <div className="space-y-8">
-      {/* Hero */}
       <div className="relative overflow-hidden rounded-2xl border border-[#e7e4dc] bg-white p-6 md:p-8 shadow-[0_1px_0_rgba(20,20,20,0.04)]">
         <div className="absolute -right-6 -top-6 opacity-[0.06] pointer-events-none" aria-hidden>
-          <Logo size={148} active={taskActive} />
+          <Logo size={148} />
         </div>
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             <div className="shrink-0 mt-0.5">
-              <Logo size={44} active={taskActive} />
+              <Logo size={44} />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <Badge variant="green" pulse>
-                  {taskActive ? `${pendingTasks} TASK${pendingTasks === 1 ? "" : "S"} ACTIVE` : "WORKSPACE READY"}
-                </Badge>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2f6fe0] opacity-60" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#2f6fe0]" />
+                  </span>
+                  WORKSPACE READY
+                </span>
                 {lastCheck?.version ? (
                   <span className="font-mono text-[11px] text-[#9a988f]">Hub v{lastCheck.version}</span>
                 ) : null}
               </div>
-              <h1 className="text-2xl md:text-[28px] font-semibold tracking-tight text-[#141414]">
-                Overview
-              </h1>
+              <h1 className="text-2xl md:text-[28px] font-semibold tracking-tight text-[#141414]">Overview</h1>
               <p className="text-sm text-[#6f6e68] mt-1 max-w-xl leading-relaxed">
                 Live status of integrations, AI runtimes, memory pools, and handoff activity.
-                {taskActive
-                  ? " Signal beam is pulsing while agents work on open tasks."
-                  : " All systems idle — ready for the next handoff."}
               </p>
             </div>
           </div>
@@ -94,12 +86,8 @@ export default async function Overview({ token, connected }: { token: string; co
         </div>
       </div>
 
-      {/* KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Link
-          href="/integrations"
-          className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all"
-        >
+        <Link href="/integrations" className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Integrations</span>
             <Plug className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
@@ -108,15 +96,10 @@ export default async function Overview({ token, connected }: { token: string; co
             <span className="text-2xl font-semibold font-mono text-[#141414]">{connected}</span>
             <span className="text-xs text-[#2f6fe0] font-medium">Live</span>
           </div>
-          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">
-            OAuth directory <ChevronRight className="w-3 h-3" />
-          </p>
+          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">OAuth directory <ChevronRight className="w-3 h-3" /></p>
         </Link>
 
-        <Link
-          href="/ai"
-          className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all"
-        >
+        <Link href="/ai" className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">AI Accounts</span>
             <Bot className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
@@ -125,15 +108,10 @@ export default async function Overview({ token, connected }: { token: string; co
             <span className="text-2xl font-semibold font-mono text-[#141414]">{accts.length}</span>
             <span className="text-xs text-[#6f6e68] font-mono">{clientCount} clients</span>
           </div>
-          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">
-            Claude / ChatGPT <ChevronRight className="w-3 h-3" />
-          </p>
+          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">Claude / ChatGPT <ChevronRight className="w-3 h-3" /></p>
         </Link>
 
-        <Link
-          href="/projects"
-          className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all"
-        >
+        <Link href="/projects" className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Projects & Pools</span>
             <FolderKanban className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
@@ -142,9 +120,7 @@ export default async function Overview({ token, connected }: { token: string; co
             <span className="text-2xl font-semibold font-mono text-[#141414]">{totalProjects}</span>
             <span className="text-xs text-[#6f6e68]">Isolated</span>
           </div>
-          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">
-            Memory pools <ChevronRight className="w-3 h-3" />
-          </p>
+          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">Memory pools <ChevronRight className="w-3 h-3" /></p>
         </Link>
 
         <div className="rounded-xl border border-[#e7e4dc] bg-white p-4">
@@ -219,13 +195,12 @@ export default async function Overview({ token, connected }: { token: string; co
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-
           <div className="rounded-2xl border border-[#e7e4dc] bg-white overflow-hidden">
             <div className="px-4 py-3 border-b border-[#e7e4dc] bg-[#f6f5f2]/60 flex items-center justify-between text-xs">
               <span className="font-mono text-[#9a988f]">EVENT STREAM</span>
-              <Badge variant="green" pulse>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
                 LIVE
-              </Badge>
+              </span>
             </div>
             <div className="p-4">
               <ActivityLog token={token} limit={6} />
@@ -238,28 +213,22 @@ export default async function Overview({ token, connected }: { token: string; co
             <Bot className="w-4 h-4 text-[#2f6fe0]" />
             <h2 className="text-sm font-semibold text-[#141414]">AI runtimes</h2>
           </div>
-
           <div className="rounded-2xl border border-[#e7e4dc] bg-white p-4 space-y-3">
             {accts.length === 0 ? (
               <div className="text-xs text-[#6f6e68] py-6 text-center">
                 No AI accounts linked yet.
                 <div className="mt-3">
                   <Link href="/ai">
-                    <Button variant="secondary" size="sm">
-                      Link Claude or ChatGPT
-                    </Button>
+                    <Button variant="secondary" size="sm">Link Claude or ChatGPT</Button>
                   </Link>
                 </div>
               </div>
             ) : (
               accts.map((acct) => (
-                <div
-                  key={acct.id}
-                  className="rounded-xl border border-[#e7e4dc] bg-[#f6f5f2]/50 p-3 space-y-1.5"
-                >
+                <div key={acct.id} className="rounded-xl border border-[#e7e4dc] bg-[#f6f5f2]/50 p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-[#141414]">{acct.label}</span>
-                    <Badge variant="green">Linked</Badge>
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">Linked</span>
                   </div>
                   <div className="text-[11px] font-mono text-[#9a988f]">
                     {acct.clients?.length ?? 0} active client{(acct.clients?.length ?? 0) === 1 ? "" : "s"}
@@ -268,7 +237,6 @@ export default async function Overview({ token, connected }: { token: string; co
               ))
             )}
           </div>
-
           <div className="rounded-2xl border border-[#e7e4dc] bg-white p-4">
             <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f] mb-1">Security</p>
             <h3 className="text-sm font-semibold text-[#141414] mb-2">OAuth isolation</h3>
