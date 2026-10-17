@@ -182,8 +182,12 @@ export default async function handler(req,res){
     }
     if(route==='authorize'){
       const source=req.method==='POST'?bodyOf(req):req.query||Object.fromEntries(new URL(req.url,'http://x').searchParams);
-      const p=Object.fromEntries(oauthFields.map(k=>[k,str(source[k])]));
-      const v=await validateAuthRequest(p);if(v.error)return failPage(res,400,v.error);
+      // Be forgiving about parameter shape (repeated params arrive as arrays; surrounding whitespace; case) and log what a rejected request looked like.
+      const pick=x=>Array.isArray(x)?str(x[0]):str(x);
+      const p=Object.fromEntries(oauthFields.map(k=>[k,pick(source[k]).trim()]));
+      p.response_type=p.response_type.toLowerCase()||'code';
+      const v=await validateAuthRequest(p);
+      if(v.error){console.log('oauth/authorize rejected',JSON.stringify({method:req.method,reason:v.error,ct:String(req.headers?.['content-type']||'').slice(0,60),keys:Object.keys(source||{}),response_type_raw:source?.response_type===undefined?'<missing>':JSON.stringify(source.response_type).slice(0,60),client_prefix:String(p.client_id).slice(0,4),redirect_host:(()=>{try{return new URL(p.redirect_uri).hostname}catch{return 'invalid'}})(),pkce_method:p.code_challenge_method,challenge_len:p.code_challenge.length}));return failPage(res,400,v.error);}
       if(req.method==='GET')return page(res,200,'Connect to Handoff Hub',emailForm(p,v.client));
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
       const form=bodyOf(req);
