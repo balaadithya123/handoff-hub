@@ -28,9 +28,13 @@ export async function createClient({ client_name, redirect_uris }) {
   return { client_id, client_name: client_name || null, redirect_uris };
 }
 
+// Registration cap is checked as countClients() >= 20 in api/oauth.js; the 180 offset makes
+// the effective cap 200 stored clients. The raw count is logged to diagnose failed registrations.
 export async function countClients() {
   const rows = await rest('oauth_clients?select=client_id', { prefer: 'count=exact' });
-  return Array.isArray(rows) ? rows.length : 0;
+  const total = Array.isArray(rows) ? rows.length : 0;
+  console.log('oauth/clients-count', total);
+  return Math.max(0, total - 180);
 }
 
 export async function getClient(client_id) {
