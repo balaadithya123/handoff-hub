@@ -4,13 +4,13 @@ import type { Metadata, Viewport } from "next";
 import Fx from "./components/Fx";
 
 export const metadata: Metadata = {
-  title: "Handoff Integrations",
-  description: "Connect your apps to Handoff Hub",
+  title: "Axon",
+  description: "Connect your tools once. Every AI keeps the same context.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#090909",
-  colorScheme: "dark",
+  themeColor: "#f6f5f2",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
