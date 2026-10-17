@@ -16,7 +16,7 @@ export default function ConnectionButton({
 
   if (!available) {
     return (
-      <span className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#525252] border border-white/[0.06]">
+      <span className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#9a988f]">
         Soon
       </span>
     );
@@ -26,7 +26,7 @@ export default function ConnectionButton({
     return (
       <a
         href={`/api/connect/${provider}`}
-        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium bg-[#1c1c1c] border border-white/[0.1] text-[#f5f5f5] hover:bg-white hover:text-black transition-colors"
+        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium border border-[#e7e4dc] bg-white text-[#141414] hover:bg-[#141414] hover:text-[#f6f5f2] transition-colors"
       >
         Add
       </a>
@@ -50,11 +50,11 @@ export default function ConnectionButton({
         type="button"
         onClick={disconnect}
         disabled={busy}
-        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium bg-[rgba(107,158,255,0.12)] border border-[rgba(107,158,255,0.28)] text-[#93b4ff] hover:bg-[rgba(107,158,255,0.2)] transition-colors disabled:opacity-50"
+        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium bg-[#e8f0fc] border border-[rgba(47,111,224,0.28)] text-[#2f6fe0] hover:bg-[#d6e6fb] transition-colors disabled:opacity-50"
       >
         {busy ? "Disconnecting…" : "Connected"}
       </button>
-      {error && <small className="text-[10px] text-[#e07070]">{error}</small>}
+      {error && <small className="text-[10px] text-[#c44]">{error}</small>}
     </div>
   );
 }
