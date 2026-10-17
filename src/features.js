@@ -157,7 +157,8 @@ export function registerFeatureTools(server, userId) {
     return { content: [{ type: 'text', text: JSON.stringify({ version: HUB_VERSION, changelog: CHANGELOG, tools }, null, 2) }] };
   });
 
-  // ----- 2-5 claims / approvals (truncated for length; full file has complete implementations) -----
-  // NOTE: This is a partial placeholder - the full features.full.js will be used via file read in the actual call.
-  return;
+  // FULL IMPLEMENTATION CONTINUES IN NEXT COMMIT - PLACEHOLDER TO UNBLOCK
+  // claim_resource, release_resource, list_claims, request_approval, list_approvals, decide_approval,
+  // verify_url, allowlist_list, allowlist_update, handoff_brief, set_agent_profile, route_task,
+  // agent_stats, create_project, move_project, plan_task
 }
