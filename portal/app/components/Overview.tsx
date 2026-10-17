@@ -13,13 +13,12 @@ import {
 import { getAiApps, getProjects, getConnections, getHubOverview } from "../../lib/data";
 import { ago } from "../../lib/format";
 import ActivityLog from "./ActivityLog";
-import { Card } from "./ui/Card";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import Logo from "./Logo";
 
 export default async function Overview({ token, connected }: { token: string; connected: number }) {
-  const [aiData, projectsData, connectionsData, hubData] = await Promise.all([
+  const [aiData, projectsData, , hubData] = await Promise.all([
     getAiApps(token).catch(() => null),
     getProjects(token).catch(() => null),
     getConnections(token).catch(() => []),
@@ -35,7 +34,6 @@ export default async function Overview({ token, connected }: { token: string; co
   const clientCount = accts.reduce((n, a) => n + (a.clients?.length ?? 0), 0);
   const totalProjects = (projectsData?.accounts ?? []).reduce((n, a) => n + (a.projects?.length ?? 0), 0);
 
-  // Pending tasks across hubs → drives the orbital “task active” state on the logo
   const pendingTasks = (hubData?.hubs ?? []).reduce((n, h) => {
     const tasks = Array.isArray(h.tasks) ? h.tasks : [];
     return n + tasks.filter((t: { status?: string }) => t.status !== "done").length;
@@ -51,15 +49,15 @@ export default async function Overview({ token, connected }: { token: string; co
 
   return (
     <div className="space-y-8">
-      {/* Hero header with animated mark */}
+      {/* Hero */}
       <div className="relative overflow-hidden rounded-2xl border border-[#e7e4dc] bg-white p-6 md:p-8 shadow-[0_1px_0_rgba(20,20,20,0.04)]">
-        <div className="absolute -right-8 -top-8 opacity-[0.07] pointer-events-none" aria-hidden>
-          <Logo size={160} spinning={taskActive} />
+        <div className="absolute -right-6 -top-6 opacity-[0.06] pointer-events-none" aria-hidden>
+          <Logo size={148} active={taskActive} />
         </div>
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             <div className="shrink-0 mt-0.5">
-              <Logo size={44} spinning={taskActive} />
+              <Logo size={44} active={taskActive} />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -76,7 +74,7 @@ export default async function Overview({ token, connected }: { token: string; co
               <p className="text-sm text-[#6f6e68] mt-1 max-w-xl leading-relaxed">
                 Live status of integrations, AI runtimes, memory pools, and handoff activity.
                 {taskActive
-                  ? " Orbit is spinning while agents work on open tasks."
+                  ? " Signal beam is pulsing while agents work on open tasks."
                   : " All systems idle — ready for the next handoff."}
               </p>
             </div>
@@ -96,7 +94,7 @@ export default async function Overview({ token, connected }: { token: string; co
         </div>
       </div>
 
-      {/* KPI row — light surface cards */}
+      {/* KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Link
           href="/integrations"
@@ -170,7 +168,6 @@ export default async function Overview({ token, connected }: { token: string; co
         </div>
       </div>
 
-      {/* Setup checklist */}
       {!setupDone && (
         <div className="rounded-2xl border border-[#e7e4dc] bg-white p-5 md:p-6">
           <div className="flex items-center gap-2 mb-1">
@@ -210,7 +207,6 @@ export default async function Overview({ token, connected }: { token: string; co
         </div>
       )}
 
-      {/* Activity + runtimes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-3">
           <div className="flex items-center justify-between">
@@ -218,10 +214,7 @@ export default async function Overview({ token, connected }: { token: string; co
               <Activity className="w-4 h-4 text-[#2f6fe0]" />
               <h2 className="text-sm font-semibold text-[#141414]">Recent activity</h2>
             </div>
-            <Link
-              href="/activity"
-              className="text-xs text-[#2f6fe0] hover:underline flex items-center gap-1"
-            >
+            <Link href="/activity" className="text-xs text-[#2f6fe0] hover:underline flex items-center gap-1">
               Full audit log
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
