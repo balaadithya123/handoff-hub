@@ -30,6 +30,22 @@
     "connected_apps",
     "app_list_tools",
     "app_call_tool",
-    "whats_new"
+    "whats_new",
+    "claim_resource",
+    "release_resource",
+    "list_claims",
+    "request_approval",
+    "decide_approval",
+    "list_approvals",
+    "allowlist_list",
+    "allowlist_update",
+    "handoff_brief",
+    "set_agent_profile",
+    "route_task",
+    "plan_task",
+    "agent_stats",
+    "create_project",
+    "move_project",
+    "verify_url"
   ]
 }
