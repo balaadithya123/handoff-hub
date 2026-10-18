@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState, type KeyboardEvent } from "react";
-import { Search, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Search, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
 import ConnectionButton from "./ConnectionButton";
 import AppMark from "./AppMark";
 import { Sheet } from "./ui/Sheet";
 import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
+import type { ProviderAvailability } from "../../lib/connections";
 
 const APPS: ReadonlyArray<readonly [string, string, string, string, boolean]> = [
   ["github", "GitHub", "Developer", "Repositories, issues, pull requests and actions.", true],
@@ -47,9 +48,12 @@ const APPS: ReadonlyArray<readonly [string, string, string, string, boolean]> = 
 export default function ConnectorDirectory({
   connected,
   names,
+  availability = {},
 }: {
   connected: string[];
   names: Record<string, string>;
+  /** Per-app result of the Hub's pre-flight check. Missing entries are treated as connectable. */
+  availability?: Record<string, ProviderAvailability>;
 }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
@@ -74,6 +78,7 @@ export default function ConnectorDirectory({
   }, [cat, filtered]);
   const selectedApp = useMemo(() => APPS.find(([id]) => id === selectedAppId), [selectedAppId]);
   const selectedIsConnected = selectedAppId ? on.has(selectedAppId) : false;
+  const selectedAvailability = selectedAppId ? availability[selectedAppId] : undefined;
   const selectedAccountName = selectedAppId && selectedIsConnected ? names[selectedAppId] : null;
   const openOnKey = (id: string) => (e: KeyboardEvent<HTMLElement>) => {
     if (e.target !== e.currentTarget) return;
@@ -146,7 +151,7 @@ export default function ConnectorDirectory({
                             <span className="block truncate text-xs text-[#6f6e68]">{desc}</span>
                           </span>
                         </button>
-                        <ConnectionButton provider={id} connected={isOn} available={live} />
+                        <ConnectionButton provider={id} connected={isOn} available={live} state={availability[id]?.state} reason={availability[id]?.reason} />
                       </div>
                     </li>
                   );
@@ -172,6 +177,14 @@ export default function ConnectorDirectory({
                 <div className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /><span>Connected</span></div>
                 {selectedAccountName ? <p className="text-[11px] text-[#6f6e68]">Account: {selectedAccountName}</p> : null}
               </div>
+            ) : selectedApp[4] && (selectedAvailability?.state === "needs_app" || selectedAvailability?.state === "unavailable") ? (
+              <div className="p-3.5 rounded-xl border border-[#e7e4dc] bg-white text-xs text-[#6f6e68] space-y-2">
+                <span className="font-semibold text-[#141414] flex items-center gap-1.5"><AlertCircle className="w-4 h-4" /><span>{selectedAvailability.state === "needs_app" ? "Setup needed" : "Can't be connected yet"}</span></span>
+                {selectedAvailability.reason ? <p className="text-[11px] leading-relaxed">{selectedAvailability.reason}</p> : null}
+                {selectedAvailability.setup ? (
+                  <p className="text-[11px] leading-relaxed">Redirect URI to register: <code className="font-mono text-[#141414] break-all">{selectedAvailability.setup.redirect_uri}</code></p>
+                ) : null}
+              </div>
             ) : selectedApp[4] ? (
               <div className="p-3.5 rounded-xl border border-[#e7e4dc] bg-white text-xs text-[#6f6e68]">
                 <span className="font-semibold text-[#141414]">Not connected yet</span>
@@ -181,7 +194,7 @@ export default function ConnectorDirectory({
               <div className="p-3.5 rounded-xl border border-[#e7e4dc] bg-white text-xs text-[#9a988f]">Coming soon</div>
             )}
             <div className="flex items-center gap-2 text-xs text-[#6f6e68]"><ShieldCheck className="w-4 h-4" /><span>OAuth only. Axon never sees your password.</span></div>
-            <ConnectionButton provider={selectedApp[0]} connected={selectedIsConnected} available={selectedApp[4]} />
+            <ConnectionButton provider={selectedApp[0]} connected={selectedIsConnected} available={selectedApp[4]} state={selectedAvailability?.state} reason={selectedAvailability?.reason} />
           </div>
         )}
       </Sheet>

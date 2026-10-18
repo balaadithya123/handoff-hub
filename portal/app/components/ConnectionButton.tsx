@@ -6,10 +6,15 @@ export default function ConnectionButton({
   provider,
   connected,
   available = true,
+  state,
+  reason,
 }: {
   provider: string;
   connected: boolean;
   available?: boolean;
+  /** What the Hub reported for this app: only "ready" (or unknown) can start a sign-in. */
+  state?: "ready" | "needs_app" | "unavailable" | "unknown";
+  reason?: string | null;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -18,6 +23,18 @@ export default function ConnectionButton({
     return (
       <span className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#9a988f]">
         Soon
+      </span>
+    );
+  }
+
+  // The Hub already knows this app cannot connect right now, so say so instead of sending the user into an error.
+  if (!connected && (state === "needs_app" || state === "unavailable")) {
+    return (
+      <span
+        title={reason ?? undefined}
+        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#9a988f] border border-dashed border-[#e7e4dc]"
+      >
+        {state === "needs_app" ? "Setup needed" : "Unavailable"}
       </span>
     );
   }
