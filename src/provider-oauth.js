@@ -22,6 +22,9 @@ const CFG = {
 //   params    extra authorization parameters the provider requires.
 // Every provider is checked up front (see resolve), so the portal shows what can really connect instead of a Connect
 // button that fails after the click.
+const GOOGLE_APP = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+const GOOGLE_EP = { authorization_endpoint: 'https://accounts.google.com/o/oauth2/v2/auth', token_endpoint: 'https://oauth2.googleapis.com/token' };
+const GOOGLE_PARAMS = { access_type: 'offline', prompt: 'consent' };
 const MCP = {
   supabase: { name: 'Supabase', server: 'https://mcp.supabase.com/mcp' },
   canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' },
@@ -38,9 +41,10 @@ const MCP = {
   hubspot: { name: 'HubSpot', server: 'https://mcp.hubspot.com', app: ['HUBSPOT_CLIENT_ID', 'HUBSPOT_CLIENT_SECRET'] },
   box: { name: 'Box', server: 'https://mcp.box.com', app: ['BOX_CLIENT_ID', 'BOX_CLIENT_SECRET'], endpoints: { authorization_endpoint: 'https://account.box.com/api/oauth2/authorize', token_endpoint: 'https://api.box.com/oauth2/token' } },
   // Google's Workspace MCP servers need your own Google Cloud OAuth client ("Use this client for an AI-powered agent").
-  'google-drive': { name: 'Google Drive', server: 'https://drivemcp.googleapis.com/mcp/v1', app: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], params: { access_type: 'offline', prompt: 'consent' } },
-  gmail: { name: 'Gmail', server: 'https://gmailmcp.googleapis.com/mcp/v1', app: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], params: { access_type: 'offline', prompt: 'consent' } },
-  'google-calendar': { name: 'Google Calendar', server: 'https://calendarmcp.googleapis.com/mcp/v1', app: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'], params: { access_type: 'offline', prompt: 'consent' } },
+  // Scopes are the ones Google's setup guide lists for each server; <PROVIDER>_SCOPES (e.g. GOOGLE_DRIVE_SCOPES) overrides them.
+  'google-drive': { name: 'Google Drive', server: 'https://drivemcp.googleapis.com/mcp/v1', app: GOOGLE_APP, endpoints: GOOGLE_EP, params: GOOGLE_PARAMS, scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file' },
+  gmail: { name: 'Gmail', server: 'https://gmailmcp.googleapis.com/mcp/v1', app: GOOGLE_APP, endpoints: GOOGLE_EP, params: GOOGLE_PARAMS, scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose' },
+  'google-calendar': { name: 'Google Calendar', server: 'https://calendarmcp.googleapis.com/mcp/v1', app: GOOGLE_APP, endpoints: GOOGLE_EP, params: GOOGLE_PARAMS, scope: 'https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.freebusy https://www.googleapis.com/auth/calendar.events.readonly' },
   // Zendesk's /api/mcp answers with RFC 9728 metadata and advertises self-registration, but Zendesk has not documented it.
   // The pre-flight check below confirms registration is really offered before Connect is shown, and a refusal is remembered.
   zendesk: { name: 'Zendesk', server: 'https://mcp.zendesk.com/api/mcp' },
@@ -228,10 +232,12 @@ async function resolve(p) {
     return { state: 'needs_app', method: 'oauth_app', reason: p + ' cannot connect without a registered OAuth app. Set ' + c.client + ' and ' + c.secret + ' on the Handoff Hub server.', setup: { env: [c.client, c.secret], redirect_uri: callback(p) } };
   }
   const creds = appCreds(m);
+  const f = await found(p);
   if (!creds && m.app) {
+    // Without an OAuth app, still connect if the server really does let apps register themselves (so nothing that worked before is blocked).
+    if (!f.error && f.d.meta.registration_endpoint) return { state: 'ready', method: 'mcp', creds, ...f };
     return { state: 'needs_app', method: 'mcp', reason: m.name + ' does not allow apps to register themselves. Create an OAuth app with ' + m.name + ', then set ' + m.app.join(' and ') + ' on the Handoff Hub server.', setup: { env: m.app, redirect_uri: callbackMcp(p) } };
   }
-  const f = await found(p);
   if (f.error) return { state: 'unavailable', method: 'mcp', reason: !m.server && m.note ? m.note : f.error };
   if (!creds && !f.d.meta.registration_endpoint) return { state: 'unavailable', method: 'mcp', reason: m.name + ' does not allow apps to register themselves, so it cannot be connected without an approved OAuth app.' };
   return { state: 'ready', method: 'mcp', creds, ...f };
@@ -268,7 +274,7 @@ async function startMcp(p, id, r) {
   u.searchParams.set('code_challenge_method', 'S256');
   u.searchParams.set('resource', d.resource);
   // Scopes come from the server's metadata; <PROVIDER>_SCOPES (e.g. GOOGLE_DRIVE_SCOPES) overrides when a provider publishes none.
-  const scope = process.env[envKey(p) + '_SCOPES'] || (d.scopes?.length ? d.scopes.join(' ') : '');
+  const scope = process.env[envKey(p) + '_SCOPES'] || m.scope || (d.scopes?.length ? d.scopes.join(' ') : '');
   if (scope) u.searchParams.set('scope', scope);
   for (const [k, v] of Object.entries(m.params || {})) u.searchParams.set(k, v);
   return u.toString();
