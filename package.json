@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/check.mjs",
-    "vercel-build": "node scripts/check.mjs"
+    "reconstruct": "node scripts/reconstruct.mjs",
+    "check": "node scripts/reconstruct.mjs && node scripts/check.mjs",
+    "vercel-build": "node scripts/reconstruct.mjs && node scripts/check.mjs"
   },
   "engines": {
     "node": ">=20"
