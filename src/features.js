@@ -1,5 +1,582 @@
-// Placeholder — overwritten at build by scripts/reconstruct.mjs from src/features.js.gz.b64.*
+// Feature pack added in 0.19.0. All state lives in the per-user project state (store.js),
+// so Claude, ChatGPT and any other connected AI read and write the same data.
+import { z } from 'zod';
+import { project, getState, mutate, opsProject } from './store.js';
+import { assertOwner } from './owner.js';
+
 export const HUB_VERSION = '0.21.0';
-export async function applyRuntimeAllowlist() { return { vercel: [], github: [] }; }
-export async function requireApproval() { return null; }
-export function registerFeatureTools() {}
+
+const CHANGELOG = [
+  {
+    version: '0.21.0',
+    date: '2026-10-17',
+    changes: [
+      'Smart memory: recall ranks by local TF-IDF semantic similarity (optional OpenAI embeddings when HUB_AI_API_KEY/OPENAI_API_KEY is set)',
+      'remember auto-enriches with summary, tags, and conflict hints against decisions',
+      'handoff_brief surfaces conflicts, stale pending tasks, and dependency-blocked tasks',
+      'plan_task: orchestrator that splits work, assigns agents, and wires depends_on (LLM when key set, heuristics otherwise)',
+      'route_task uses agent success rates and turnaround from agent_stats, not only strength match + load',
+      'hand_off_task / get_my_handoffs support depends_on for dependency-aware handoffs'
+    ]
+  },
+  {
+    version: '0.20.0',
+    date: '2026-10-08',
+    changes: [
+      'Optional projects: pass project_id only when the user chose or named a project. Each project is a separate memory pool that never mixes with the normal pool or other projects; with no project named nothing is created or shown',
+      'list_projects now lists only explicit projects as short summaries (the normal pool is not listed, and no projects means an empty list)',
+      'create_project: create a named project when the user asks for one',
+      'move_project: merge one pool into another (preview first, confirm:true to apply); portal_project:true points the portal Overview and approvals at the destination',
+      'Hub operations data (portal Overview, approvals, allowlist log, default health-check target) follows state.meta.ops_project, which defaults to the normal pool'
+    ]
+  },
+  {
+    version: '0.19.0',
+    date: '2026-10-07',
+    changes: [
+      'whats_new: shows server version, changelog and the exact tool list so an AI can tell when its cached connector tool list is stale',
+      'claim_resource / release_resource / list_claims: advisory locks so two AIs do not edit the same file or task at once',
+      'request_approval / decide_approval / list_approvals: approval records; optional gate on vercel_trigger_redeploy (HUB_REQUIRE_APPROVAL=redeploy)',
+      'verify_url: HTTP content check of a deployed page (status, title, expected text). It does NOT render the page, so it is not a visual check',
+      'allowlist_list / allowlist_update: owner can add or remove Vercel projects and GitHub repos at runtime, no redeploy needed',
+      'handoff_brief: one-call summary of state, pending tasks, claims, approvals and recent events for the next AI',
+      'set_agent_profile / route_task / agent_stats: rule-based task splitting and routing MVP with per-agent handoff stats'
+    ]
+  },
+  { version: '0.18.0', date: '2026-10-06', changes: ['Portal link flow, connected_apps, app_list_tools, app_call_tool, owner-only GitHub/Vercel tools'] }
+];
+
+const projectId = z.string().min(1).optional().describe('Optional. Leave this out unless the user chose or named a project (for example "save this to my X project"); then pass that project id from list_projects. Omitted means the normal private memory pool. Projects never mix with each other or with the normal pool, and are never shared with another user.');
+const agentName = z.string().min(1).describe('Name of the calling AI agent, e.g. claude or chatgpt');
+const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
+const norm = s => String(s).trim().toLowerCase();
+const pid = id => id ?? 'default';
+const now = () => new Date().toISOString();
+const trim = (s, n = 160) => (s == null ? '' : String(s).length > n ? `${String(s).slice(0, n - 1)}…` : String(s));
+
+function pushEvent(p, event) {
+  p.events.unshift({ ...event, at: event.at ?? now() });
+  p.events = p.events.slice(0, 100);
+}
+
+// ---------- runtime allowlist ----------
+const BASE_VERCEL = process.env.VERCEL_ALLOWED_PROJECTS || '';
+const BASE_GITHUB = process.env.GITHUB_ALLOWED_REPOS || 'balaadithya123/handoff-hub';
+const csv = s => s.split(',').map(x => x.trim()).filter(Boolean);
+const uniq = list => [...new Set(list)];
+
+function ownerStateKey() {
+  return csv(process.env.HUB_OWNER_USER_IDS || '')[0] || null;
+}
+
+// integrations.js reads these env vars on every call, so merging the stored list into them is enough.
+export async function applyRuntimeAllowlist() {
+  const ownerId = ownerStateKey();
+  if (!ownerId) return { vercel: csv(BASE_VERCEL), github: csv(BASE_GITHUB) };
+  const state = await getState(ownerId);
+  const extra = state.allowlist || { vercel: [], github: [] };
+  const vercel = uniq([...csv(BASE_VERCEL), ...(extra.vercel || [])]);
+  const github = uniq([...csv(BASE_GITHUB), ...(extra.github || [])]);
+  process.env.VERCEL_ALLOWED_PROJECTS = vercel.join(',');
+  process.env.GITHUB_ALLOWED_REPOS = github.join(',');
+  return { vercel, github };
+}
+
+// ---------- approval gate ----------
+function gateEnabled(action) {
+  return csv(process.env.HUB_REQUIRE_APPROVAL || '').includes(action);
+}
+
+// Call before a gated action. Returns null when the gate is off, or the consumed approval id.
+// Approvals live in the portal project (state.meta.ops_project, normal pool unless designated).
+export async function requireApproval(userId, gate, approvalId, expectedAction) {
+  if (!gateEnabled(gate)) return null;
+  if (!approvalId) throw new Error(`${gate} requires an approved approval_id. Call request_approval with action "${expectedAction}", have it approved with decide_approval, then pass approval_id.`);
+  return mutate(userId, state => {
+    const a = (project(state, opsProject(state)).approvals || []).find(x => x.id === approvalId);
+    if (!a) throw new Error(`No approval found with id ${approvalId}`);
+    if (a.status !== 'approved') throw new Error(`Approval ${approvalId} is ${a.status}, not approved`);
+    if (a.used) throw new Error(`Approval ${approvalId} was already used`);
+    if (a.action !== expectedAction) throw new Error(`Approval ${approvalId} is for "${a.action}", not "${expectedAction}"`);
+    if (a.expires_at && a.expires_at < now()) throw new Error(`Approval ${approvalId} has expired`);
+    a.used = true;
+    a.used_at = now();
+    return a.id;
+  });
+}
+
+// ---------- routing rules ----------
+const CATEGORY_RULES = [
+  ['code', /\b(commit|deploy|redeploy|bug|fix|refactor|typescript|javascript|api|endpoint|migration|sql|build|test|repo|pull request|schema|function|server)\b/i],
+  ['design', /\b(ui|ux|design|canva|layout|logo|poster|figma|mockup|css|landing|wireframe)\b/i],
+  ['research', /\b(research|compare|find|search|latest|news|market|competitor|survey|benchmark)\b/i],
+  ['writing', /\b(write|draft|email|copy|summary|summarize|document|docs|readme|post|announcement)\b/i],
+  ['data', /\b(analy[sz]e|csv|spreadsheet|chart|metrics|dataset|statistics|report)\b/i],
+  ['planning', /\b(plan|roadmap|strategy|prioriti[sz]e|decide|scope|outline)\b/i]
+];
+
+function classify(textValue) {
+  for (const [category, re] of CATEGORY_RULES) if (re.test(textValue)) return category;
+  return 'general';
+}
+
+function splitTask(task) {
+  const parts = task
+    .split(/\r?\n|;|(?:^|\s)(?:\d+[.)]|[-*•])\s+|\s+then\s+/i)
+    .map(s => s.trim().replace(/^(?:\d+[.)]|[-*•])\s+/, ''))
+    .filter(s => s.length > 2);
+  return parts.length ? parts : [task.trim()];
+}
+
+function pendingLoad(p, agent) {
+  return (p.tasks || []).filter(t => t.to_agent === agent && t.status !== 'done').length;
+}
+
+// Merge two lists without duplicates (by id, else by content), newest first by `key`, capped.
+function mergeList(a = [], b = [], key = 'at', cap = 100) {
+  const seen = new Set();
+  const out = [];
+  for (const x of [...a, ...b]) {
+    const k = x && x.id ? `id:${x.id}` : JSON.stringify(x);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(x);
+  }
+  return out.sort((x, y) => String(y?.[key] ?? '').localeCompare(String(x?.[key] ?? ''))).slice(0, cap);
+}
+
+const slugId = s => String(s).trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+
+export function registerFeatureTools(server, userId) {
+  const tool = (name, description, schema, annotations, handler) =>
+    server.tool(name, description, schema, { title: annotations.title, readOnlyHint: !!annotations.ro, destructiveHint: annotations.ro ? false : !!annotations.destructive, idempotentHint: !!annotations.ro, openWorldHint: !!annotations.open }, handler);
+
+  // ----- 1. whats_new -----
+  server.tool('whats_new', 'Show this Handoff Hub server version, its changelog and the exact list of tools it currently offers. If a tool named here is missing from your own tool list, your connector has a stale cached list: disconnect and reconnect the Handoff Hub connector.', { since_version: z.string().optional() }, { title: 'What is new', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, async ({ since_version }) => {
+    const tools = Object.keys(server._registeredTools || {}).sort();
+    const changes = since_version ? CHANGELOG.filter(c => c.version > since_version) : CHANGELOG;
+    return text({
+      server_version: HUB_VERSION,
+      tool_count: tools.length,
+      tools,
+      changelog: changes,
+      approval_gates: { redeploy: gateEnabled('redeploy') },
+      stale_connector_hint: 'Compare "tools" with the tools you can see. Any name you cannot see means reconnect the connector.'
+    });
+  });
+
+  // ----- 2. claims -----
+  tool('claim_resource', 'Take an advisory lock on a file, task or deployment before changing it, so two AIs do not work on the same thing at once. Returns claimed:false and who holds it if someone else has an unexpired claim. Re-claiming your own resource renews it.', { project_id: projectId, agent: agentName, resource: z.string().min(1).describe('e.g. portal/app/page.tsx or deploy:portal'), note: z.string().optional(), ttl_minutes: z.number().int().min(1).max(1440).optional() }, { title: 'Claim a resource' }, async input => text(await mutate(userId, state => {
+    const p = project(state, pid(input.project_id));
+    p.claims = p.claims || {};
+    const me = norm(input.agent);
+    const cur = p.claims[input.resource];
+    if (cur && cur.expires_at > now() && cur.agent !== me) return { claimed: false, held_by: cur.agent, note: cur.note, expires_at: cur.expires_at };
+    const claim = { agent: me, note: input.note, at: now(), expires_at: new Date(Date.now() + (input.ttl_minutes ?? 60) * 60000).toISOString() };
+    p.claims[input.resource] = claim;
+    pushEvent(p, { type: 'claim_taken', agent: me, resource: input.resource });
+    return { claimed: true, resource: input.resource, ...claim };
+  })));
+
+  tool('release_resource', 'Release a claim you hold. Only the holder can release it unless force is true (use force only for an abandoned claim).', { project_id: projectId, agent: agentName, resource: z.string().min(1), force: z.boolean().optional() }, { title: 'Release a resource', destructive: true }, async input => text(await mutate(userId, state => {
+    const p = project(state, pid(input.project_id));
+    const cur = (p.claims || {})[input.resource];
+    if (!cur) return { released: false, reason: 'no such claim' };
+    const me = norm(input.agent);
+    if (cur.agent !== me && !input.force) return { released: false, reason: `held by ${cur.agent}` };
+    delete p.claims[input.resource];
+    pushEvent(p, { type: 'claim_released', agent: me, resource: input.resource, forced: cur.agent !== me });
+    return { released: true, resource: input.resource };
+  })));
+
+  tool('list_claims', 'List active (unexpired) resource claims for a project.', { project_id: projectId }, { title: 'List claims', ro: true }, async ({ project_id }) => {
+    const p = project(await getState(userId), pid(project_id));
+    const active = Object.entries(p.claims || {}).filter(([, c]) => c.expires_at > now()).map(([resource, c]) => ({ resource, ...c }));
+    return text(active);
+  });
+
+  // ----- 3. approvals -----
+  tool('request_approval', 'Record that an action needs approval before it runs (for example "redeploy:prj_123"). Another AI, or the human via an AI in chat, then approves with decide_approval. When HUB_REQUIRE_APPROVAL includes redeploy, vercel_trigger_redeploy needs the approved id.', { project_id: projectId, agent: agentName, action: z.string().min(1), details: z.string().optional(), data: z.record(z.any()).optional(), ttl_minutes: z.number().int().min(1).max(10080).optional() }, { title: 'Request approval' }, async input => text(await mutate(userId, state => {
+    const p = project(state, pid(input.project_id));
+    p.approvals = p.approvals || [];
+    const item = { id: crypto.randomUUID(), action: input.action, details: input.details, data: input.data, requested_by: norm(input.agent), status: 'pending', created_at: now(), expires_at: new Date(Date.now() + (input.ttl_minutes ?? 1440) * 60000).toISOString() };
+    p.approvals.unshift(item);
+    p.approvals = p.approvals.slice(0, 100);
+    pushEvent(p, { type: 'approval_requested', agent: item.requested_by, action: item.action, approval_id: item.id });
+    return item;
+  })));
+
+  tool('list_approvals', 'List approval records, newest first. Filter by status: pending, approved, denied.', { project_id: projectId, status: z.enum(['pending', 'approved', 'denied']).optional() }, { title: 'List approvals', ro: true }, async ({ project_id, status }) => {
+    const p = project(await getState(userId), pid(project_id));
+    return text((p.approvals || []).filter(a => !status || a.status === status));
+  });
+
+  tool('decide_approval', 'Approve or deny a pending approval. The requesting AI cannot approve its own request unless human_confirmed is true, which you may set only when the human explicitly told you in chat to approve.', { project_id: projectId, agent: agentName, approval_id: z.string().min(1), decision: z.enum(['approve', 'deny']), human_confirmed: z.boolean().optional(), reason: z.string().optional() }, { title: 'Decide an approval', destructive: true }, async input => text(await mutate(userId, state => {
+    const p = project(state, pid(input.project_id));
+    const a = (p.approvals || []).find(x => x.id === input.approval_id);
+    if (!a) return { error: `No approval found with id ${input.approval_id}` };
+    if (a.status !== 'pending') return { error: `Approval is already ${a.status}` };
+    if (a.expires_at < now()) return { error: 'Approval request has expired' };
+    const me = norm(input.agent);
+    if (me === a.requested_by && !input.human_confirmed) return { error: 'The requesting AI cannot decide its own request. Ask another AI, or pass human_confirmed:true only if the human told you to.' };
+    a.status = input.decision === 'approve' ? 'approved' : 'denied';
+    a.decided_by = me;
+    a.decided_via = input.human_confirmed ? 'human_in_chat' : 'other_ai';
+    a.decided_at = now();
+    a.reason = input.reason;
+    pushEvent(p, { type: 'approval_decided', agent: me, approval_id: a.id, status: a.status, via: a.decided_via });
+    return a;
+  })));
+
+  // ----- 4. verify_url -----
+  tool('verify_url', 'Owner only. Fetch a deployed https page and check HTTP status, title, size and that expected text is present. This is an HTTP content check only: it does not render the page and cannot judge layout or visuals. Allowed hosts: *.vercel.app plus VERIFY_ALLOWED_HOSTS.', { url: z.string().url(), expect_text: z.array(z.string()).optional(), min_bytes: z.number().int().min(0).optional(), project_id: projectId, agent: z.string().min(1).optional() }, { title: 'Verify a deployed URL (owner only)', ro: true, open: true }, async input => {
+    assertOwner(userId, 'verify_url');
+    const extra = csv(process.env.VERIFY_ALLOWED_HOSTS || '');
+    const hostOk = h => h.endsWith('.vercel.app') || extra.includes(h);
+    const u = new URL(input.url);
+    if (u.protocol !== 'https:' || !hostOk(u.hostname)) throw new Error(`verify_url only checks https URLs on *.vercel.app or VERIFY_ALLOWED_HOSTS, not ${u.hostname}`);
+    const res = await fetch(u, { redirect: 'follow', signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'handoff-hub-verify/0.19' } });
+    const finalHost = new URL(res.url).hostname;
+    if (!hostOk(finalHost)) throw new Error(`Redirected to a disallowed host: ${finalHost}`);
+    const body = (await res.text()).slice(0, 2_000_000);
+    const title = (body.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1]?.trim() || null;
+    const missing = (input.expect_text || []).filter(t => !body.includes(t));
+    const bytes = Buffer.byteLength(body);
+    const ok = res.ok && !missing.length && bytes >= (input.min_bytes ?? 0);
+    const result = { url: input.url, final_url: res.url, status: res.status, ok, bytes, title, missing_text: missing, visual_check: 'not performed (HTTP content check only)', checked_at: now() };
+    if (input.agent) await mutate(userId, state => { pushEvent(project(state, pid(input.project_id)), { agent: input.agent, action: 'verify_url', details: `${ok ? 'ok' : 'FAILED'} ${res.status} ${u.hostname}`, data: result }); });
+    return text(result);
+  });
+
+  // ----- 5. allowlist -----
+  tool('allowlist_list', 'Owner only. Show the Vercel projects and GitHub repos the Hub may act on: the server environment list plus runtime additions.', {}, { title: 'List allowlist (owner only)', ro: true }, async () => {
+    assertOwner(userId, 'allowlist_list');
+    const merged = await applyRuntimeAllowlist();
+    const extra = (await getState(userId)).allowlist || { vercel: [], github: [] };
+    return text({ effective: merged, runtime_additions: extra });
+  });
+
+  tool('allowlist_update', 'Owner only. Add or remove one Vercel project id or GitHub repo (owner/name) on the runtime allowlist, no redeploy needed. Entries from the server environment cannot be removed here. Every change is logged as an event.', { action: z.enum(['add', 'remove']), kind: z.enum(['vercel_project', 'github_repo']), value: z.string().min(3), agent: z.string().min(1).optional() }, { title: 'Update allowlist (owner only)', destructive: true, open: true }, async input => {
+    assertOwner(userId, 'allowlist_update');
+    if (input.kind === 'github_repo' && !/^[\w.-]+\/[\w.-]+$/.test(input.value)) throw new Error('github_repo must look like owner/name');
+    if (input.kind === 'vercel_project' && !/^prj_[A-Za-z0-9]+$/.test(input.value)) throw new Error('vercel_project must be a Vercel project id like prj_xxx');
+    const key = input.kind === 'vercel_project' ? 'vercel' : 'github';
+    await mutate(userId, state => {
+      state.allowlist = state.allowlist || { vercel: [], github: [] };
+      const list = new Set(state.allowlist[key] || []);
+      if (input.action === 'add') list.add(input.value); else list.delete(input.value);
+      state.allowlist[key] = [...list];
+      pushEvent(project(state, opsProject(state)), { type: 'allowlist_changed', agent: input.agent ?? 'unknown', action: input.action, kind: input.kind, value: input.value });
+    });
+    const merged = await applyRuntimeAllowlist();
+    return text({ ok: true, effective: merged });
+  });
+
+  // ----- 6. handoff_brief -----
+  tool('handoff_brief', 'One-call briefing for the next AI: summary, decisions, blockers, pending tasks (with stale + dependency status), active claims, pending approvals, conflict hints from memories, and recent events. Call this at the start or end of a session instead of reading the whole state.', { project_id: projectId, agent: z.string().min(1).optional(), event_limit: z.number().int().min(1).max(30).optional(), stale_hours: z.number().int().min(1).max(720).optional() }, { title: 'Handoff brief', ro: true }, async ({ project_id, agent, event_limit = 8, stale_hours = 48 }) => {
+    const p = project(await getState(userId), pid(project_id));
+    const me = agent ? norm(agent) : null;
+    const doneIds = new Set((p.tasks || []).filter(t => t.status === 'done').map(t => t.id));
+    const staleMs = stale_hours * 3600 * 1000;
+    const pending = (p.tasks || []).filter(t => t.status !== 'done').map(t => {
+      const deps = Array.isArray(t.depends_on) ? t.depends_on : [];
+      const blocked_by = deps.filter(id => !doneIds.has(id));
+      const age_ms = t.created_at ? Date.now() - Date.parse(t.created_at) : 0;
+      return {
+        id: t.id,
+        to: t.to_agent,
+        from: t.from_agent,
+        task: trim(t.task, 200),
+        created_at: t.created_at,
+        depends_on: deps,
+        blocked: blocked_by.length > 0,
+        blocked_by,
+        stale: age_ms > staleMs,
+        age_hours: Math.round(age_ms / 3600000)
+      };
+    });
+    const claims = Object.entries(p.claims || {}).filter(([, c]) => c.expires_at > now()).map(([resource, c]) => ({ resource, agent: c.agent, expires_at: c.expires_at }));
+    const approvals = (p.approvals || []).filter(a => a.status === 'pending' && a.expires_at > now()).map(a => ({ id: a.id, action: a.action, requested_by: a.requested_by }));
+    const events = (p.events || []).slice(0, event_limit).map(e => ({ at: e.at, agent: e.agent, what: e.action || e.type, note: trim(e.details || e.summary || e.task || e.blocker) }));
+    const memories = (p.memories || []).slice(0, 5).map(m => ({ text: trim(m.summary || m.memory, 220), tags: m.tags || [], conflicts: m.conflicts || [] }));
+    const open_conflicts = (p.memories || []).flatMap(m => (m.conflicts || []).map(c => ({ memory_id: m.id, ...c }))).slice(0, 8);
+    const stale_tasks = pending.filter(t => t.stale);
+    const blocked_tasks = pending.filter(t => t.blocked);
+    const actionable = pending.filter(t => !t.blocked);
+    const brief = {
+      project: p.id,
+      summary: trim(p.summary, 900),
+      last_agent: p.last_agent,
+      updated_at: p.updated_at,
+      decisions: p.decisions || [],
+      blockers: p.blockers || [],
+      pending_tasks: pending,
+      actionable_tasks: actionable,
+      stale_tasks,
+      blocked_tasks,
+      your_tasks: me ? pending.filter(t => t.to === me) : undefined,
+      active_claims: claims,
+      pending_approvals: approvals,
+      recent_events: events,
+      latest_memories: memories,
+      open_conflicts,
+      stale_hours
+    };
+    const md = [
+      `# Handoff brief: ${p.id}`,
+      `Summary: ${brief.summary || '(none)'}`,
+      `Blockers: ${brief.blockers.length ? brief.blockers.join('; ') : 'none'}`,
+      `Actionable tasks: ${actionable.length ? actionable.map(t => `${t.to}: ${t.task}`).join(' | ') : 'none'}`,
+      `Stale (>${stale_hours}h): ${stale_tasks.length ? stale_tasks.map(t => t.id.slice(0, 8)).join(', ') : 'none'}`,
+      `Blocked by deps: ${blocked_tasks.length}`,
+      `Conflicts: ${open_conflicts.length ? open_conflicts.map(c => c.severity + ':' + trim(c.decision, 80)).join(' | ') : 'none'}`,
+      `Active claims: ${claims.length ? claims.map(c => `${c.resource} (${c.agent})`).join(', ') : 'none'}`,
+      `Recent: ${events.map(e => `${e.agent || '?'} ${e.what}`).join(' > ') || 'none'}`
+    ].join('\n');
+    return text({ ...brief, markdown: md });
+  });
+
+  // ----- 7. router MVP -----
+  tool('set_agent_profile', 'Tell the router what an AI agent is good at. strengths are categories: code, design, research, writing, data, planning, general. Stored per project and shared by all connected AIs.', { project_id: projectId, agent: agentName, strengths: z.array(z.enum(['code', 'design', 'research', 'writing', 'data', 'planning', 'general'])).min(1), notes: z.string().optional() }, { title: 'Set agent profile' }, async input => text(await mutate(userId, state => {
+    const p = project(state, pid(input.project_id));
+    p.agent_profiles = p.agent_profiles || {};
+    p.agent_profiles[norm(input.agent)] = { strengths: input.strengths, notes: input.notes, updated_at: now() };
+    return p.agent_profiles[norm(input.agent)];
+  })));
+
+  tool('route_task', 'Split a task into subtasks and suggest which agent should take each one. Uses agent profiles, pending load, and historical success/turnaround from completed handoffs. Set create_handoffs to create real hand_off_task items with sequential depends_on within each agent group.', { project_id: projectId, task: z.string().min(3), from_agent: z.string().min(1).optional(), available_agents: z.array(z.string().min(1)).optional(), create_handoffs: z.boolean().optional() }, { title: 'Route a task' }, async input => text(await mutate(userId, state => {
+    const p = project(state, pid(input.project_id));
+    const profiles = p.agent_profiles || {};
+    const pool = (input.available_agents?.length ? input.available_agents.map(norm) : Object.keys(profiles));
+    const load = Object.fromEntries(pool.map(a => [a, pendingLoad(p, a)]));
+    const hist = {};
+    for (const t of p.tasks || []) {
+      const a = t.to_agent;
+      if (!a) continue;
+      hist[a] = hist[a] || { done: 0, received: 0, turn_ms: [] };
+      hist[a].received += 1;
+      if (t.status === 'done') {
+        hist[a].done += 1;
+        if (t.created_at && t.completed_at) {
+          const ms = Date.parse(t.completed_at) - Date.parse(t.created_at);
+          if (Number.isFinite(ms) && ms > 0) hist[a].turn_ms.push(ms);
+        }
+      }
+    }
+    const success = a => {
+      const h = hist[a];
+      if (!h || !h.received) return 0.5;
+      return h.done / h.received;
+    };
+    const avgTurn = a => {
+      const arr = hist[a]?.turn_ms || [];
+      if (!arr.length) return 1;
+      return arr.reduce((x, y) => x + y, 0) / arr.length;
+    };
+    const scoreAgent = (a, category) => {
+      const strengths = profiles[a]?.strengths || [];
+      const fit = strengths.includes(category) ? 2 : strengths.includes('general') ? 1 : 0;
+      const rate = success(a);
+      const turnPenalty = Math.min(avgTurn(a) / (6 * 3600 * 1000), 2);
+      const loadPenalty = (load[a] || 0) * 0.35;
+      return fit * 2 + rate * 1.5 - turnPenalty - loadPenalty;
+    };
+    const subtasks = splitTask(input.task).map((t, i) => {
+      const category = classify(t);
+      const scored = pool.map(a => ({ a, score: scoreAgent(a, category), fit: (profiles[a]?.strengths || []).includes(category) ? 2 : (profiles[a]?.strengths || []).includes('general') ? 1 : 0 })).sort((x, y) => y.score - x.score);
+      const best = scored[0];
+      const suggested = best && (best.fit > 0 || best.score > 0.2) ? best.a : (best ? best.a : null);
+      if (suggested) load[suggested] = (load[suggested] || 0) + 1;
+      return {
+        index: i,
+        text: t,
+        category,
+        suggested_agent: suggested,
+        reason: suggested
+          ? `score ${scoreAgent(suggested, category).toFixed(2)} (fit/${category}, success ${(success(suggested) * 100).toFixed(0)}%, load ${load[suggested] - 1})`
+          : (pool.length ? `no suitable agent for ${category}` : 'no agent profiles set yet; call set_agent_profile'),
+        est_tokens: Math.ceil(t.length / 4)
+      };
+    });
+    const groups = {};
+    for (const s of subtasks) if (s.suggested_agent) (groups[s.suggested_agent] = groups[s.suggested_agent] || []).push(s);
+    const created = [];
+    if (input.create_handoffs) {
+      if (!input.from_agent) return { error: 'from_agent is required when create_handoffs is true' };
+      p.tasks = p.tasks || [];
+      for (const [agent, items] of Object.entries(groups)) {
+        let prevId = null;
+        for (const step of items) {
+          const item = {
+            id: crypto.randomUUID(),
+            project_id: pid(input.project_id),
+            task: step.text,
+            context: `Routed from: ${trim(input.task, 400)}`,
+            data: { routed: true, category: step.category, plan_index: step.index },
+            from_agent: norm(input.from_agent),
+            to_agent: agent,
+            status: 'pending',
+            depends_on: prevId ? [prevId] : [],
+            created_at: now()
+          };
+          p.tasks.unshift(item);
+          pushEvent(p, { type: 'handoff_created', agent: item.from_agent, to_agent: agent, task: item.task });
+          created.push({ id: item.id, to_agent: agent, depends_on: item.depends_on });
+          prevId = item.id;
+        }
+      }
+      p.tasks = p.tasks.slice(0, 200);
+    }
+    return {
+      subtasks,
+      groups: Object.fromEntries(Object.entries(groups).map(([a, v]) => [a, v.map(s => s.index)])),
+      unassigned: subtasks.filter(s => !s.suggested_agent).map(s => s.index),
+      created_handoffs: created,
+      ranking: 'strength + success_rate + inverse_turnaround - pending_load',
+      token_tip: 'Send each agent only its own steps plus required context, not the whole original task.'
+    };
+  })));
+
+  tool('plan_task', 'Orchestrate a user request into ordered steps with agent suggestions and depends_on links. Uses an LLM when HUB_AI_API_KEY or OPENAI_API_KEY is set; otherwise heuristic split + route_task ranking. Set create_handoffs to enqueue real hand_off_task records (respecting dependencies).', { project_id: projectId, task: z.string().min(3), from_agent: z.string().min(1).optional(), available_agents: z.array(z.string().min(1)).optional(), create_handoffs: z.boolean().optional() }, { title: 'Plan a task' }, async input => {
+    const { planWithLlm, aiConfigured } = await import('./ai.js');
+    return text(await mutate(userId, async state => {
+      const p = project(state, pid(input.project_id));
+      const profiles = p.agent_profiles || {};
+      const pool = (input.available_agents?.length ? input.available_agents.map(norm) : Object.keys(profiles));
+      const stats = {};
+      for (const t of p.tasks || []) {
+        const a = t.to_agent;
+        if (!a) continue;
+        stats[a] = stats[a] || { received: 0, done: 0, pending: 0 };
+        stats[a].received += 1;
+        if (t.status === 'done') stats[a].done += 1;
+        else stats[a].pending += 1;
+      }
+      let steps = await planWithLlm(input.task, pool, profiles, stats);
+      let method = 'llm';
+      if (!steps || !steps.length) {
+        method = 'heuristic';
+        const parts = splitTask(input.task);
+        steps = parts.map((t, i) => {
+          const category = classify(t);
+          const candidates = pool.map(a => {
+            const strengths = profiles[a]?.strengths || [];
+            const fit = strengths.includes(category) ? 2 : strengths.includes('general') ? 1 : 0;
+            const pend = stats[a]?.pending || 0;
+            return { a, score: fit * 2 - pend * 0.3 };
+          }).sort((x, y) => y.score - x.score);
+          const best = candidates[0];
+          return {
+            id: `s${i + 1}`,
+            text: t,
+            category,
+            suggested_agent: best && best.score > 0 ? best.a : (best?.a || null),
+            depends_on: i === 0 ? [] : [`s${i}`],
+            est_minutes: null
+          };
+        });
+      }
+      // Normalize depends_on to step ids that exist
+      const ids = new Set(steps.map(s => s.id));
+      steps = steps.map(s => ({ ...s, depends_on: (s.depends_on || []).filter(d => ids.has(d) && d !== s.id) }));
+      const created = [];
+      if (input.create_handoffs) {
+        if (!input.from_agent) return { error: 'from_agent is required when create_handoffs is true', steps, method, ai_configured: aiConfigured() };
+        p.tasks = p.tasks || [];
+        const idMap = {};
+        for (const step of steps) {
+          const depends = (step.depends_on || []).map(d => idMap[d]).filter(Boolean);
+          const item = {
+            id: crypto.randomUUID(),
+            project_id: pid(input.project_id),
+            task: step.text,
+            context: `Planned from: ${trim(input.task, 400)}`,
+            data: { planned: true, plan_step: step.id, category: step.category, method },
+            from_agent: norm(input.from_agent),
+            to_agent: step.suggested_agent || norm(input.from_agent),
+            status: 'pending',
+            depends_on: depends,
+            created_at: now()
+          };
+          idMap[step.id] = item.id;
+          p.tasks.unshift(item);
+          pushEvent(p, { type: 'handoff_created', agent: item.from_agent, to_agent: item.to_agent, task: item.task });
+          created.push({ id: item.id, plan_step: step.id, to_agent: item.to_agent, depends_on: depends });
+        }
+        p.tasks = p.tasks.slice(0, 200);
+      }
+      return {
+        method,
+        ai_configured: aiConfigured(),
+        steps,
+        created_handoffs: created,
+        tip: 'Call handoff_brief after agents work; blocked tasks stay non-actionable until depends_on are done.'
+      };
+    }));
+  });
+
+  tool('agent_stats', 'Per-agent handoff statistics from this project: tasks received, done, pending, average turnaround and last activity. Counts are from Hub records only; token use is not visible to the Hub.', { project_id: projectId }, { title: 'Agent stats', ro: true }, async ({ project_id }) => {
+    const p = project(await getState(userId), pid(project_id));
+    const stats = {};
+    const row = a => (stats[a] = stats[a] || { received: 0, done: 0, pending: 0, avg_turnaround_minutes: null, events_logged: 0, last_active: null, _t: [] });
+    for (const t of p.tasks || []) {
+      const r = row(t.to_agent);
+      r.received += 1;
+      if (t.status === 'done') {
+        r.done += 1;
+        if (t.completed_at && t.created_at) r._t.push((Date.parse(t.completed_at) - Date.parse(t.created_at)) / 60000);
+      } else r.pending += 1;
+    }
+    for (const e of p.events || []) {
+      if (!e.agent) continue;
+      const r = row(norm(e.agent));
+      r.events_logged += 1;
+      if (!r.last_active || e.at > r.last_active) r.last_active = e.at;
+    }
+    for (const r of Object.values(stats)) {
+      r.avg_turnaround_minutes = r._t.length ? Math.round(r._t.reduce((a, b) => a + b, 0) / r._t.length) : null;
+      delete r._t;
+    }
+    return text({ agents: stats, note: 'Event history keeps the latest 100 events, so events_logged and last_active cover recent activity only.' });
+  });
+
+  // ----- 8. optional projects (separate memory pools) -----
+  tool('create_project', 'Create a separate, optional memory pool (project) only when the user asks for one by name. Anything saved with this project_id stays in that pool and never mixes with the normal pool or other projects. Do not create projects on your own.', { name: z.string().min(1).max(80), project_id: z.string().min(1).max(60).optional().describe('Defaults to a lowercase slug of the name'), description: z.string().max(300).optional() }, { title: 'Create a project' }, async input => text(await mutate(userId, state => {
+    const id = input.project_id ?? slugId(input.name);
+    if (!id || id === 'default') return { error: 'Choose a different project name; "default" is the normal pool.' };
+    const existed = Boolean(state.projects[id]);
+    const p = project(state, id);
+    p.name = p.name ?? input.name;
+    p.description = input.description ?? p.description;
+    p.created_at = p.created_at ?? now();
+    return { id: p.id, name: p.name, description: p.description, created: !existed };
+  })));
+
+  tool('move_project', 'Move everything saved in one memory pool into another (merged without duplicates). Use from_project "default" to move the normal pool. Without confirm:true this only previews counts and changes nothing. The source pool is removed afterwards. Set portal_project:true to make the destination the project the portal Overview and approvals read.', { from_project: z.string().min(1), to_project: z.string().min(1), confirm: z.boolean().optional(), portal_project: z.boolean().optional(), agent: z.string().min(1).optional() }, { title: 'Move a project into another', destructive: true }, async input => text(await mutate(userId, state => {
+    const from = input.from_project;
+    const to = input.to_project;
+    const src = state.projects[from];
+    if (!src) return { error: `No project with id ${from}` };
+    if (from === to) return { error: 'from_project and to_project are the same' };
+    const counts = p => ({ memories: (p.memories || []).length, events: (p.events || []).length, tasks: (p.tasks || []).length, health_checks: (p.health_checks || []).length, approvals: (p.approvals || []).length });
+    if (!input.confirm) return { preview: true, from, to, moves: counts(src), note: 'Nothing changed. Call again with confirm:true to move.' };
+    const dst = project(state, to);
+    dst.memories = mergeList(dst.memories, src.memories, 'at', 500);
+    dst.events = mergeList(dst.events, src.events, 'at', 100);
+    dst.tasks = mergeList(dst.tasks, src.tasks, 'created_at', 200);
+    dst.approvals = mergeList(dst.approvals, src.approvals, 'created_at', 100);
+    dst.health_checks = mergeList(dst.health_checks, src.health_checks, 'at', 50);
+    dst.claims = { ...(src.claims || {}), ...(dst.claims || {}) };
+    dst.integrations = { ...(src.integrations || {}), ...(dst.integrations || {}) };
+    dst.agent_profiles = { ...(src.agent_profiles || {}), ...(dst.agent_profiles || {}) };
+    dst.decisions = uniq([...(dst.decisions || []), ...(src.decisions || [])]);
+    dst.blockers = uniq([...(dst.blockers || []), ...(src.blockers || [])]);
+    dst.summary = dst.summary ?? src.summary;
+    dst.last_agent = dst.last_agent ?? src.last_agent;
+    dst.updated_at = now();
+    delete state.projects[from];
+    if (input.portal_project || state.meta?.ops_project === from) { state.meta = state.meta || {}; state.meta.ops_project = to; }
+    pushEvent(dst, { type: 'project_moved', agent: input.agent ?? 'unknown', from, to });
+    return { moved: true, from, to, now_in_destination: counts(dst), portal_project: opsProject(state) };
+  })));
+}

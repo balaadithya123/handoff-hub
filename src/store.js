@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const localFile = userId => path.join('/tmp', `handoff-hub-state-${userId}.json`);
+// Security: sanitize userId to prevent path traversal when constructing local file path
+const sanitizeUserId = userId => String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
+const localFile = userId => path.join('/tmp', `handoff-hub-state-${sanitizeUserId(userId)}.json`);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
