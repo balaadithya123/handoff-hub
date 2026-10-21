@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { SESSION_COOKIE, sessionUser } from "../lib/portal";
-import { connectionStatus } from "../lib/connections";
+import { connectionStatus, providerStatus, type ConnectionRow, type ProviderAvailability } from "../lib/connections";
 import Shell, { type Tab } from "./components/Shell";
 import ConnectorDirectory from "./components/ConnectorDirectory";
 import Landing from "./components/Landing";
@@ -40,7 +40,18 @@ async function Dashboard({
   notice: Notice;
   project: string;
 }) {
-  const connections = await connectionStatus(token).catch(() => []);
+  // Availability checks hit the network, so only the Integrations tab asks for them.
+  let connections: ConnectionRow[] = [];
+  let providers: ProviderAvailability[] = [];
+  if (tab === "integrations") {
+    const s = await providerStatus(token).catch(() => null);
+    connections = s?.connections ?? (await connectionStatus(token).catch(() => []));
+    providers = s?.providers ?? [];
+  } else {
+    connections = await connectionStatus(token).catch(() => []);
+  }
+  const availability: Record<string, ProviderAvailability> = {};
+  for (const p of providers) availability[p.provider] = p;
   const names: Record<string, string> = {};
   for (const c of connections) {
     if (c.provider_account_name) names[c.provider] = c.provider_account_name;
@@ -50,7 +61,7 @@ async function Dashboard({
   return (
     <Shell email={email} tab={tab} title={title} sub={sub} notice={notice}>
       {tab === "integrations" ? (
-        <ConnectorDirectory connected={connections.map((c) => c.provider as string)} names={names} />
+        <ConnectorDirectory connected={connections.map((c) => c.provider as string)} names={names} availability={availability} />
       ) : tab === "projects" ? (
         <Projects token={token} />
       ) : tab === "ai" ? (

@@ -14,9 +14,17 @@ const CFG = {
   vercel: { client: 'VERCEL_CLIENT_ID', secret: 'VERCEL_CLIENT_SECRET', auth: 'https://vercel.com/oauth/authorize', token: 'https://api.vercel.com/login/oauth/token', scope: 'openid email profile offline_access' }
 };
 
-// MCP servers: the app registers itself automatically during sign-in (no client ID/secret to set up).
-// Entries with `server` use a verified official endpoint; the rest are looked up in the MCP registry by name.
-// A provider that refuses dynamic registration fails with a clear message instead of a fake Connect.
+// MCP servers. By default the app registers itself automatically during sign-in (no client ID/secret to set up).
+//   server    verified official remote endpoint. Without it the provider is looked up in the MCP registry by name.
+//   app       env var names [CLIENT_ID, CLIENT_SECRET] of a pre-registered OAuth app. Used by providers that do NOT allow
+//             apps to register themselves; those stay "needs_app" until the owner creates the app and sets both variables.
+//   endpoints published sign-in URLs, used only when the server exposes no discovery metadata.
+//   params    extra authorization parameters the provider requires.
+// Every provider is checked up front (see resolve), so the portal shows what can really connect instead of a Connect
+// button that fails after the click.
+const GOOGLE_APP = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+const GOOGLE_EP = { authorization_endpoint: 'https://accounts.google.com/o/oauth2/v2/auth', token_endpoint: 'https://oauth2.googleapis.com/token' };
+const GOOGLE_PARAMS = { access_type: 'offline', prompt: 'consent' };
 const MCP = {
   supabase: { name: 'Supabase', server: 'https://mcp.supabase.com/mcp' },
   canva: { name: 'Canva', server: 'https://mcp.canva.com/mcp' },
@@ -26,11 +34,25 @@ const MCP = {
   asana: { name: 'Asana', server: 'https://mcp.asana.com/mcp' },
   sentry: { name: 'Sentry', server: 'https://mcp.sentry.dev/mcp' },
   figma: { name: 'Figma', server: 'https://mcp.figma.com/mcp' },
-  gitlab: { name: 'GitLab' }, 'google-drive': { name: 'Google Drive' }, slack: { name: 'Slack' },
-  hubspot: { name: 'HubSpot' },
-  box: { name: 'Box' }, dropbox: { name: 'Dropbox' }, gmail: { name: 'Gmail' },
-  'google-calendar': { name: 'Google Calendar' }, 'microsoft-teams': { name: 'Microsoft Teams' },
-  sharepoint: { name: 'SharePoint' }, onenote: { name: 'OneNote' }, zendesk: { name: 'Zendesk' }
+  gitlab: { name: 'GitLab', server: 'https://gitlab.com/api/v4/mcp' },
+  dropbox: { name: 'Dropbox', server: 'https://mcp.dropbox.com/mcp' },
+  // Official servers that require a registered OAuth app (no self-registration).
+  slack: { name: 'Slack', server: 'https://mcp.slack.com/mcp', app: ['SLACK_CLIENT_ID', 'SLACK_CLIENT_SECRET'] },
+  hubspot: { name: 'HubSpot', server: 'https://mcp.hubspot.com', app: ['HUBSPOT_CLIENT_ID', 'HUBSPOT_CLIENT_SECRET'] },
+  box: { name: 'Box', server: 'https://mcp.box.com', app: ['BOX_CLIENT_ID', 'BOX_CLIENT_SECRET'], endpoints: { authorization_endpoint: 'https://account.box.com/api/oauth2/authorize', token_endpoint: 'https://api.box.com/oauth2/token' } },
+  // Google's Workspace MCP servers need your own Google Cloud OAuth client ("Use this client for an AI-powered agent").
+  // Scopes are the ones Google's setup guide lists for each server; <PROVIDER>_SCOPES (e.g. GOOGLE_DRIVE_SCOPES) overrides them.
+  'google-drive': { name: 'Google Drive', server: 'https://drivemcp.googleapis.com/mcp/v1', app: GOOGLE_APP, endpoints: GOOGLE_EP, params: GOOGLE_PARAMS, scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file' },
+  gmail: { name: 'Gmail', server: 'https://gmailmcp.googleapis.com/mcp/v1', app: GOOGLE_APP, endpoints: GOOGLE_EP, params: GOOGLE_PARAMS, scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose' },
+  'google-calendar': { name: 'Google Calendar', server: 'https://calendarmcp.googleapis.com/mcp/v1', app: GOOGLE_APP, endpoints: GOOGLE_EP, params: GOOGLE_PARAMS, scope: 'https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.freebusy https://www.googleapis.com/auth/calendar.events.readonly' },
+  // Zendesk's /api/mcp answers with RFC 9728 metadata and advertises self-registration, but Zendesk has not documented it.
+  // The pre-flight check below confirms registration is really offered before Connect is shown, and a refusal is remembered.
+  zendesk: { name: 'Zendesk', server: 'https://mcp.zendesk.com/api/mcp' },
+  // Microsoft: its Teams/SharePoint/OneDrive MCP servers are preview-only, need a Microsoft Entra app plus tenant admin
+  // approval (Entra has no self-registration), and OneNote has none. No endpoint is guessed; only the MCP registry is checked.
+  'microsoft-teams': { name: 'Microsoft Teams', note: 'Microsoft only offers its Teams MCP server in preview, and it needs a Microsoft Entra app with tenant admin approval, which the Hub does not support yet.' },
+  sharepoint: { name: 'SharePoint', note: 'Microsoft only offers its SharePoint MCP server in preview, and it needs a Microsoft Entra app with tenant admin approval, which the Hub does not support yet.' },
+  onenote: { name: 'OneNote', note: 'Microsoft does not offer a OneNote MCP server yet.' }
 };
 const PROVIDERS = Object.keys({...CFG,...MCP});
 
@@ -176,8 +198,72 @@ async function registryServer(provider) {
   if(!remote?.url) throw new Error(MCP[provider].name+' has no official remote MCP server in the registry yet, so it cannot be connected here.');
   return remote.url;
 }
-async function startMcp(p, id) {
-  const m = MCP[p], server = m.server || await registryServer(p), d = await discover(server), cl = await register(d.meta, m.name, p), ver = rnd(48);
+// ---------- availability: can this provider really connect right now? ----------
+// Resolved once up front and cached, so the portal never offers a Connect button that is certain to fail.
+//   ready        the Hub can start a real sign-in now
+//   needs_app    the provider needs an OAuth app the owner must create; `setup` says which variables to set
+//   unavailable  cannot be connected (no official remote server, endpoint unreachable, registration refused)
+const FOUND_OK_MS = 60 * 60 * 1000, FOUND_BAD_MS = 2 * 60 * 1000, RESOLVE_BUDGET_MS = 6000;
+const foundCache = new Map();
+const envKey = p => p.toUpperCase().replace(/-/g, '_');
+const appCreds = m => (m?.app && process.env[m.app[0]] && process.env[m.app[1]]) ? { id: process.env[m.app[0]], secret: process.env[m.app[1]] } : null;
+const remember = (p, v) => foundCache.set(p, { v, until: Date.now() + (v.error ? FOUND_BAD_MS : FOUND_OK_MS) });
+
+// Locates the server and its sign-in details. Never throws: failures come back as { error } so they can be reported and cached.
+async function found(p) {
+  const hit = foundCache.get(p);
+  if (hit && hit.until > Date.now()) return hit.v;
+  let v;
+  try {
+    const m = MCP[p], server = m.server || await registryServer(p);
+    const d = await discover(server).catch(e => { if (m.endpoints) return { meta: m.endpoints, resource: server, scopes: null }; throw e; });
+    v = { server, d };
+  } catch (e) { v = { error: e?.message || String(e) }; }
+  remember(p, v);
+  return v;
+}
+
+async function resolve(p) {
+  if (p === 'vercel') return { state: 'ready', method: 'vercel_connect' };
+  if (classicReady(p)) return { state: 'ready', method: 'oauth_app' };
+  const m = MCP[p];
+  if (!m) {
+    const c = CFG[p];
+    return { state: 'needs_app', method: 'oauth_app', reason: p + ' cannot connect without a registered OAuth app. Set ' + c.client + ' and ' + c.secret + ' on the Handoff Hub server.', setup: { env: [c.client, c.secret], redirect_uri: callback(p) } };
+  }
+  const creds = appCreds(m);
+  const f = await found(p);
+  if (!creds && m.app) {
+    // Without an OAuth app, still connect if the server really does let apps register themselves (so nothing that worked before is blocked).
+    if (!f.error && f.d.meta.registration_endpoint) return { state: 'ready', method: 'mcp', creds, ...f };
+    return { state: 'needs_app', method: 'mcp', reason: m.name + ' does not allow apps to register themselves. Create an OAuth app with ' + m.name + ', then set ' + m.app.join(' and ') + ' on the Handoff Hub server.', setup: { env: m.app, redirect_uri: callbackMcp(p) } };
+  }
+  if (f.error) return { state: 'unavailable', method: 'mcp', reason: !m.server && m.note ? m.note : f.error };
+  if (!creds && !f.d.meta.registration_endpoint) return { state: 'unavailable', method: 'mcp', reason: m.name + ' does not allow apps to register themselves, so it cannot be connected without an approved OAuth app.' };
+  return { state: 'ready', method: 'mcp', creds, ...f };
+}
+
+const withTimeout = (promise, ms, fallback) => new Promise(done => {
+  const t = setTimeout(() => done(fallback), ms);
+  promise.then(v => { clearTimeout(t); done(v); }, () => { clearTimeout(t); done(fallback); });
+});
+
+// What the portal gets: the state only, never credentials or discovery details.
+async function providerStates() {
+  return Promise.all(PROVIDERS.map(async provider => {
+    const r = await withTimeout(resolve(provider), RESOLVE_BUDGET_MS, { state: 'unknown', method: 'mcp' });
+    return { provider, configured: r.state === 'ready', state: r.state, method: r.method || 'none', reason: r.reason || null, setup: r.setup || null };
+  }));
+}
+
+async function startMcp(p, id, r) {
+  const m = MCP[p], d = r.d, ver = rnd(48);
+  let cl;
+  if (r.creds) cl = { client_id: r.creds.id, client_secret: r.creds.secret };
+  else {
+    // Some providers only let certain clients self-register. If registration is refused, remember it so the portal stops offering Connect.
+    try { cl = await register(d.meta, m.name, p); } catch (e) { remember(p, { error: e?.message || String(e) }); throw e; }
+  }
   const state = await newFlow(id, p, ver, { client_id: cl.client_id, client_secret: cl.client_secret ? encrypt(cl.client_secret) : null, token_endpoint: d.meta.token_endpoint, resource: d.resource });
   const u = new URL(d.meta.authorization_endpoint);
   u.searchParams.set('client_id', cl.client_id);
@@ -187,7 +273,10 @@ async function startMcp(p, id) {
   u.searchParams.set('code_challenge', pkce(ver));
   u.searchParams.set('code_challenge_method', 'S256');
   u.searchParams.set('resource', d.resource);
-  if (d.scopes?.length) u.searchParams.set('scope', d.scopes.join(' '));
+  // Scopes come from the server's metadata; <PROVIDER>_SCOPES (e.g. GOOGLE_DRIVE_SCOPES) overrides when a provider publishes none.
+  const scope = process.env[envKey(p) + '_SCOPES'] || m.scope || (d.scopes?.length ? d.scopes.join(' ') : '');
+  if (scope) u.searchParams.set('scope', scope);
+  for (const [k, v] of Object.entries(m.params || {})) u.searchParams.set(k, v);
   return u.toString();
 }
 
@@ -215,9 +304,9 @@ async function start(p, session) {
   if (!PROVIDERS.includes(p)) throw new Error('Unsupported provider');
   env(ENC_KEY, 'PROVIDER_TOKEN_ENC_KEY');
   if (p === 'vercel') return startVercelConnect(id);
-  if (classicReady(p)) return startClassic(p, id);
-  if (MCP[p]) return startMcp(p, id);
-  throw new Error(p + ' cannot connect without a registered OAuth app. Set ' + CFG[p].client + ' and ' + CFG[p].secret + ' on the Handoff Hub server.');
+  const r = await resolve(p);
+  if (r.state !== 'ready') throw new Error(r.reason || 'Could not check whether ' + p + ' can connect. Try again in a moment.');
+  return r.method === 'oauth_app' ? startClassic(p, id) : startMcp(p, id, r);
 }
 
 async function complete(p, code, state) {
@@ -268,7 +357,11 @@ async function disconnect(p, session) {
 export async function providerAction(b) {
   if (b.action === 'start') return { authorization_url: await start(b.provider, b.portal_session) };
   if (b.action === 'consume') return { ok: await consume(b.provider, b.portal_session, b.ticket) };
-  if (b.action === 'status') return { connections: await status(b.portal_session), providers: PROVIDERS.map(provider => ({ provider, configured: classicReady(provider) || Boolean(MCP[provider]), method: classicReady(provider) ? 'oauth_app' : MCP[provider] ? 'mcp' : 'none' })) };
+  if (b.action === 'status') {
+    const connections = await status(b.portal_session);
+    // Availability needs network checks, so it is only computed for callers that show the directory.
+    return b.include_providers ? { connections, providers: await providerStates() } : { connections };
+  }
   if (b.action === 'disconnect') return disconnect(b.provider, b.portal_session);
   throw new Error('Unknown action');
 }
