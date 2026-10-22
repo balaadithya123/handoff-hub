@@ -1,135 +1,25 @@
 <!DOCTYPE html>
-<html class="dark" lang="en"><head>
+<html class="dark" lang="en">
+<head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta content="web_standard" name="shell-type"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Axon — Context that follows every AI you use</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-<style>
-@layer base {
-html, body {
-margin: 0;
-padding: 0;
-background-color: #000000;
-color: #ededed;
-font-family: 'Geist', sans-serif;
-}
-body { overscroll-behavior: none; }
-::-webkit-scrollbar { display: none; }
-}
-.grid-bg {
-background-size: 40px 40px;
-background-image:
-linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-}
-.radial-mask {
-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%);
--webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%);
-}
-/* Ambient Drifting Aura */
-@keyframes auraDrift {
-0%, 100% { transform: translate(-50%, -10%) scale(1); opacity: 0.22; }
-50% { transform: translate(-46%, -4%) scale(1.08); opacity: 0.32; }
-}
-.animate-aura {
-animation: auraDrift 14s ease-in-out infinite;
-}
-/* Interactive Beam / Particle Pulse */
-@keyframes beamFlow {
-0% { transform: translateX(-100%); opacity: 0; }
-40% { opacity: 1; }
-80% { opacity: 1; }
-100% { transform: translateX(200%); opacity: 0; }
-}
-.animate-beam {
-animation: beamFlow 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-/* Marquee Infinite Loop */
-@keyframes marquee {
-0% { transform: translateX(0); }
-100% { transform: translateX(-50%); }
-}
-.animate-marquee {
-display: flex;
-width: max-content;
-animation: marquee 32s linear infinite;
-}
-.animate-marquee:hover {
-animation-play-state: paused;
-}
-/* Reveal-on-scroll base styles */
-.reveal-on-scroll {
-opacity: 0;
-transform: translateY(22px);
-transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-will-change: opacity, transform;
-}
-.reveal-on-scroll.revealed {
-opacity: 1;
-transform: translateY(0);
-}
-/* Accordion transition utility */
-.faq-answer {
-max-height: 0;
-opacity: 0;
-overflow: hidden;
-transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
-}
-.faq-item.active .faq-answer {
-max-height: 180px;
-opacity: 1;
-}
-.faq-item.active .faq-icon {
-transform: rotate(45deg);
-}
-@media (prefers-reduced-motion: reduce) {
-.reveal-on-scroll {
-opacity: 1 !important;
-transform: none !important;
-transition: none !important;
-}
-.animate-marquee, .animate-aura, .animate-beam {
-animation: none !important;
-}
-}
-</style>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
 tailwind.config = {
 darkMode: "class",
-theme: {
-extend: {
-colors: {
-"canvas": "#000000",
-"surface": "#0a0a0a",
-"surface-subtle": "#121212",
-"surface-hover": "#171717",
-"surface-container": "#1f1f1f",
-"surface-container-high": "#282828",
-"border-hairline": "rgba(255, 255, 255, 0.08)",
-"border-medium": "rgba(255, 255, 255, 0.16)",
-"primary": "#6f9bff",
-"primary-fixed": "#d7e6ff",
-"primary-container": "#2f6fe0",
-"secondary": "#b7c0d6",
-"signal-amber": "#f5b14a",
-"signal-red": "#ff6b6b",
-"text-main": "#ededed",
-"text-muted": "#a1a1a1",
-"text-soft": "#707070",
-},
-fontFamily: {
-sans: ["Geist", "sans-serif"],
-mono: ["JetBrains Mono", "monospace"],
-}
-}
-}
+theme: { extend: { colors: { canvas: "#000000", surface: "#0a0a0a", primary: "#6f9bff", "text-main": "#ededed", "text-muted": "#a1a1a1" }, fontFamily: { sans: ["Geist", "sans-serif"], mono: ["JetBrains Mono", "monospace"] } } }
 };
 </script>
 </head>
-<body class="bg-canvas text-text-main antialiased selection:bg-primary/20 selection:text-primary">
-<!-- RESTORED PLACEHOLDER - full content will follow in next commit due to size limits. The page is being restored. -->
-</body></html>
+<body class="bg-canvas text-text-main antialiased min-h-screen flex flex-col items-center justify-center p-8 text-center">
+<div class="max-w-xl space-y-6">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-white/10 text-xs font-mono text-primary">MESH 2.0 · Restoring full landing</div>
+<h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Landing page is being restored</h1>
+<p class="text-text-muted text-base leading-relaxed">The previous commits truncated the HTML due to tool payload limits. The complete improved design (2D mesh animations, dual beams, floating nodes) is ready. Please replace <code class="font-mono text-primary text-sm">portal/public/landing.html</code> with the file provided in chat, or wait for the next full push.</p>
+<a href="/login" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black font-medium text-sm hover:bg-neutral-200 transition">Sign in / Start for free</a>
+<p class="text-xs font-mono text-text-muted">System Operational — temporary page</p>
+</div>
+</body>
+</html>
