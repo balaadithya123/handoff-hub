@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// Fallback for a stale/invalid session cookie: show the same static Stitch landing page.
-// Explicit `null` return type: a `never`-returning component fails the JSX type check at build time.
+// Serve the complete improved landing page (all original sections + 2D animations).
+// User uploaded it as landing-improved-full.html.
 export default function Landing(): null {
-  redirect("/landing.html");
+  redirect("/landing-improved-full.html");
 }
