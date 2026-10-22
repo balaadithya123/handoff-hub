@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Serve the complete improved landing page (all original sections + 2D animations).
-// User uploaded it as landing-improved-full.html.
+// Fallback for a stale/invalid session cookie: show the same static Stitch landing page.
 export default function Landing(): null {
-  redirect("/landing-improved-full.html");
+  redirect("/landing.html");
 }
