@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 
-// Fallback for a stale/invalid session cookie: show the same static Stitch landing page.
-// Explicit `null` return type: a `never`-returning component fails the JSX type check at build time.
+// Serve the complete original landing (all sections) from the known-good commit.
+// This avoids the tool payload size limit that truncated the static file.
+// Design improvements (2D mesh, dual beams, etc.) will be re-applied on top of the full content next.
 export default function Landing(): null {
-  redirect("/landing.html");
+  redirect("https://raw.githubusercontent.com/balaadithya123/handoff-hub/30abf5ee8513/portal/public/landing.html");
 }
