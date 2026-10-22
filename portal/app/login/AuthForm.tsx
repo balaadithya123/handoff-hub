@@ -8,7 +8,7 @@ import Logo from "../components/Logo";
 type Mode = "login" | "signup";
 
 const inputWrap =
-  "flex items-center gap-3 h-[54px] px-4 rounded-xl bg-[#141414] border border-white/[0.06] focus-within:border-[#3ecf8e]/50 transition-colors";
+  "flex items-center gap-3 h-[54px] px-4 rounded-xl bg-[#141414] border border-white/[0.06] focus-within:border-[#6f9bff]/50 transition-colors";
 const inputEl = "flex-1 bg-transparent outline-none text-[15px] text-[#ededed] placeholder:text-[#4a4a4a] min-w-0";
 
 export default function AuthForm() {
@@ -61,10 +61,10 @@ export default function AuthForm() {
         <div className="flex flex-col items-center text-center">
           <div className="relative">
             <Logo size={60} />
-            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#3ecf8e] ring-4 ring-[#0e0e0e]" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#6f9bff] ring-4 ring-[#0e0e0e]" />
           </div>
           <h1 className="mt-6 text-[26px] leading-8 font-semibold tracking-[-0.03em] text-[#ededed]">
-            {login ? "Sign in to Handoff Hub" : "Create your Handoff Hub account"}
+            {login ? "Sign in to Axon" : "Create your Axon account"}
           </h1>
           <p className="mt-2 text-[15px] leading-6 text-[#a1a1a1] max-w-[360px]">
             Access your shared context mesh and connected AI tools
@@ -96,8 +96,8 @@ export default function AuthForm() {
               <label htmlFor="auth-email" className="text-[15px] font-medium text-[#ededed]">
                 Work Email
               </label>
-              <span className="flex items-center gap-1.5 font-mono text-[11px] text-[#3ecf8e]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#3ecf8e]" />
+              <span className="flex items-center gap-1.5 font-mono text-[11px] text-[#6f9bff]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#6f9bff]" />
                 Secure channel
               </span>
             </div>
@@ -161,20 +161,20 @@ export default function AuthForm() {
 
         <div className="mt-6 flex items-center justify-between rounded-lg bg-[#141414] border border-white/[0.04] px-4 py-3.5 font-mono text-[12px] text-[#707070]">
           <span className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#3ecf8e]" aria-hidden />
+            <ShieldCheck className="w-4 h-4 text-[#6f9bff]" aria-hidden />
             Encrypted in transit
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4ddcc6]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#6f9bff]" />
             Account isolated
           </span>
         </div>
       </div>
 
       <div className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-[12px] text-[#a1a1a1]">
-        <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#3ecf8e] shrink-0" aria-hidden />OAuth 2.0 PKCE direct auth</span>
-        <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#3ecf8e] shrink-0" aria-hidden />No third-party passwords</span>
-        <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#3ecf8e] shrink-0" aria-hidden />Account-isolated memory</span>
+        <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#6f9bff] shrink-0" aria-hidden />OAuth 2.0 PKCE direct auth</span>
+        <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#6f9bff] shrink-0" aria-hidden />No third-party passwords</span>
+        <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#6f9bff] shrink-0" aria-hidden />Account-isolated memory</span>
       </div>
 
       <p className="mt-8 text-center text-[15px] text-[#a1a1a1]">
