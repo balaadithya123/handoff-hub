@@ -28,13 +28,14 @@ const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail=email=>typeof email==='string'&&email.length<=254&&EMAIL_RE.test(email);
 function oauthError(res,status,error,error_description){res.setHeader('Cache-Control','no-store');return res.status(status).json({error,error_description});}
 
-// Best-effort brute-force guard for portal codes (per server instance): at most 10 attempts per IP per 10 minutes.
-const portalTries=new Map();
-function portalAttemptAllowed(req){
+// Best-effort brute-force guard for portal codes & OTP verification (per server instance): at most 10 attempts per IP per 10 minutes.
+const rateTries=new Map();
+function attemptAllowed(req, scope='portal'){
   const ip=String(req.headers?.['x-forwarded-for']||req.socket?.remoteAddress||'').split(',')[0].trim()||'?';
+  const key=`${scope}:${ip}`;
   const now=Date.now(),win=10*60*1000;
-  const arr=(portalTries.get(ip)||[]).filter(t=>now-t<win);arr.push(now);portalTries.set(ip,arr);
-  if(portalTries.size>500){for(const[k,v]of portalTries)if(!v.some(t=>now-t<win))portalTries.delete(k);}
+  const arr=(rateTries.get(key)||[]).filter(t=>now-t<win);arr.push(now);rateTries.set(key,arr);
+  if(rateTries.size>500){for(const[k,v]of rateTries)if(!v.some(t=>now-t<win))rateTries.delete(k);}
   return arr.length<=10;
 }
 
@@ -211,9 +212,11 @@ export default async function handler(req,res){
         return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email,{info:true}));
       }
       if(form.action==='verify_email'){
-        const otp=str(form.otp).trim();
         // The replace choice arrives as mode=replace|add (radio); form.replace==='1' is kept so an older cached page still works.
         const mode=str(form.mode)==='replace'||form.replace==='1'?'replace':str(form.mode)==='add'?'add':'';
+        // Anti-brute-force guard for 6-digit email OTPs
+        if(!attemptAllowed(req,'email_otp'))return page(res,429,'Connect to Handoff Hub',emailForm(p,v.client,'Too many verification attempts. Wait a few minutes and try again.','otp',email,{mode}));
+        const otp=str(form.otp).trim();
         const replace=mode==='replace';
         const unlock=replace?'':str(form.unlock).trim().slice(0,64);
         const now=new Date().toISOString();
@@ -247,7 +250,7 @@ export default async function handler(req,res){
         const mode=str(form.mode)==='replace'?'replace':str(form.mode)==='add'?'add':'';
         const replace=mode==='replace';
         const unlock=replace?'':str(form.unlock).trim().slice(0,64);
-        if(!portalAttemptAllowed(req))return page(res,429,'Connect to Handoff Hub',emailForm(p,v.client,'Too many attempts. Wait a few minutes and try again.'));
+        if(!attemptAllowed(req,'portal'))return page(res,429,'Connect to Handoff Hub',emailForm(p,v.client,'Too many attempts. Wait a few minutes and try again.'));
         const now=new Date().toISOString();
         const hash=crypto.createHash('sha256').update(pcode).digest('hex');
         const pc=pcode?await otpDb(`portal_link_codes?code_hash=eq.${encodeURIComponent(hash)}&used=eq.false&expires_at=gt.${encodeURIComponent(now)}&select=account_id&limit=1`):{ok:false};
