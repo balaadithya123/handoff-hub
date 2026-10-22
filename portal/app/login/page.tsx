@@ -46,7 +46,7 @@ export default async function LoginPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#6f9bff]" />
             SECURE SESSION // TLS
           </span>
-          <span>HANDOFF HUB // PORTAL</span>
+          <span>AXON // PORTAL</span>
         </div>
 
         <AuthForm />
