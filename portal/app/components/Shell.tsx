@@ -64,7 +64,7 @@ export default function Shell({
   const padL = collapsed ? "md:pl-14" : "md:pl-64";
 
   return (
-    <div className="min-h-screen bg-[#f6f5f2] text-[#141414] font-sans antialiased flex flex-col">
+    <div className="axon-dashboard min-h-screen bg-[#f6f5f2] text-[#141414] font-sans antialiased flex flex-col">
       <aside className={`fixed left-0 top-0 h-full bg-[#f6f5f2] border-r border-[#e7e4dc] z-50 hidden md:flex flex-col justify-between select-none transition-[width] duration-200 ${railW}`}>
         <div className="flex flex-col flex-1 min-h-0">
           <div className="h-16 px-3 flex items-center border-b border-[#e7e4dc]">

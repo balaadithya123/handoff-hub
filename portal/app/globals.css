@@ -51,3 +51,123 @@ button:not(:disabled),
 [role="button"]:not(:disabled) {
   cursor: pointer;
 }
+
+
+/* Axon dashboard refresh — scoped to the authenticated workspace.
+   Landing page and existing brand mark are intentionally untouched. */
+.axon-dashboard {
+  --axon-canvas: #f4f7fb;
+  --axon-surface: #ffffff;
+  --axon-line: #e4eaf3;
+  --axon-ink: #172033;
+  --axon-muted: #64748b;
+  background: var(--axon-canvas) !important;
+  color: var(--axon-ink) !important;
+  min-height: 100dvh;
+  letter-spacing: -0.012em;
+}
+.axon-dashboard aside {
+  background: #fff !important;
+  border-color: var(--axon-line) !important;
+  box-shadow: 8px 0 28px rgba(25, 45, 78, .035);
+}
+.axon-dashboard header {
+  background: rgba(255,255,255,.88) !important;
+  border-color: var(--axon-line) !important;
+  box-shadow: 0 1px 0 rgba(25,45,78,.025);
+}
+.axon-dashboard main {
+  max-width: 1360px !important;
+  padding-top: 32px !important;
+  padding-bottom: 44px !important;
+}
+.axon-dashboard [class~="bg-[#f6f5f2]"],
+.axon-dashboard [class~="bg-[#efeee9]"],
+.axon-dashboard [class~="bg-[#f6f5f2]/50"] {
+  background: #f4f7fb !important;
+}
+.axon-dashboard [class~="bg-white"],
+.axon-dashboard [class*="bg-white/"] {
+  background-color: #fff !important;
+}
+.axon-dashboard [class*="border-[#e7e4dc]"],
+.axon-dashboard [class*="border-[#d9d5cb]"] {
+  border-color: var(--axon-line) !important;
+}
+.axon-dashboard [class*="text-[#141414]"] {
+  color: var(--axon-ink) !important;
+}
+.axon-dashboard [class*="text-[#6f6e68]"],
+.axon-dashboard [class*="text-[#9a988f]"] {
+  color: var(--axon-muted) !important;
+}
+.axon-dashboard [class*="rounded-xl"],
+.axon-dashboard [class*="rounded-2xl"] {
+  border-radius: 16px !important;
+}
+.axon-dashboard a,
+.axon-dashboard button {
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.axon-dashboard aside nav a {
+  min-height: 42px;
+  border-radius: 11px !important;
+  font-weight: 500;
+}
+.axon-dashboard aside nav a[class*="bg-[#141414]"] {
+  background: #eaf1ff !important;
+  color: #2457c5 !important;
+  box-shadow: inset 3px 0 0 #3975e8;
+}
+.axon-dashboard aside nav a:hover {
+  background: #f1f5fb !important;
+}
+.axon-dashboard header button {
+  border-radius: 12px;
+}
+.axon-dashboard main > div > [class*="rounded-2xl"],
+.axon-dashboard main > div > [class*="rounded-xl"] {
+  box-shadow: 0 8px 28px rgba(25,45,78,.045);
+}
+.axon-dashboard main a[class*="group"]:hover,
+.axon-dashboard main button:hover {
+  border-color: #c7d6ef;
+}
+.axon-dashboard input,
+.axon-dashboard select,
+.axon-dashboard textarea {
+  border-color: #dce5f1 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: var(--axon-ink) !important;
+}
+.axon-dashboard input:focus,
+.axon-dashboard select:focus,
+.axon-dashboard textarea:focus {
+  outline: 3px solid rgba(57,117,232,.14) !important;
+  border-color: #7da4ed !important;
+}
+.axon-dashboard nav.md\:hidden {
+  background: rgba(255,255,255,.96) !important;
+  border-color: var(--axon-line) !important;
+  box-shadow: 0 -8px 28px rgba(25,45,78,.06);
+}
+.axon-dashboard nav.md\:hidden a {
+  border-radius: 12px !important;
+}
+@media (max-width: 767px) {
+  .axon-dashboard main {
+    padding: 22px 16px 96px !important;
+  }
+  .axon-dashboard header {
+    min-height: 58px;
+    padding-inline: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .axon-dashboard *,
+  .axon-dashboard *::before,
+  .axon-dashboard *::after {
+    transition-duration: .01ms !important;
+  }
+}
