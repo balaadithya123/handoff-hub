@@ -96,7 +96,7 @@ export default function ConnectorDirectory({
           Sign in with the app itself. Axon stores the token. It never sees your password.
         </p>
       </div>
-      <div className="w-full overflow-x-auto pb-1">
+      <div className="marketplace-categories w-full overflow-x-auto pb-1">
         <div className="flex w-max gap-2">
           {cats.map((c) => {
             const active = cat === c;
@@ -110,14 +110,14 @@ export default function ConnectorDirectory({
           })}
         </div>
       </div>
-      <div className="relative max-w-xl">
+      <div className="marketplace-search relative max-w-xl">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a988f]" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name" className="pl-10 h-11 rounded-full bg-white border-[#e7e4dc]" />
       </div>
       {cat === "All" && !query && connectedApps.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-base font-semibold text-[#141414]">Connected</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="marketplace-connected-grid grid grid-cols-2 sm:grid-cols-4 gap-3">
             {connectedApps.map(([id, name]) => (
               <button key={id} type="button" onClick={() => setSelectedAppId(id)}
                 className="flex flex-col items-center gap-3 rounded-2xl border border-[#e7e4dc] bg-white px-3 py-6 text-center hover:border-[#141414]">
@@ -138,15 +138,15 @@ export default function ConnectorDirectory({
           {sections.map(({ title, rows }) => (
             <section key={title} className="space-y-2">
               <h2 className="text-base font-semibold text-[#141414]">{title}</h2>
-              <ul className="grid gap-1 md:grid-cols-2 md:gap-x-10">
+              <ul className="marketplace-app-list grid gap-1 md:grid-cols-2 md:gap-x-10">
                 {rows.map(([id, name, category, desc, live]) => {
                   const isOn = on.has(id);
                   return (
                     <li key={id}>
-                      <div className="flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-[#efeee9]">
+                      <div className="marketplace-app-row flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-[#efeee9]">
                         <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => setSelectedAppId(id)} onKeyDown={openOnKey(id)}>
-                          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white border border-[#e7e4dc]"><AppMark id={id} size={20} /></span>
-                          <span className="min-w-0">
+                          <span className="marketplace-app-icon flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white border border-[#e7e4dc]"><AppMark id={id} size={20} /></span>
+                          <span className="marketplace-app-meta min-w-0">
                             <span className="block truncate text-sm font-medium text-[#141414]">{name}</span>
                             <span className="block truncate text-xs text-[#6f6e68]">{desc}</span>
                           </span>
