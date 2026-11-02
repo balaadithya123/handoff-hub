@@ -2,6 +2,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import Fx from "./components/Fx";
+import { GeistSans } from "geist/font/sans";
 
 export const metadata: Metadata = {
   title: "Axon",
@@ -9,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f5f2",
-  colorScheme: "light",
+  themeColor: "#09090b",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
         />
       </head>
-      <body>
+      <body className={GeistSans.variable}>
         <Suspense fallback={null}>
           <Fx />
         </Suspense>

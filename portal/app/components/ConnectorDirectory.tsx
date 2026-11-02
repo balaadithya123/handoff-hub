@@ -89,7 +89,7 @@ export default function ConnectorDirectory({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="integration-marketplace space-y-8">
       <div className="space-y-1">
         <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[#141414]">Apps</h1>
         <p className="text-sm text-[#6f6e68] max-w-xl">
