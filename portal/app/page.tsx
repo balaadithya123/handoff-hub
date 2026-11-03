@@ -29,12 +29,14 @@ const META: Record<Tab, [string, string]> = {
 
 async function Dashboard({
   email,
+  name,
   token,
   tab,
   notice,
   project,
 }: {
   email: string;
+  name: string;
   token: string;
   tab: Tab;
   notice: Notice;
@@ -59,7 +61,7 @@ async function Dashboard({
   const [title, sub] = META[tab];
 
   return (
-    <Shell email={email} tab={tab} title={title} sub={sub} notice={notice}>
+    <Shell email={email} name={name} tab={tab} title={title} sub={sub} notice={notice}>
       {tab === "integrations" ? (
         <ConnectorDirectory connected={connections.map((c) => c.provider as string)} names={names} availability={availability} />
       ) : tab === "projects" ? (
@@ -71,7 +73,7 @@ async function Dashboard({
       ) : tab === "activity" ? (
         <ActivityLog token={token} limit={30} project={project} filters />
       ) : (
-        <Overview token={token} connected={connections.length} />
+        <Overview token={token} connected={connections.length} name={name} />
       )}
     </Shell>
   );
@@ -99,7 +101,7 @@ export default async function Home({
   const project = typeof sp.project === "string" ? sp.project.slice(0, 80) : "";
 
   return user && token ? (
-    <Dashboard email={user.email} token={token} tab={tab} notice={notice} project={project} />
+    <Dashboard email={user.email} name={user.name} token={token} tab={tab} notice={notice} project={project} />
   ) : (
     <Landing />
   );
