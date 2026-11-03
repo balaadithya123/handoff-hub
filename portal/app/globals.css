@@ -104,3 +104,17 @@ button:not(:disabled),
 .axon-dashboard [role="dialog"]{background:#101012!important;color:var(--axon-ink)!important;border-color:var(--axon-line)!important}
 @media(max-width:767px){.axon-dashboard main{padding:22px 16px 96px!important}.axon-dashboard header{min-height:58px;padding-inline:16px}.axon-dashboard .marketplace-categories{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px}.axon-dashboard .marketplace-categories button{flex:0 0 auto}.axon-dashboard .marketplace-app-list{grid-template-columns:1fr!important}}
 @media(prefers-reduced-motion:reduce){.axon-dashboard *,.axon-dashboard *::before,.axon-dashboard *::after{transition-duration:.01ms!important}}
+
+/* Reference-matched Axon dashboard and app marketplace */
+.axon-dashboard aside { width:176px; }
+.axon-dashboard main { padding-top:20px!important; }
+.axon-dashboard .axon-overview { gap:20px!important; }
+.axon-dashboard .marketplace-app-list { grid-template-columns:repeat(4,minmax(0,1fr))!important; gap:10px!important; }
+.axon-dashboard .marketplace-app-list>li { border:0!important; background:transparent!important; padding:0!important; }
+.axon-dashboard .marketplace-app-row { min-height:56px!important; border-radius:10px!important; }
+.axon-dashboard .integration-marketplace { gap:16px!important; }
+.axon-dashboard .marketplace-search { max-width:640px!important; }
+.axon-dashboard .marketplace-categories button { border-radius:999px!important; padding:6px 13px!important; }
+.axon-dashboard .marketplace-app-icon { border-radius:9px!important; }
+@media(max-width:1100px){.axon-dashboard .marketplace-app-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:767px){.axon-dashboard aside{width:auto}.axon-dashboard .marketplace-app-list{grid-template-columns:1fr!important}}
