@@ -46,15 +46,15 @@ export default function Shell({ email, tab, title, sub, notice, children }: {
   }, [userMenuOpen]);
 
   const initial = (email || "?").charAt(0).toUpperCase();
-  const rail = collapsed ? "md:w-[72px]" : "md:w-[248px]";
-  const offset = collapsed ? "md:pl-[72px]" : "md:pl-[248px]";
+  const rail = collapsed ? "md:w-[64px]" : "md:w-[176px]";
+  const offset = collapsed ? "md:pl-[64px]" : "md:pl-[176px]";
 
   return (
     <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
       <aside className={`axon-sidebar fixed inset-y-0 left-0 z-50 hidden md:flex flex-col border-r border-white/10 bg-[#09090b] ${rail}`}>
-        <div className="flex h-[68px] items-center border-b border-white/10 px-4">
+        <div className="flex h-[54px] items-center border-b border-white/10 px-4">
           <Link href="/overview" title="Axon workspace" className="flex min-w-0 items-center gap-3">
-            <Logo size={34} className="shrink-0" />
+            <Logo size={30} className="shrink-0" />
             {!collapsed && <span className="min-w-0"><span className="block text-[15px] font-semibold tracking-tight text-white">Axon</span><span className="block truncate text-[11px] text-zinc-500">Workspace</span></span>}
           </Link>
           {!collapsed && <span className="ml-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-zinc-500">BETA</span>}
@@ -96,7 +96,7 @@ export default function Shell({ email, tab, title, sub, notice, children }: {
       </aside>
 
       <div className={`min-h-screen min-w-0 ${offset}`}>
-        <header className="axon-topbar sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-white/10 bg-[#09090b]/95 px-4 backdrop-blur-xl md:px-8">
+        <header className="axon-topbar sticky top-0 z-40 flex h-[54px] items-center gap-4 border-b border-white/10 bg-[#09090b]/95 px-4 backdrop-blur-xl md:px-8">
           <div className="flex items-center gap-2 md:hidden"><Logo size={29}/><span className="text-sm font-semibold">Axon</span></div>
           <div className="hidden min-w-0 md:block">
             <p className="truncate text-[13px] font-medium text-zinc-100">{title}</p>
@@ -115,7 +115,7 @@ export default function Shell({ email, tab, title, sub, notice, children }: {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1480px] px-4 pb-24 pt-7 md:px-8 md:pb-12 md:pt-9">
+        <main className="mx-auto w-full max-w-[1600px] px-4 pb-24 pt-5 md:px-7 md:pb-12 md:pt-5">
           {notice && <div role="status" className={`mb-6 rounded-md border px-4 py-3 text-sm ${notice.kind === "ok" ? "border-blue-400/20 bg-blue-400/[.07] text-blue-200" : "border-red-400/20 bg-red-400/[.07] text-red-200"}`}>{notice.text}</div>}
           {children}
         </main>
