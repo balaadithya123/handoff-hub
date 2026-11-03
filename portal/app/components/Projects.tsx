@@ -1,183 +1,184 @@
-import { Fragment } from "react";
 import Link from "next/link";
-import { FolderKanban, Plus, CheckCircle2, AlertCircle, Clock, ChevronDown, Sparkles } from "lucide-react";
+import {
+  Activity, ArrowUpRight, Bot, CheckCircle2, Clock3, Database,
+  FolderKanban, Plus, ShieldAlert, Sparkles, Waypoints,
+} from "lucide-react";
 import { getProjects } from "../../lib/data";
 import { PortalSwitch, ProjectCreate } from "./ProjectActions";
-import { Card } from "./ui/Card";
-import { Badge } from "./ui/Badge";
-import { Table, TableHeader, TableRow, TableHead, TableCell } from "./ui/Table";
 
-const when = (iso?: string | null) => (iso ? iso.slice(0, 16).replace("T", " ") + " UTC" : "No activity yet");
+function dateLabel(value?: string | null) {
+  if (!value) return "No activity yet";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No activity yet";
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "numeric", minute: "2-digit",
+  }).format(date);
+}
+
+function Metric({ label, value, icon: Icon, tone = "neutral" }: {
+  label: string; value: number | string; icon: typeof Database; tone?: "neutral" | "warning";
+}) {
+  return (
+    <div className="project-metric">
+      <span className={`project-metric-icon ${tone === "warning" ? "warning" : ""}`}><Icon size={15} /></span>
+      <span className="min-w-0">
+        <strong>{value}</strong>
+        <small>{label}</small>
+      </span>
+    </div>
+  );
+}
 
 export default async function Projects({ token }: { token: string }) {
-  const d = await getProjects(token).catch(() => null);
-
-  if (!d || !d.ok) {
+  const data = await getProjects(token).catch(() => null);
+  if (!data?.ok) {
     return (
-      <div className="p-4 rounded-xl bg-[#ff7b7b]/10 border border-[#ff7b7b]/30 text-xs text-[#ff7b7b]">
-        Could not load projects. Please try again shortly.
-      </div>
+      <section className="axon-empty-state">
+        <FolderKanban size={28} />
+        <h2>Projects couldn’t be loaded</h2>
+        <p>Axon couldn’t retrieve your project pools. Refresh the page and try again.</p>
+      </section>
     );
   }
 
-  const accts = d.accounts ?? [];
-
-  if (accts.length === 0) {
-    return (
-      <Card className="p-8 text-center border-dashed">
-        <FolderKanban className="w-8 h-8 text-[#8a8a8a] mx-auto mb-3" />
-        <h3 className="text-sm font-semibold text-[#ededed]">No AI Accounts Linked Yet</h3>
-        <p className="text-xs text-[#a1a1a1] max-w-md mx-auto mt-1 mb-4">
-          Link an AI account (Claude / ChatGPT) first to create and view isolated project memory pools.
-        </p>
-        <Link href="/ai">
-          <span className="text-xs text-[#3ecf8e] hover:underline font-semibold">Open AI accounts &rarr;</span>
-        </Link>
-      </Card>
-    );
-  }
+  const accounts = data.accounts ?? [];
+  const projects = accounts.flatMap(account => account.projects ?? []);
+  const totalMemories = projects.reduce((sum, project) => sum + (project.counts?.memories ?? 0), 0);
+  const totalTasks = projects.reduce((sum, project) => sum + (project.counts?.tasks ?? 0), 0);
+  const totalBlockers = projects.reduce((sum, project) => sum + (project.counts?.blockers ?? 0), 0);
+  const portalFeeds = projects.filter(project => project.is_portal).length;
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+    <div className="axon-page axon-projects">
+      <section className="axon-page-heading">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="green" pulse>
-              ISOLATED MEMORY POOLS
-            </Badge>
-            <span className="text-xs text-[#8a8a8a]">•</span>
-            <span className="text-xs font-mono text-[#8a8a8a]">{accts.length} Accounts</span>
-          </div>
-          <h1 className="text-2xl font-semibold text-[#ededed] tracking-tight">Projects & Memory Pools</h1>
-          <p className="text-xs text-[#a1a1a1] mt-0.5 max-w-2xl">
-            Separate memory pools your AI apps can save to. The project marked <strong className="text-[#3ecf8e]">Portal feed</strong> feeds the Overview and Activity tabs.
-          </p>
+          <p className="axon-eyebrow">WORKSPACE / PROJECTS</p>
+          <h1>Projects &amp; Pools</h1>
+          <p>Keep work, memory and AI activity organised in separate project spaces.</p>
         </div>
-      </div>
+        <div className="axon-heading-mark"><FolderKanban size={21} /></div>
+      </section>
 
-      {accts.map((a) => {
-        const rows = [...a.projects].sort(
-          (x, y) =>
-            Number(y.is_portal) - Number(x.is_portal) ||
-            String(y.updated_at ?? "").localeCompare(String(x.updated_at ?? ""))
-        );
+      <section className="axon-stat-grid" aria-label="Project summary">
+        <div className="axon-stat-card">
+          <span className="axon-stat-icon"><FolderKanban size={17} /></span>
+          <span className="axon-stat-copy"><strong>{projects.length}</strong><small>Project pools</small></span>
+        </div>
+        <div className="axon-stat-card">
+          <span className="axon-stat-icon"><Database size={17} /></span>
+          <span className="axon-stat-copy"><strong>{totalMemories}</strong><small>Saved memories</small></span>
+        </div>
+        <div className="axon-stat-card">
+          <span className="axon-stat-icon"><Waypoints size={17} /></span>
+          <span className="axon-stat-copy"><strong>{totalTasks}</strong><small>Recorded tasks</small></span>
+        </div>
+        <div className="axon-stat-card">
+          <span className={`axon-stat-icon ${totalBlockers ? "is-warning" : ""}`}><ShieldAlert size={17} /></span>
+          <span className="axon-stat-copy"><strong>{totalBlockers}</strong><small>Open blockers</small></span>
+        </div>
+      </section>
 
-        return (
-          <Card key={a.id} className="space-y-4">
-            {/* Account Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-              <div>
-                <h2 className="text-base font-semibold text-[#ededed]">{a.nickname || a.label}</h2>
-                {a.nickname && <span className="text-xs font-mono text-[#8a8a8a]">{a.label}</span>}
-              </div>
-              {a.ops_project !== "default" && (
-                <PortalSwitch hubUser={a.id} project="default" label="Show default pool in portal" ghost />
-              )}
-            </div>
+      {accounts.length === 0 ? (
+        <section className="axon-empty-state">
+          <Bot size={28} />
+          <h2>Connect an AI account first</h2>
+          <p>Your project pools are attached to linked AI accounts. Connect one to start creating isolated workspaces.</p>
+          <Link href="/ai" className="axon-primary-link">Open AI Accounts <ArrowUpRight size={15} /></Link>
+        </section>
+      ) : (
+        <div className="space-y-7">
+          {accounts.map(account => {
+            const rows = [...(account.projects ?? [])].sort(
+              (a, b) => Number(b.is_portal) - Number(a.is_portal)
+                || String(b.updated_at ?? "").localeCompare(String(a.updated_at ?? ""))
+            );
+            return (
+              <section className="axon-account-section" key={account.id}>
+                <header className="axon-section-header">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="axon-account-avatar"><Bot size={18} /></span>
+                    <div className="min-w-0">
+                      <h2>{account.nickname || account.label}</h2>
+                      <p>{account.nickname ? account.label + " · " : ""}{rows.length} {rows.length === 1 ? "pool" : "pools"}</p>
+                    </div>
+                  </div>
+                  {account.ops_project !== "default" && (
+                    <PortalSwitch hubUser={account.id} project="default" label="Use default pool" ghost />
+                  )}
+                </header>
 
-            {rows.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[#8a8a8a] bg-[#111] rounded-lg">
-                No saved project memory pools for this AI account yet.
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <tr>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Memories</TableHead>
-                    <TableHead className="text-right">Tasks</TableHead>
-                    <TableHead className="text-right">Blockers</TableHead>
-                    <TableHead className="text-right">Claims</TableHead>
-                    <TableHead>Last Activity</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </tr>
-                </TableHeader>
-                <tbody>
-                  {rows.map((p) => (
-                    <Fragment key={p.id}>
-                      <TableRow>
-                        <TableCell>
-                          <div className="font-semibold text-[#ededed]">{p.name}</div>
-                          {p.description && <div className="text-[11px] text-[#8a8a8a]">{p.description}</div>}
-                        </TableCell>
-                        <TableCell>
-                          {p.is_portal ? (
-                            <Badge variant="green">Portal Feed</Badge>
+                {rows.length === 0 ? (
+                  <div className="axon-inline-empty">
+                    <Database size={18} />
+                    <span><strong>No project pools yet</strong><small>Create a pool below to keep this AI account’s work separate.</small></span>
+                  </div>
+                ) : (
+                  <div className="axon-project-grid">
+                    {rows.map(project => (
+                      <article className="axon-project-card" key={project.id}>
+                        <div className="axon-project-card-top">
+                          <div className="axon-project-symbol"><FolderKanban size={18} /></div>
+                          {project.is_portal ? (
+                            <span className="axon-status-chip success"><span />Portal feed</span>
                           ) : (
-                            <Badge variant="grey" dot={false}>Inactive</Badge>
+                            <span className="axon-status-chip neutral">Private pool</span>
                           )}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-xs">{p.counts.memories}</TableCell>
-                        <TableCell className="text-right font-mono text-xs">
-                          {p.counts.pending_tasks} / {p.counts.tasks}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-xs">
-                          {p.counts.blockers > 0 ? (
-                            <Badge variant="amber">{p.counts.blockers}</Badge>
+                        </div>
+                        <div className="axon-project-title">
+                          <h3>{project.name}</h3>
+                          <p>{project.description || "A separate memory pool for this project."}</p>
+                        </div>
+                        <div className="axon-project-metrics">
+                          <Metric label="Memories" value={project.counts?.memories ?? 0} icon={Database} />
+                          <Metric label="Tasks" value={`${project.counts?.pending_tasks ?? 0} / ${project.counts?.tasks ?? 0}`} icon={Waypoints} />
+                          <Metric label="Claims" value={project.counts?.claims ?? 0} icon={Activity} />
+                          <Metric label="Blockers" value={project.counts?.blockers ?? 0} icon={ShieldAlert} tone={(project.counts?.blockers ?? 0) > 0 ? "warning" : "neutral"} />
+                        </div>
+                        <div className="axon-project-card-footer">
+                          <span><Clock3 size={13} />{dateLabel(project.updated_at)}</span>
+                          {project.is_portal ? (
+                            <span className="axon-feed-active"><CheckCircle2 size={14} />Active feed</span>
                           ) : (
-                            "0"
+                            <PortalSwitch hubUser={account.id} project={project.id} label="Set as feed" ghost />
                           )}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-xs">{p.counts.claims}</TableCell>
-                        <TableCell className="font-mono text-[11px] text-[#8a8a8a]">{when(p.updated_at)}</TableCell>
-                        <TableCell className="text-right">
-                          {p.is_portal ? (
-                            <span className="text-xs font-mono text-[#3ecf8e]">Active Feed</span>
+                        </div>
+                        <details className="axon-project-activity">
+                          <summary><Activity size={14} />Recent activity <span>{project.recent?.length ?? 0}</span></summary>
+                          {project.summary && <p className="axon-project-summary">{project.summary}</p>}
+                          {!project.recent?.length ? (
+                            <p className="axon-muted-note">No recent activity recorded for this pool.</p>
                           ) : (
-                            <PortalSwitch hubUser={a.id} project={p.id} label="Set Feed" ghost />
+                            <ol>
+                              {project.recent.map((event, index) => (
+                                <li key={index}>
+                                  <span className="axon-event-time">{dateLabel(event.at)}</span>
+                                  <span className="axon-event-agent">{event.agent || "AI"}</span>
+                                  <span className="axon-event-action">{(event.action || "event").replace(/_/g, " ")}</span>
+                                  {event.text && <span className="axon-event-text">{event.text}</span>}
+                                </li>
+                              ))}
+                            </ol>
                           )}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-[#0e0e0e]/50 hover:bg-[#0e0e0e]/50">
-                        <TableCell className="p-3" colSpan={8}>
-                          <details className="group">
-                            <summary className="cursor-pointer text-[11px] font-mono text-[#8a8a8a] hover:text-[#ededed] flex items-center gap-1">
-                              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
-                              <span>Latest Activity Stream ({p.recent.length})</span>
-                            </summary>
-                            {p.summary && (
-                              <p className="mt-2 text-xs text-[#a1a1a1] bg-[#111] p-2.5 rounded border border-white/5">
-                                {p.summary}
-                              </p>
-                            )}
-                            {p.recent.length === 0 ? (
-                              <p className="mt-2 text-[11px] text-[#707070]">No recent events in this project.</p>
-                            ) : (
-                              <div className="mt-2 space-y-1">
-                                {p.recent.map((e, i) => (
-                                  <div
-                                    key={i}
-                                    className="text-[11px] font-mono flex items-center gap-3 p-1.5 rounded bg-[#111]/80 text-[#a1a1a1]"
-                                  >
-                                    <span className="text-[#8a8a8a] shrink-0">{when(e.at)}</span>
-                                    <span className="text-[#3ecf8e] font-semibold">{e.agent || "AI"}</span>
-                                    <span className="text-[#ededed]">{(e.action || "event").replace(/_/g, " ")}</span>
-                                    {e.text && <span className="text-[#8a8a8a] truncate">{e.text}</span>}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </details>
-                        </TableCell>
-                      </TableRow>
-                    </Fragment>
-                  ))}
-                </tbody>
-              </Table>
-            )}
+                        </details>
+                      </article>
+                    ))}
+                  </div>
+                )}
 
-            {/* Create Project Footer */}
-            <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#111]/40 p-3 rounded-lg">
-              <ProjectCreate hubUser={a.id} />
-              <p className="text-[11px] text-[#8a8a8a]">
-                Project counts reflect the latest 100 events retained by the Hub.
-              </p>
-            </div>
-          </Card>
-        );
-      })}
+                <div className="axon-create-pool">
+                  <div className="axon-create-copy">
+                    <span className="axon-create-icon"><Plus size={17} /></span>
+                    <span><strong>Create a project pool</strong><small>Start a clean, isolated memory space under this AI account.</small></span>
+                  </div>
+                  <ProjectCreate hubUser={account.id} />
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
+      <p className="axon-page-footnote"><Sparkles size={13} />Pools stay isolated. The portal feed controls which pool appears in Overview and Activity.</p>
     </div>
   );
 }
