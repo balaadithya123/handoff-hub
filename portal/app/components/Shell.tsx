@@ -40,8 +40,8 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
   const displayName = name || email;
   const initial = displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join("") || "?";
-  const rail = collapsed ? "md:w-[72px]" : "md:w-[220px]";
-  const offset = collapsed ? "md:pl-[72px]" : "md:pl-[220px]";
+  const rail = collapsed ? "md:w-[84px]" : "md:w-[270px]";
+  const offset = collapsed ? "md:pl-[84px]" : "md:pl-[270px]";
 
   return (
     <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
@@ -57,7 +57,7 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
           {NAV_GROUPS.map((group) => {
             const items = NAV.filter(item => item.group === group);
             return <section key={group} className="axon-nav-group">
-              {!collapsed && <p className="axon-nav-caption">{group === "AI" ? "AI MANAGEMENT" : group.toUpperCase()}</p>}
+              {!collapsed && <p className="axon-nav-caption">{group === "AI" ? "AI WORKFLOWS" : group === "Monitor" ? "MONITORING" : "YOUR WORKSPACE"}</p>}
               <nav className="axon-nav-list">
                 {items.map(item => {
                   const Icon = ICONS[item.id] || LayoutDashboard;
@@ -66,7 +66,7 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
                     aria-current={active ? "page" : undefined}
                     className={`axon-nav-item ${active ? "is-active" : ""} ${collapsed ? "is-collapsed" : ""}`}>
                     <span className="axon-nav-icon"><Icon size={17} strokeWidth={1.8}/></span>
-                    {!collapsed && <><span className="axon-nav-label">{item.label}</span>{active && <span className="axon-nav-active-dot"/>}</>}
+                    {!collapsed && <><span className="axon-nav-copy"><span className="axon-nav-label">{item.label}</span><small>{item.hint}</small></span>{active && <span className="axon-nav-active-dot"/>}</>}
                   </Link>;
                 })}
               </nav>
