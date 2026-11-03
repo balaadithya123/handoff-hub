@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Copy, X, Clock } from "lucide-react";
+import { Activity, Copy, Search, X } from "lucide-react";
 import { ago, human } from "../../lib/format";
 
 type Ev = {
@@ -14,177 +14,113 @@ type Ev = {
 };
 
 export default function ActivityExplorer({ rows }: { rows: Ev[] }) {
-  const [q, setQ] = useState("");
+  const [query, setQuery] = useState("");
   const [agent, setAgent] = useState("all");
-  const [sel, setSel] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Ev | null>(null);
   const [copied, setCopied] = useState(false);
 
   const agents = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.agent || "unknown"))).sort(),
+    () => [...new Set(rows.map(row => row.agent || "unknown"))].sort(),
     [rows]
   );
-
   const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (agent !== "all" && (r.agent || "unknown") !== agent) return false;
-      if (!query) return true;
-      const hay = `${r.agent || ""} ${r.action || ""} ${r.text || ""} ${r.project_name || ""} ${r.project || ""}`.toLowerCase();
-      return hay.includes(query);
+    const term = query.trim().toLowerCase();
+    return rows.filter(row => {
+      if (agent !== "all" && (row.agent || "unknown") !== agent) return false;
+      if (!term) return true;
+      return [
+        row.agent, row.action, row.text, row.project_name, row.project,
+      ].some(value => String(value || "").toLowerCase().includes(term));
     });
-  }, [rows, q, agent]);
+  }, [rows, query, agent]);
 
-  const active = sel != null ? filtered[sel] : null;
-
-  async function copyJson() {
-    if (!active) return;
-    await navigator.clipboard.writeText(JSON.stringify(active, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  async function copyEvent() {
+    if (!selected || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(selected, null, 2));
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
   }
 
   return (
     <div className="activity-explorer space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1 min-w-0">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a988f]" />
+      <div className="activity-toolbar">
+        <label className="activity-search">
+          <Search size={16} />
           <input
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setSel(null);
-            }}
-            placeholder="Search agent, action, or text"
-            className="h-11 w-full rounded-full border border-[#e7e4dc] bg-white pl-10 pr-4 detail-value text-sm text-zinc-100 outline-none placeholder:text-[#9a988f] focus:border-[#141414]"
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            placeholder="Search activities, agents or projects"
+            aria-label="Search activity"
           />
-        </div>
+        </label>
         <select
           value={agent}
-          onChange={(e) => {
-            setAgent(e.target.value);
-            setSel(null);
-          }}
-          aria-label="Agent"
-          className="h-11 shrink-0 rounded-full border border-[#e7e4dc] bg-white px-4 text-sm text-[#141414] outline-none focus:border-[#141414]"
+          onChange={event => setAgent(event.target.value)}
+          aria-label="Filter by AI client"
         >
-          <option value="all">All agents</option>
-          {agents.map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
+          <option value="all">All AI clients</option>
+          {agents.map(name => <option key={name} value={name}>{name}</option>)}
         </select>
       </div>
 
-      <p className="text-xs text-[#9a988f]">
-        {filtered.length} of {rows.length} events
-      </p>
-
-      <div className="activity-list overflow-hidden rounded-xl border border-white/10 bg-[#101012]">
-        {filtered.length === 0 ? (
-          <p className="px-5 py-12 text-center text-sm text-[#6f6e68]">No events match these filters.</p>
-        ) : (
-          <ul className="divide-y divide-[#e7e4dc]">
-            {filtered.map((r, i) => {
-              const isActive = sel === i;
-              return (
-                <li key={`${r.at}-${i}`}>
-                  <button
-                    type="button"
-                    onClick={() => setSel(isActive ? null : i)}
-                    className={`flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors sm:px-5 ${
-                      isActive ? "bg-white/[.07]" : "hover:bg-white/[.035]"
-                    }`}
-                  >
-                    <span className="mt-1.5 flex size-2 shrink-0 rounded-full bg-[#2f6fe0]" />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="text-sm font-medium text-zinc-100">
-                          {human(r.action || "event")}
-                        </span>
-                        <span className="rounded-full bg-white/[.08] px-2 py-0.5 text-[11px] text-zinc-300">
-                          {r.agent || "unknown"}
-                        </span>
-                        {(r.project_name || r.project) && (
-                          <span className="text-[11px] text-zinc-500">
-                            {r.project_name || r.project}
-                          </span>
-                        )}
-                      </span>
-                      {r.text ? (
-                        <span className="mt-1 block truncate text-xs text-zinc-400">{r.text}</span>
-                      ) : null}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1 text-[11px] text-[#9a988f]">
-                      <Clock className="h-3 w-3" />
-                      {ago(r.at)}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+      <div className="activity-results-label">
+        <span>{filtered.length} {filtered.length === 1 ? "event" : "events"}</span>
+        <span>Newest first</span>
       </div>
 
-      {active && (
-        <div className="activity-detail fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-sm" onClick={() => setSel(null)}>
-          <aside
-            className="flex h-full w-full max-w-md flex-col border-l border-white/10 bg-[#101012] text-zinc-100 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-              <h2 className="text-base font-semibold text-zinc-100">
-                {human(active.action || "event")}
-              </h2>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={copyJson}
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/10 hover:text-white"
-                >
-                  <Copy className="h-3 w-3" />
-                  {copied ? "Copied" : "JSON"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSel(null)}
-                  aria-label="Close"
-                  className="rounded-full p-1.5 text-zinc-400 hover:bg-white/10 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+      {filtered.length === 0 ? (
+        <div className="axon-empty-state compact">
+          <Activity size={26} />
+          <h3>No matching activity</h3>
+          <p>Try a different search or clear the AI client filter.</p>
+          {(query || agent !== "all") && (
+            <button type="button" className="axon-action-button" onClick={() => { setQuery(""); setAgent("all"); }}>
+              Clear filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <ol className="activity-event-list">
+          {filtered.map((row, index) => (
+            <li key={`${row.at}-${row.agent}-${index}`}>
+              <button type="button" className="activity-event" onClick={() => { setSelected(row); setCopied(false); }}>
+                <span className="activity-event-marker"><Activity size={14} /></span>
+                <span className="activity-event-content">
+                  <span className="activity-event-heading">
+                    <strong>{human(row.action || "event")}</strong>
+                    <span className="activity-agent-tag">{row.agent || "Unknown client"}</span>
+                  </span>
+                  <span className="activity-event-description">{row.text || "No additional details were recorded."}</span>
+                  <span className="activity-event-project">{row.project_name || row.project || "Default pool"}</span>
+                </span>
+                <time>{ago(row.at)}</time>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {selected && (
+        <div className="activity-detail" role="presentation" onClick={() => setSelected(null)}>
+          <aside role="dialog" aria-modal="true" aria-label="Activity details" onClick={event => event.stopPropagation()}>
+            <header>
+              <div><span className="axon-eyebrow">ACTIVITY DETAILS</span><h2>{human(selected.action || "event")}</h2></div>
+              <div className="activity-detail-actions">
+                <button type="button" className="axon-action-button" onClick={copyEvent}><Copy size={13} />{copied ? "Copied" : "Copy data"}</button>
+                <button type="button" className="activity-close" aria-label="Close details" onClick={() => setSelected(null)}><X size={17} /></button>
               </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="detail-card rounded-xl border border-white/10 bg-[#171719] p-3">
-                  <p className="detail-label text-[10px] uppercase tracking-wider text-zinc-500">Agent</p>
-                  <p className="mt-1 truncate text-sm text-[#141414]">{active.agent || "—"}</p>
-                </div>
-                <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Pool</p>
-                  <p className="mt-1 truncate text-sm text-[#141414]">
-                    {active.project_name || active.project || "default"}
-                  </p>
-                </div>
+            </header>
+            <div className="activity-detail-body">
+              <div className="activity-detail-grid">
+                <div><small>AI client</small><strong>{selected.agent || "Unknown"}</strong></div>
+                <div><small>Project pool</small><strong>{selected.project_name || selected.project || "Default pool"}</strong></div>
               </div>
-              <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
-                <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Recorded</p>
-                <p className="mt-1 font-mono text-xs text-zinc-300">{active.at}</p>
-              </div>
-              <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
-                <p className="text-[10px] uppercase tracking-wider text-[#9a988f]">Details</p>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-100 break-words">
-                  {active.text || "—"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#e7e4dc] bg-white p-3">
-                <p className="mb-2 text-[10px] uppercase tracking-wider text-[#9a988f]">Payload</p>
-                <pre className="max-h-64 overflow-auto rounded-lg bg-[#09090b] p-3 font-mono text-[11px] leading-relaxed text-zinc-200">
-                  {JSON.stringify(active, null, 2)}
-                </pre>
-              </div>
+              <section><small>Recorded</small><strong>{new Date(selected.at).toLocaleString()}</strong></section>
+              <section><small>Details</small><p>{selected.text || "No additional details were recorded."}</p></section>
+              <section><small>Event data</small><pre>{JSON.stringify(selected, null, 2)}</pre></section>
             </div>
           </aside>
         </div>
