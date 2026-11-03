@@ -445,3 +445,6 @@ button:not(:disabled),
 .axon-loading-footnote{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));color:#52525b;font-size:8px;font-weight:700;letter-spacing:.2em}
 .axon-route-content{width:100%;min-width:0;will-change:opacity,transform}
 @media(prefers-reduced-motion:reduce){.axon-loading-screen *,.axon-route-content{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.axon-route-stage{width:100%;min-height:100dvh;min-width:0;transform-origin:50% 20%}
+@media(prefers-reduced-motion:reduce){.axon-route-stage{animation:none!important;transition:none!important}}
