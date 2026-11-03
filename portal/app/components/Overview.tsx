@@ -4,7 +4,7 @@ import { getAiApps, getProjects, getHubOverview } from "../../lib/data";
 import { ago } from "../../lib/format";
 import ActivityLog from "./ActivityLog";
 
-export default async function Overview({ token, connected }: { token: string; connected: number }) {
+export default async function Overview({ token, connected, name }: { token: string; connected: number; name: string }) {
   const [aiData, projectsData, hubData] = await Promise.all([
     getAiApps(token).catch(() => null), getProjects(token).catch(() => null), getHubOverview(token).catch(() => null),
   ]);
@@ -26,7 +26,7 @@ export default async function Overview({ token, connected }: { token: string; co
       <div className="pt-2">
         <div className="mb-4 h-[2px] w-9 bg-[#9ca3af]" />
         <p className="text-[13px] text-zinc-400">Welcome back,</p>
-        <h1 className="text-[32px] font-semibold leading-[1.08] tracking-[-.045em] text-white md:text-[38px]">Your Axon workspace</h1>
+        <h1 className="text-[32px] font-semibold leading-[1.08] tracking-[-.045em] text-white md:text-[38px]">{name}</h1>
         <p className="mt-2 max-w-[470px] text-[13px] leading-5 text-zinc-400">Your AI workspace is ready. Build, automate and collaborate with the power of Axon.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link href="/projects" className="inline-flex h-9 items-center gap-2 rounded-full bg-white px-4 text-[11px] font-semibold text-black hover:bg-zinc-200">New Project <ArrowRight size={14}/></Link>
