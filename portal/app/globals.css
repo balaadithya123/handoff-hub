@@ -448,3 +448,63 @@ button:not(:disabled),
 
 .axon-route-stage{width:100%;min-height:100dvh;min-width:0;transform-origin:50% 20%}
 @media(prefers-reduced-motion:reduce){.axon-route-stage{animation:none!important;transition:none!important}}
+
+
+/* Refined workspace sidebar */
+.axon-dashboard .axon-sidebar{width:220px;background:#0b0b0e;border-right:1px solid #25252b;box-shadow:12px 0 36px rgba(0,0,0,.12);transition:width .22s cubic-bezier(.22,1,.36,1)}
+.axon-dashboard .axon-sidebar-brand{height:76px;display:flex;align-items:center;gap:10px;padding:0 17px;border-bottom:1px solid #222228}
+.axon-dashboard .axon-brand-link{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none}
+.axon-dashboard .axon-brand-symbol{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid #303038;border-radius:12px;background:linear-gradient(145deg,#202027,#111114)}
+.axon-dashboard .axon-brand-copy{display:flex;flex-direction:column;line-height:1}
+.axon-dashboard .axon-brand-copy strong{font-size:18px;font-weight:750;letter-spacing:-.06em;color:#f4f4f5}
+.axon-dashboard .axon-brand-copy small{margin-top:6px;font-size:8px;font-weight:700;letter-spacing:.15em;color:#777782}
+.axon-dashboard .axon-brand-beta{margin-left:auto;padding:3px 6px;border:1px solid #303038;border-radius:5px;color:#85858f;font-size:8px;font-weight:700;letter-spacing:.1em}
+.axon-dashboard .axon-sidebar-scroll{flex:1;overflow-y:auto;padding:25px 12px}
+.axon-dashboard .axon-nav-group+.axon-nav-group{margin-top:28px}
+.axon-dashboard .axon-nav-caption{padding:0 11px;margin:0 0 9px;color:#666671;font-size:9px;font-weight:800;letter-spacing:.15em}
+.axon-dashboard .axon-nav-list{display:flex;flex-direction:column;gap:4px}
+.axon-dashboard .axon-nav-item{position:relative;display:flex;align-items:center;gap:12px;min-height:43px;padding:0 11px;border:1px solid transparent;border-radius:10px;color:#92929c;font-size:12px;font-weight:600;text-decoration:none;transition:all .16s ease}
+.axon-dashboard .axon-nav-item:hover{color:#eeeef0;background:#151519;border-color:#24242b}
+.axon-dashboard .axon-nav-item.is-active{color:#f8f8fa;background:linear-gradient(100deg,#202027,#17171c);border-color:#34343d;box-shadow:inset 2px 0 #d4d4d8}
+.axon-dashboard .axon-nav-icon{display:grid;place-items:center;width:22px;flex:none;color:#777782}
+.axon-dashboard .axon-nav-item.is-active .axon-nav-icon{color:#ededf0}
+.axon-dashboard .axon-nav-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axon-dashboard .axon-nav-active-dot{width:5px;height:5px;margin-left:auto;flex:none;border-radius:50%;background:#e4e4e7;box-shadow:0 0 9px #a1a1aa}
+.axon-dashboard .axon-nav-item.is-collapsed{justify-content:center;padding:0}
+.axon-dashboard .axon-sidebar-bottom{padding:12px;border-top:1px solid #24242a}
+.axon-dashboard .axon-support-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin-bottom:8px;border-radius:9px;color:#9999a2;font-size:11px;text-decoration:none}
+.axon-dashboard .axon-support-link:hover{background:#17171b;color:#f4f4f5}
+.axon-dashboard .axon-support-link span{margin-left:auto;color:#666671}
+.axon-dashboard .axon-collapse-button{display:flex;align-items:center;gap:10px;width:100%;height:38px;padding:0 11px;border:1px solid #28282f;border-radius:9px;background:#121216;color:#92929c;font-size:11px}
+.axon-dashboard .axon-collapse-button:hover{border-color:#44444d;color:#f4f4f5}
+.axon-dashboard .axon-collapse-button.is-collapsed{justify-content:center;padding:0}
+.axon-dashboard .axon-sidebar-profile{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 3px 2px;border-top:1px solid #24242a}
+.axon-dashboard .axon-profile-avatar{display:grid;place-items:center;width:32px;height:32px;flex:none;border:1px solid #393941;border-radius:10px;background:#202027;color:#f4f4f5;font-size:10px;font-weight:700}
+.axon-dashboard .axon-profile-copy{display:flex;flex-direction:column;min-width:0}
+.axon-dashboard .axon-profile-copy strong{overflow:hidden;color:#e4e4e7;font-size:10px;font-weight:650;text-overflow:ellipsis;white-space:nowrap}
+.axon-dashboard .axon-profile-copy small{overflow:hidden;margin-top:3px;color:#777782;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.axon-dashboard .axon-sidebar-profile.is-collapsed{justify-content:center}
+.axon-dashboard .axon-loading-caption,.axon-dashboard .axon-loading-track,.axon-dashboard .axon-loading-footnote{display:none!important}
+.axon-loading-screen .axon-loading-center{gap:0}
+.axon-loading-screen .axon-loading-brand{margin:0;color:#f4f4f5;font-size:13px;font-weight:800;letter-spacing:.32em;text-indent:.32em}
+.axon-loading-screen .axon-loading-dots{display:flex;align-items:center;gap:7px;margin-top:17px}
+.axon-loading-screen .axon-loading-dots span{width:5px;height:5px;border-radius:50%;background:#c4c4cc;box-shadow:0 0 12px rgba(220,220,230,.24)}
+.axon-loading-screen .axon-loading-mark{margin-bottom:12px}
+.axon-loading-screen .axon-loading-mark:after{content:"";position:absolute;inset:-7px;border:1px solid rgba(212,212,216,.09);border-radius:50%}
+.axon-dashboard .axon-hub-tools{display:flex;flex-direction:column;gap:20px;color:#f4f4f5}
+.axon-dashboard .axon-hub-tools .hub-tools-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:18px;border-bottom:1px solid #29292f}
+.axon-dashboard .axon-hub-tools .hub-tools-heading h1{margin:6px 0;color:#f4f4f5;font-size:clamp(25px,3vw,34px);font-weight:750;letter-spacing:-.05em}
+.axon-dashboard .axon-hub-tools .hub-tools-heading p{color:#9696a0;font-size:12px;line-height:1.6}
+.axon-dashboard .axon-hub-tools .hub-tools-eyebrow{color:#85858f;font-size:9px;font-weight:800;letter-spacing:.16em}
+.axon-dashboard .axon-hub-tools .hub-tools-card{min-width:0;padding:19px;border:1px solid #2a2a31;border-radius:15px;background:linear-gradient(145deg,#151519,#101013)}
+.axon-dashboard .axon-hub-tools .hub-tools-card h3{color:#f4f4f5;font-size:14px;font-weight:700}
+.axon-dashboard .axon-hub-tools .hub-tools-card p{color:#9999a3}
+.axon-dashboard .axon-hub-tools .hub-tools-kpi{padding:16px;border:1px solid #2a2a31;border-radius:13px;background:#131317}
+.axon-dashboard .axon-hub-tools .hub-tools-kpi strong{display:block;color:#f4f4f5;font-size:25px;font-weight:750;letter-spacing:-.04em}
+.axon-dashboard .axon-hub-tools .hub-tools-kpi span{display:block;color:#85858f;font-size:10px}
+.axon-dashboard .axon-hub-tools table{color:#d4d4d8}
+.axon-dashboard .axon-hub-tools th{color:#85858f}
+.axon-dashboard .axon-hub-tools td{color:#d4d4d8}
+.axon-dashboard .axon-hub-tools tr{border-color:#29292f}
+.axon-dashboard .axon-hub-tools .hub-tools-muted{color:#85858f}
+@media(max-width:767px){.axon-dashboard .axon-sidebar{display:none}.axon-dashboard main{padding-inline:16px}.axon-loading-screen .axon-loading-mark{width:78px;height:78px}}
