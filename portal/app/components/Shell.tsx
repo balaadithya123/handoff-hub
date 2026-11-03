@@ -14,23 +14,13 @@ import SignOutButton from "./SignOutButton";
 export type Tab = "overview" | "integrations" | "projects" | "ai" | "tools" | "activity";
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
-  overview: LayoutDashboard,
-  integrations: Plug,
-  projects: FolderKanban,
-  ai: Bot,
-  tools: Wrench,
-  activity: Activity,
+  overview: LayoutDashboard, integrations: Plug, projects: FolderKanban,
+  ai: Bot, tools: Wrench, activity: Activity,
 };
 
-export default function Shell({
-  email, tab, title, sub, notice, children,
-}: {
-  email: string;
-  tab: Tab;
-  title: string;
-  sub: string;
-  notice: { kind: "error" | "ok"; text: string } | null;
-  children: ReactNode;
+export default function Shell({ email, tab, title, sub, notice, children }: {
+  email: string; tab: Tab; title: string; sub: string;
+  notice: { kind: "error" | "ok"; text: string } | null; children: ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -40,8 +30,7 @@ export default function Shell({
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
     const apply = () => setCollapsed(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
+    apply(); mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
 
@@ -53,162 +42,96 @@ export default function Shell({
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setUserMenuOpen(false); };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [userMenuOpen]);
 
   const initial = (email || "?").charAt(0).toUpperCase();
-  const railW = collapsed ? "md:w-14" : "md:w-64";
-  const padL = collapsed ? "md:pl-14" : "md:pl-64";
+  const rail = collapsed ? "md:w-[72px]" : "md:w-[248px]";
+  const offset = collapsed ? "md:pl-[72px]" : "md:pl-[248px]";
 
   return (
-    <div className="axon-dashboard min-h-screen bg-[#f6f5f2] text-[#141414] font-sans antialiased flex flex-col">
-      <aside className={`fixed left-0 top-0 h-full bg-[#f6f5f2] border-r border-[#e7e4dc] z-50 hidden md:flex flex-col justify-between select-none transition-[width] duration-200 ${railW}`}>
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="h-16 px-3 flex items-center border-b border-[#e7e4dc]">
-            <Link href="/overview" title="Axon" className="flex items-center gap-2.5 w-full p-2 rounded-lg bg-white/80 hover:bg-white border border-[#e7e4dc] hover:border-[#d9d5cb] transition-all group text-left">
-              <Logo size={30} className="shrink-0" />
-              {!collapsed && (
-                <>
-                  <div className="flex-1 min-w-0 leading-tight">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-medium text-[#141414] truncate">Axon</span>
-                      <span className="px-1.5 rounded font-mono text-[10px] bg-[#efeee9] text-[#6f6e68] border border-[#e7e4dc] leading-4">PORTAL</span>
-                    </div>
-                    <span className="block font-mono text-[11px] text-[#9a988f] truncate">{email}</span>
-                  </div>
-                  <ChevronsUpDown className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
-                </>
-              )}
-            </Link>
-          </div>
-
-          <div className="flex-1 overflow-y-auto py-2 px-1">
-            {NAV_GROUPS.map((group, gi) => {
-              const items = NAV.filter((n) => n.group === group);
-              return (
-                <div key={group} className={gi === 0 ? "" : "pt-4"}>
-                  {!collapsed && (
-                    <div className="px-3 pt-2 pb-1.5 font-mono text-[10px] text-[#9a988f] uppercase tracking-wider font-semibold">
-                      {group === "AI" ? "AI Engine" : group}
-                    </div>
-                  )}
-                  <nav className="flex flex-col gap-0.5">
-                    {items.map((item) => {
-                      const Icon = ICONS[item.id] || LayoutDashboard;
-                      const isActive = tab === item.id;
-                      return (
-                        <Link
-                          key={item.id}
-                          href={item.href}
-                          title={collapsed ? item.label : undefined}
-                          className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors ${
-                            collapsed ? "justify-center" : ""
-                          } ${
-                            isActive
-                              ? "bg-[#141414] text-[#f6f5f2]"
-                              : "text-[#6f6e68] hover:bg-[#efeee9] hover:text-[#141414]"
-                          }`}
-                        >
-                          <Icon className="w-4 h-4 shrink-0" />
-                          {!collapsed && <span className="truncate">{item.label}</span>}
-                        </Link>
-                      );
-                    })}
-                  </nav>
-                </div>
-              );
-            })}
-          </div>
+    <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
+      <aside className={`axon-sidebar fixed inset-y-0 left-0 z-50 hidden md:flex flex-col border-r border-white/10 bg-[#09090b] ${rail}`}>
+        <div className="flex h-[68px] items-center border-b border-white/10 px-4">
+          <Link href="/overview" title="Axon workspace" className="flex min-w-0 items-center gap-3">
+            <Logo size={34} className="shrink-0" />
+            {!collapsed && <span className="min-w-0"><span className="block text-[15px] font-semibold tracking-tight text-white">Axon</span><span className="block truncate text-[11px] text-zinc-500">Workspace</span></span>}
+          </Link>
+          {!collapsed && <span className="ml-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-zinc-500">BETA</span>}
         </div>
 
-        <div className="p-2 border-t border-[#e7e4dc] space-y-1">
-          <button
-            type="button"
-            title={collapsed ? "Expand" : "Collapse"}
-            onClick={() => setCollapsed((c) => !c)}
-            className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-[#6f6e68] hover:bg-[#efeee9] hover:text-[#141414]"
-          >
-            {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-            {!collapsed && <span>Collapse</span>}
+        <div className="flex-1 overflow-y-auto px-3 py-5">
+          {NAV_GROUPS.map((group, gi) => {
+            const items = NAV.filter((n) => n.group === group);
+            return <section key={group} className={gi ? "mt-7" : ""}>
+              {!collapsed && <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-600">{group === "AI" ? "AI engine" : group}</p>}
+              <nav className="space-y-1">
+                {items.map((item) => {
+                  const Icon = ICONS[item.id] || LayoutDashboard;
+                  const active = tab === item.id;
+                  return <Link key={item.id} href={item.href} title={collapsed ? item.label : undefined}
+                    aria-current={active ? "page" : undefined}
+                    className={`group flex h-10 items-center gap-3 rounded-md px-3 text-[13px] transition-colors ${collapsed ? "justify-center px-0" : ""} ${active ? "bg-white/[.10] text-white ring-1 ring-inset ring-white/[.08]" : "text-zinc-400 hover:bg-white/[.05] hover:text-zinc-100"}`}>
+                    <Icon className={`h-[17px] w-[17px] shrink-0 ${active ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {!collapsed && active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-400" />}
+                  </Link>;
+                })}
+              </nav>
+            </section>;
+          })}
+        </div>
+
+        <div className="border-t border-white/10 p-3">
+          <button type="button" onClick={() => setCollapsed(v => !v)} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`flex h-9 w-full items-center gap-3 rounded-md px-3 text-xs text-zinc-500 hover:bg-white/[.05] hover:text-zinc-200 ${collapsed ? "justify-center px-0" : ""}`}>
+            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            {!collapsed && "Collapse sidebar"}
           </button>
+          {!collapsed && <div className="mt-3 flex items-center gap-2 border-t border-white/[.07] px-2 pt-3">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-semibold text-zinc-200">{initial}</span>
+            <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-400">{email}</span>
+          </div>}
         </div>
       </aside>
 
-      <div className={`flex-1 flex flex-col min-w-0 ${padL}`}>
-        <header className="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 md:px-6 border-b border-[#e7e4dc] bg-[#f6f5f2]/90 backdrop-blur">
-          <div className="flex items-center gap-2 md:hidden">
-            <Logo size={28} />
-            <span className="text-sm font-medium">Axon</span>
-          </div>
-          <div className="hidden md:flex items-center gap-2 min-w-0">
-            <span className="text-[#141414] font-medium truncate">{title}</span>
-            {sub ? <span className="text-[#9a988f] text-sm truncate hidden lg:inline">{sub}</span> : null}
+      <div className={`min-h-screen min-w-0 ${offset}`}>
+        <header className="axon-topbar sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-white/10 bg-[#09090b]/95 px-4 backdrop-blur-xl md:px-8">
+          <div className="flex items-center gap-2 md:hidden"><Logo size={29}/><span className="text-sm font-semibold">Axon</span></div>
+          <div className="hidden min-w-0 md:block">
+            <p className="truncate text-[13px] font-medium text-zinc-100">{title}</p>
+            <p className="mt-0.5 truncate text-[11px] text-zinc-500">{sub}</p>
           </div>
           <div className="flex-1" />
-          <button
-            type="button"
-            onClick={() => setCmdOpen(true)}
-            className="hidden sm:flex items-center gap-2 rounded-full border border-[#e7e4dc] bg-white px-3 py-1.5 text-xs text-[#6f6e68] hover:border-[#d9d5cb]"
-          >
-            <Search className="w-3.5 h-3.5" />
-            Search
+          <button type="button" onClick={() => setCmdOpen(true)} className="hidden h-9 items-center gap-2 rounded-md border border-white/10 bg-white/[.03] px-3 text-xs text-zinc-500 hover:border-white/20 hover:text-zinc-200 sm:flex">
+            <Search className="h-3.5 w-3.5"/> Search workspace <kbd className="ml-5 rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600">⌘ K</kbd>
           </button>
           <div className="relative" ref={menuRef}>
-            <button
-              type="button"
-              onClick={() => setUserMenuOpen((o) => !o)}
-              className="flex size-9 items-center justify-center rounded-full bg-[#141414] text-sm font-medium text-[#f6f5f2]"
-            >
-              {initial}
-            </button>
-            {userMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[#e7e4dc] bg-white p-2 shadow-lg z-50">
-                <p className="px-2 py-1.5 text-xs text-[#9a988f] truncate">{email}</p>
-                <SignOutButton />
-              </div>
-            )}
+            <button type="button" onClick={() => setUserMenuOpen(v => !v)} aria-expanded={userMenuOpen}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-xs font-semibold text-white hover:bg-zinc-700">{initial}</button>
+            {userMenuOpen && <div className="absolute right-0 mt-2 w-60 rounded-lg border border-white/10 bg-[#151518] p-2 shadow-2xl">
+              <p className="truncate px-2 py-2 text-xs text-zinc-400">{email}</p><div className="my-1 border-t border-white/10"/><SignOutButton />
+            </div>}
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 md:px-6 py-6 md:py-8">
-          {notice && (
-            <div
-              className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
-                notice.kind === "ok"
-                  ? "border-[rgba(47,111,224,0.28)] bg-[#e8f0fc] text-[#2f6fe0]"
-                  : "border-[rgba(204,68,68,0.28)] bg-[rgba(204,68,68,0.08)] text-[#c44]"
-              }`}
-            >
-              {notice.text}
-            </div>
-          )}
+        <main className="mx-auto w-full max-w-[1480px] px-4 pb-24 pt-7 md:px-8 md:pb-12 md:pt-9">
+          {notice && <div role="status" className={`mb-6 rounded-md border px-4 py-3 text-sm ${notice.kind === "ok" ? "border-blue-400/20 bg-blue-400/[.07] text-blue-200" : "border-red-400/20 bg-red-400/[.07] text-red-200"}`}>{notice.text}</div>}
           {children}
         </main>
       </div>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 flex border-t border-[#e7e4dc] bg-[#f6f5f2]/95 backdrop-blur px-1 py-1">
-        {NAV.map((item) => {
+      <nav className="axon-mobile-nav fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 border-t border-white/10 bg-[#09090b]/95 px-1 pb-[max(env(safe-area-inset-bottom),4px)] pt-1 backdrop-blur-xl md:hidden">
+        {NAV.map(item => {
           const Icon = ICONS[item.id] || LayoutDashboard;
-          const isActive = tab === item.id;
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg text-[10px] ${
-                isActive ? "text-[#141414] font-medium" : "text-[#9a988f]"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {item.label.split(" ")[0]}
-            </Link>
-          );
+          const active = tab === item.id;
+          return <Link key={item.id} href={item.href} aria-current={active ? "page" : undefined}
+            className={`flex min-w-0 flex-col items-center gap-1 rounded-md py-2 text-[9px] ${active ? "text-white" : "text-zinc-500"}`}>
+            <Icon className="h-[17px] w-[17px]"/><span className="max-w-full truncate">{item.label.split(" ")[0]}</span>
+          </Link>;
         })}
       </nav>
-
-      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen}/>
     </div>
   );
 }
