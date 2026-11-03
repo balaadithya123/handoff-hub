@@ -1,255 +1,89 @@
 import Link from "next/link";
-import {
-  Plug,
-  Bot,
-  FolderKanban,
-  Activity,
-  ArrowRight,
-  CheckCircle2,
-  ChevronRight,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
-import { getAiApps, getProjects, getConnections, getHubOverview } from "../../lib/data";
+import { Plug, Bot, FolderKanban, Activity, ArrowUpRight, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
+import { getAiApps, getProjects, getHubOverview } from "../../lib/data";
 import { ago } from "../../lib/format";
 import ActivityLog from "./ActivityLog";
-import { Badge } from "./ui/Badge";
-import { Button } from "./ui/Button";
-import Logo from "./Logo";
 
 export default async function Overview({ token, connected }: { token: string; connected: number }) {
-  const [aiData, projectsData, , hubData] = await Promise.all([
+  const [aiData, projectsData, hubData] = await Promise.all([
     getAiApps(token).catch(() => null),
     getProjects(token).catch(() => null),
-    getConnections(token).catch(() => []),
     getHubOverview(token).catch(() => null),
   ]);
-
-  const checks = (hubData?.hubs ?? []).flatMap((h) => h.health ?? []).filter((c) => c.at);
-  checks.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const checks = (hubData?.hubs ?? []).flatMap(h => h.health ?? []).filter(c => c.at);
+  checks.sort((a,b) => String(b.at).localeCompare(String(a.at)));
   const lastCheck = checks[0];
   const issues = lastCheck?.anomalies?.length ?? 0;
-
-  const accts = aiData?.accounts ?? [];
-  const clientCount = accts.reduce((n, a) => n + (a.clients?.length ?? 0), 0);
-  const totalProjects = (projectsData?.accounts ?? []).reduce((n, a) => n + (a.projects?.length ?? 0), 0);
-
-  const steps = [
-    { label: "Connect an integration", done: connected > 0, href: "/integrations", cta: "Manage integrations" },
-    { label: "Link an AI account (Claude / ChatGPT)", done: accts.length > 0, href: "/ai", cta: "Link account" },
-    { label: "Create a memory pool project", done: totalProjects > 0, href: "/projects", cta: "View projects" },
+  const accounts = aiData?.accounts ?? [];
+  const clients = accounts.reduce((n,a) => n + (a.clients?.length ?? 0), 0);
+  const projects = (projectsData?.accounts ?? []).reduce((n,a) => n + (a.projects?.length ?? 0), 0);
+  const setup = [
+    { label: "Connect an integration", href: "/integrations", done: connected > 0, action: "Browse integrations" },
+    { label: "Link an AI account", href: "/ai", done: accounts.length > 0, action: "Connect AI account" },
+    { label: "Create a memory pool", href: "/projects", done: projects > 0, action: "Open projects" },
   ];
-  const setupDone = steps.every((s) => s.done);
+  const complete = setup.every(s => s.done);
+  const metrics = [
+    { label: "Connected apps", value: String(connected), note: "OAuth connections", href: "/integrations", Icon: Plug },
+    { label: "AI accounts", value: String(accounts.length), note: `${clients} linked clients`, href: "/ai", Icon: Bot },
+    { label: "Projects", value: String(projects), note: "Memory pools", href: "/projects", Icon: FolderKanban },
+    { label: "Hub health", value: !lastCheck ? "—" : issues ? String(issues) : "OK", note: lastCheck?.at ? ago(lastCheck.at) : "No checks recorded", href: "/tools", Icon: ShieldCheck },
+  ];
 
-  return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-2xl border border-[#e7e4dc] bg-white p-6 md:p-8 shadow-[0_1px_0_rgba(20,20,20,0.04)]">
-        <div className="absolute -right-6 -top-6 opacity-[0.06] pointer-events-none" aria-hidden>
-          <Logo size={148} />
+  return <div className="axon-overview space-y-8">
+    <section className="flex flex-col justify-between gap-5 border-b border-white/10 pb-7 lg:flex-row lg:items-end">
+      <div>
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-500">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/>
+          Workspace
+          {lastCheck?.version && <span className="font-mono normal-case tracking-normal text-zinc-600">· Hub v{lastCheck.version}</span>}
         </div>
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="shrink-0 mt-0.5">
-              <Logo size={44} />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2f6fe0] opacity-60" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#2f6fe0]" />
-                  </span>
-                  WORKSPACE READY
-                </span>
-                {lastCheck?.version ? (
-                  <span className="font-mono text-[11px] text-[#9a988f]">Hub v{lastCheck.version}</span>
-                ) : null}
-              </div>
-              <h1 className="text-2xl md:text-[28px] font-semibold tracking-tight text-[#141414]">Overview</h1>
-              <p className="text-sm text-[#6f6e68] mt-1 max-w-xl leading-relaxed">
-                Live status of integrations, AI runtimes, memory pools, and handoff activity.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/integrations">
-              <Button variant="primary" size="sm" icon={<Plug className="w-3.5 h-3.5" />}>
-                Add Integration
-              </Button>
-            </Link>
-            <Link href="/ai">
-              <Button variant="secondary" size="sm" icon={<Bot className="w-3.5 h-3.5" />}>
-                Link AI Account
-              </Button>
-            </Link>
-          </div>
+        <h1 className="text-3xl font-semibold tracking-tight text-white md:text-[38px]">Overview</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">Your connected tools, AI runtimes and shared context in one place.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Link href="/integrations" className="inline-flex h-10 items-center gap-2 rounded-md bg-white px-4 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200"><Plug className="h-3.5 w-3.5"/> Add integration <ArrowUpRight className="h-3.5 w-3.5"/></Link>
+        <Link href="/ai" className="inline-flex h-10 items-center gap-2 rounded-md border border-white/15 bg-white/[.03] px-4 text-xs font-medium text-zinc-200 hover:bg-white/[.07]"><Bot className="h-3.5 w-3.5"/> Link AI account</Link>
+      </div>
+    </section>
+
+    <section className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10 sm:grid-cols-2 xl:grid-cols-4">
+      {metrics.map(({label,value,note,href,Icon}) => <Link key={label} href={href} className="group min-h-[142px] bg-[#101012] p-5 transition hover:bg-[#151518]">
+        <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">{label}</span><Icon className="h-4 w-4 text-zinc-600 transition group-hover:text-zinc-300"/></div>
+        <div className="mt-5 flex items-end justify-between"><span className="font-mono text-[32px] font-medium tracking-tight text-zinc-100">{value}</span><ArrowUpRight className="mb-1 h-4 w-4 text-zinc-700 group-hover:text-zinc-300"/></div>
+        <p className="mt-1 text-[11px] text-zinc-500">{note}</p>
+      </Link>)}
+    </section>
+
+    {!complete && <section className="overflow-hidden rounded-lg border border-white/10 bg-[#101012]">
+      <div className="flex flex-col gap-2 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div><h2 className="text-sm font-semibold text-zinc-100">Set up your workspace</h2><p className="mt-1 text-xs text-zinc-500">A few steps to get your Axon workspace ready.</p></div>
+        <span className="font-mono text-[11px] text-zinc-500">{setup.filter(s=>s.done).length} / 3 complete</span>
+      </div>
+      <div className="divide-y divide-white/[.07]">
+        {setup.map((s,i)=><div key={s.label} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
+          <span className="w-7 font-mono text-[11px] text-zinc-600">0{i+1}</span>
+          {s.done ? <CheckCircle2 className="h-4 w-4 text-emerald-400"/> : <span className="h-4 w-4 rounded-full border border-zinc-600"/>}
+          <span className={`flex-1 text-sm ${s.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{s.label}</span>
+          <Link href={s.href} className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-white">{s.done ? "Review" : s.action}<ArrowRight className="h-3 w-3"/></Link>
+        </div>)}
+      </div>
+    </section>}
+
+    <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
+      <div className="min-w-0 rounded-lg border border-white/10 bg-[#101012]">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4"><div className="flex items-center gap-2"><Activity className="h-4 w-4 text-zinc-500"/><h2 className="text-sm font-semibold text-zinc-100">Recent activity</h2></div><Link href="/activity" className="text-xs text-zinc-500 hover:text-white">View all <ArrowUpRight className="ml-1 inline h-3 w-3"/></Link></div>
+        <div className="p-5"><ActivityLog token={token} limit={8}/></div>
+      </div>
+      <div className="rounded-lg border border-white/10 bg-[#101012]">
+        <div className="border-b border-white/10 px-5 py-4"><h2 className="text-sm font-semibold text-zinc-100">System status</h2><p className="mt-1 text-xs text-zinc-500">Latest recorded Hub health check</p></div>
+        <div className="space-y-4 p-5">
+          <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Health</span><span className={`inline-flex items-center gap-2 text-xs ${!lastCheck ? "text-zinc-500" : issues ? "text-amber-300" : "text-emerald-300"}`}><span className={`h-1.5 w-1.5 rounded-full ${!lastCheck ? "bg-zinc-600" : issues ? "bg-amber-300" : "bg-emerald-400"}`}/>{!lastCheck ? "Not checked" : issues ? `${issues} issue(s)` : "Operational"}</span></div>
+          <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Last check</span><span className="text-xs text-zinc-300">{lastCheck?.at ? ago(lastCheck.at) : "—"}</span></div>
+          <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Hub version</span><span className="font-mono text-xs text-zinc-300">{lastCheck?.version || "—"}</span></div>
+          <div className="border-t border-white/10 pt-4"><Link href="/tools" className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-white">Open Hub tools <ArrowRight className="h-3 w-3"/></Link></div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Link href="/integrations" className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Integrations</span>
-            <Plug className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold font-mono text-[#141414]">{connected}</span>
-            <span className="text-xs text-[#2f6fe0] font-medium">Live</span>
-          </div>
-          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">OAuth directory <ChevronRight className="w-3 h-3" /></p>
-        </Link>
-
-        <Link href="/ai" className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">AI Accounts</span>
-            <Bot className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold font-mono text-[#141414]">{accts.length}</span>
-            <span className="text-xs text-[#6f6e68] font-mono">{clientCount} clients</span>
-          </div>
-          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">Claude / ChatGPT <ChevronRight className="w-3 h-3" /></p>
-        </Link>
-
-        <Link href="/projects" className="group rounded-xl border border-[#e7e4dc] bg-white p-4 hover:border-[#d9d5cb] hover:shadow-sm transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Projects & Pools</span>
-            <FolderKanban className="w-3.5 h-3.5 text-[#9a988f] group-hover:text-[#141414] transition-colors" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold font-mono text-[#141414]">{totalProjects}</span>
-            <span className="text-xs text-[#6f6e68]">Isolated</span>
-          </div>
-          <p className="text-[11px] text-[#9a988f] mt-2 flex items-center gap-1">Memory pools <ChevronRight className="w-3 h-3" /></p>
-        </Link>
-
-        <div className="rounded-xl border border-[#e7e4dc] bg-white p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Hub Health</span>
-            <ShieldCheck className="w-3.5 h-3.5 text-[#9a988f]" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold font-mono text-[#141414]">
-              {!lastCheck ? "—" : issues === 0 ? "OK" : `${issues}`}
-            </span>
-            {lastCheck && (
-              <span className={`text-xs font-medium ${issues === 0 ? "text-[#2f6fe0]" : "text-[#b07a3a]"}`}>
-                {issues === 0 ? "Healthy" : "issue" + (issues === 1 ? "" : "s")}
-              </span>
-            )}
-          </div>
-          <p className="text-[11px] text-[#9a988f] mt-2">
-            {lastCheck?.at ? ago(lastCheck.at) : "Run a check from Hub tools"}
-          </p>
-        </div>
-      </div>
-
-      {!setupDone && (
-        <div className="rounded-2xl border border-[#e7e4dc] bg-white p-5 md:p-6">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-[#2f6fe0]" />
-            <h2 className="text-sm font-semibold text-[#141414]">Get started with Axon</h2>
-          </div>
-          <p className="text-xs text-[#6f6e68] mb-4">Complete these steps to unlock multi-model handoffs.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {steps.map((step, idx) => (
-              <div
-                key={step.label}
-                className={`rounded-xl border p-4 flex flex-col justify-between gap-3 transition-colors ${
-                  step.done
-                    ? "bg-[#f6f5f2] border-[#e7e4dc] text-[#6f6e68]"
-                    : "bg-white border-[#2f6fe0]/35 text-[#141414] shadow-sm"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs font-semibold leading-snug">
-                    <span className="font-mono text-[#9a988f] mr-1">0{idx + 1}.</span>
-                    {step.label}
-                  </span>
-                  {step.done ? (
-                    <CheckCircle2 className="w-4 h-4 text-[#2f6fe0] shrink-0" />
-                  ) : (
-                    <span className="w-2 h-2 rounded-full bg-[#b07a3a] animate-pulse shrink-0 mt-1" />
-                  )}
-                </div>
-                <Link href={step.href}>
-                  <Button variant={step.done ? "ghost" : "primary"} size="sm" className="w-full text-xs">
-                    {step.cta}
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#2f6fe0]" />
-              <h2 className="text-sm font-semibold text-[#141414]">Recent activity</h2>
-            </div>
-            <Link href="/activity" className="text-xs text-[#2f6fe0] hover:underline flex items-center gap-1">
-              Full audit log
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="rounded-2xl border border-[#e7e4dc] bg-white overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#e7e4dc] bg-[#f6f5f2]/60 flex items-center justify-between text-xs">
-              <span className="font-mono text-[#9a988f]">EVENT STREAM</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
-                LIVE
-              </span>
-            </div>
-            <div className="p-4">
-              <ActivityLog token={token} limit={6} />
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4 text-[#2f6fe0]" />
-            <h2 className="text-sm font-semibold text-[#141414]">AI runtimes</h2>
-          </div>
-          <div className="rounded-2xl border border-[#e7e4dc] bg-white p-4 space-y-3">
-            {accts.length === 0 ? (
-              <div className="text-xs text-[#6f6e68] py-6 text-center">
-                No AI accounts linked yet.
-                <div className="mt-3">
-                  <Link href="/ai">
-                    <Button variant="secondary" size="sm">Link Claude or ChatGPT</Button>
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              accts.map((acct) => (
-                <div key={acct.id} className="rounded-xl border border-[#e7e4dc] bg-[#f6f5f2]/50 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-[#141414]">{acct.label}</span>
-                    <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">Linked</span>
-                  </div>
-                  <div className="text-[11px] font-mono text-[#9a988f]">
-                    {acct.clients?.length ?? 0} active client{(acct.clients?.length ?? 0) === 1 ? "" : "s"}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="rounded-2xl border border-[#e7e4dc] bg-white p-4">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f] mb-1">Security</p>
-            <h3 className="text-sm font-semibold text-[#141414] mb-2">OAuth isolation</h3>
-            <p className="text-xs text-[#6f6e68] leading-relaxed mb-3">
-              Integration credentials and tokens are encrypted and scoped to your account only.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-[#2f6fe0]">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span>No plain-text password storage</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    </section>
+  </div>;
 }
