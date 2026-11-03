@@ -58,8 +58,8 @@ export default async function ActivityLog({
     <div className="space-y-8">
       {filters && (
         <div className="space-y-1">
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[#141414]">Activity</h1>
-          <p className="text-sm text-[#6f6e68] max-w-xl">
+          <h1 className="text-[30px] md:text-[34px] font-semibold tracking-tight text-white">Activity</h1>
+          <p className="text-sm text-zinc-400 max-w-xl">
             What your AI accounts did through Axon. Newest first.
           </p>
         </div>
@@ -75,10 +75,10 @@ export default async function ActivityLog({
           ].map((k) => (
             <div
               key={k.label}
-              className="rounded-2xl border border-[#e7e4dc] bg-white px-4 py-4"
+              className="rounded-xl border border-white/[.08] bg-[#101012] px-4 py-4"
             >
-              <p className="text-xs text-[#9a988f]">{k.label}</p>
-              <p className="mt-1.5 text-xl font-semibold tracking-tight text-[#141414] tabular-nums">
+              <p className="text-xs text-zinc-500">{k.label}</p>
+              <p className="mt-1.5 text-xl font-semibold tracking-tight text-zinc-100 tabular-nums">
                 {k.value}
               </p>
             </div>
@@ -96,8 +96,8 @@ export default async function ActivityLog({
             href="/activity"
             className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
               project === ""
-                ? "bg-[#141414] text-[#f6f5f2]"
-                : "bg-white text-[#6f6e68] border border-[#e7e4dc] hover:text-[#141414]"
+                ? "bg-white text-black"
+                : "bg-[#101012] text-zinc-400 border border-white/10 hover:text-white"
             }`}
           >
             All
@@ -119,10 +119,10 @@ export default async function ActivityLog({
       )}
 
       {failed ? (
-        <div className="rounded-2xl border border-[#e7e4dc] bg-white px-6 py-16 text-center">
+        <div className="rounded-xl border border-white/[.08] bg-[#101012] px-6 py-16 text-center">
           <Activity className="mx-auto mb-3 h-8 w-8 text-[#9a988f]" />
-          <p className="text-sm font-medium text-[#141414]">Couldn’t load activity</p>
-          <p className="mt-1 text-xs text-[#6f6e68]">Try again in a moment.</p>
+          <p className="text-sm font-medium text-zinc-100">Couldn’t load activity</p>
+          <p className="mt-1 text-xs text-zinc-500">Try again in a moment.</p>
         </div>
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-[#e7e4dc] bg-white px-6 py-16 text-center">
