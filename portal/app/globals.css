@@ -451,7 +451,7 @@ button:not(:disabled),
 
 
 /* Refined workspace sidebar */
-.axon-dashboard .axon-sidebar{width:220px;background:#0b0b0e;border-right:1px solid #25252b;box-shadow:12px 0 36px rgba(0,0,0,.12);transition:width .22s cubic-bezier(.22,1,.36,1)}
+.axon-dashboard .axon-sidebar{background:#0b0b0e;border-right:1px solid #25252b;box-shadow:12px 0 36px rgba(0,0,0,.12);transition:width .22s cubic-bezier(.22,1,.36,1)}
 .axon-dashboard .axon-sidebar-brand{height:76px;display:flex;align-items:center;gap:10px;padding:0 17px;border-bottom:1px solid #222228}
 .axon-dashboard .axon-brand-link{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none}
 .axon-dashboard .axon-brand-symbol{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid #303038;border-radius:12px;background:linear-gradient(145deg,#202027,#111114)}
@@ -508,3 +508,120 @@ button:not(:disabled),
 .axon-dashboard .axon-hub-tools tr{border-color:#29292f}
 .axon-dashboard .axon-hub-tools .hub-tools-muted{color:#85858f}
 @media(max-width:767px){.axon-dashboard .axon-sidebar{display:none}.axon-dashboard main{padding-inline:16px}.axon-loading-screen .axon-loading-mark{width:78px;height:78px}}
+
+
+/* Axon workspace visual refresh — bold Manrope type and a rebuilt navigation surface. */
+.axon-dashboard {
+  font-family: "Manrope", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+}
+.axon-dashboard h1,.axon-dashboard h2,.axon-dashboard h3,.axon-dashboard button {
+  font-family: "Manrope", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+.axon-dashboard h1,.axon-dashboard h2,.axon-dashboard h3 { font-weight: 850; }
+
+.axon-dashboard .axon-sidebar {
+  background: radial-gradient(ellipse at 12% 0%, rgba(190,242,100,.10), transparent 34%),linear-gradient(180deg,#111319 0%,#0b0d11 54%,#090a0d 100%);
+  border-right: 1px solid #282d32;box-shadow:18px 0 46px rgba(0,0,0,.28);
+  transition:width .24s cubic-bezier(.22,1,.36,1);
+}
+.axon-dashboard .axon-sidebar-brand {height:88px;padding:0 19px;gap:12px;border-bottom:1px solid rgba(255,255,255,.07)}
+.axon-dashboard .axon-brand-link {gap:13px}
+.axon-dashboard .axon-brand-symbol {
+  width:43px;height:43px;border-radius:15px;border:1px solid rgba(212,255,145,.23);
+  background:linear-gradient(145deg,rgba(190,242,100,.16),rgba(255,255,255,.035));
+  box-shadow:0 8px 26px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.08)
+}
+.axon-dashboard .axon-brand-copy strong {color:#f7f8f3;font-size:24px;font-weight:900;letter-spacing:-.085em}
+.axon-dashboard .axon-brand-copy small {margin-top:6px;color:#9a9f8f;font-size:8px;font-weight:800;letter-spacing:.19em}
+.axon-dashboard .axon-brand-beta {color:#d7f6a0;border-color:rgba(190,242,100,.24);background:rgba(190,242,100,.08);font-size:8px;font-weight:900}
+.axon-dashboard .axon-sidebar-scroll {padding:27px 13px 20px}
+.axon-dashboard .axon-nav-group+.axon-nav-group {margin-top:30px}
+.axon-dashboard .axon-nav-caption {padding:0 12px;margin:0 0 12px;color:#777f79;font-size:9px;font-weight:900;letter-spacing:.2em}
+.axon-dashboard .axon-nav-list {gap:6px}
+.axon-dashboard .axon-nav-item {
+  min-height:54px;padding:0 12px;gap:13px;border-radius:14px;border:1px solid transparent;
+  color:#9ca39e;font-size:12px;font-weight:750;letter-spacing:-.02em;
+}
+.axon-dashboard .axon-nav-item:hover {color:#f4f7ed;background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.06);transform:translateX(2px)}
+.axon-dashboard .axon-nav-icon {width:27px;height:27px;display:grid;place-items:center;border-radius:9px;color:#858e87;background:rgba(255,255,255,.035)}
+.axon-dashboard .axon-nav-item.is-active {
+  color:#151b10;background:linear-gradient(110deg,#d6f99b,#b9e96e);border-color:rgba(224,255,178,.75);
+  box-shadow:0 7px 22px rgba(160,220,92,.16),inset 0 1px rgba(255,255,255,.52)
+}
+.axon-dashboard .axon-nav-item.is-active .axon-nav-icon {color:#27351c;background:rgba(38,58,22,.10)}
+.axon-dashboard .axon-nav-copy {display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.axon-dashboard .axon-nav-label {font-size:12px;font-weight:850;line-height:1.15}
+.axon-dashboard .axon-nav-copy small {overflow:hidden;color:rgba(201,209,198,.55);font-size:9px;font-weight:550;letter-spacing:0;text-overflow:ellipsis;white-space:nowrap}
+.axon-dashboard .axon-nav-item.is-active .axon-nav-copy small {color:rgba(38,53,27,.68)}
+.axon-dashboard .axon-nav-active-dot {width:6px;height:6px;background:#26351d;box-shadow:0 0 0 4px rgba(43,65,24,.10)}
+.axon-dashboard .axon-nav-item.is-collapsed {min-height:48px;width:100%}
+.axon-dashboard .axon-sidebar-bottom {padding:15px 13px 17px;border-top:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,transparent,rgba(255,255,255,.018))}
+.axon-dashboard .axon-support-link {min-height:43px;padding:0 12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);border-radius:12px;color:#b1b7b0;font-size:11px;font-weight:750}
+.axon-dashboard .axon-support-link:hover {background:rgba(190,242,100,.08);border-color:rgba(190,242,100,.20)}
+.axon-dashboard .axon-collapse-button {height:42px;padding:0 12px;border:1px solid #30363b;border-radius:12px;background:#171a1e;color:#aab2aa;font-size:11px;font-weight:750}
+.axon-dashboard .axon-collapse-button:hover {background:#20252a;border-color:#465044;color:#e9f5de}
+.axon-dashboard .axon-sidebar-profile {margin-top:14px;padding:13px 5px 0;border-top:1px solid rgba(255,255,255,.07)}
+.axon-dashboard .axon-profile-avatar {width:37px;height:37px;border:1px solid rgba(190,242,100,.28);border-radius:13px;background:linear-gradient(145deg,#35432b,#1c2519);color:#e4f5ca;font-size:11px;font-weight:900}
+.axon-dashboard .axon-profile-copy strong {color:#f1f3ec;font-size:11px;font-weight:850}
+.axon-dashboard .axon-profile-copy small {color:#858e86;font-size:9px}
+.axon-dashboard .axon-sidebar-profile.is-collapsed {justify-content:center}
+.axon-dashboard .axon-mobile-nav {border-color:#282d32;background:rgba(12,14,17,.97)}
+.axon-dashboard .axon-mobile-nav a {font-weight:800}
+.axon-dashboard .axon-mobile-nav a[aria-current="page"] {color:#d2f59a;background:rgba(190,242,100,.09)}
+
+.axon-dashboard .axon-hub-tools {gap:22px}
+.axon-dashboard .axon-hub-tools .hub-tools-heading {align-items:flex-start;padding:5px 0 21px;border-color:#2b3033}
+.axon-dashboard .axon-hub-tools .hub-tools-heading h1 {color:#f4f7ef;font-size:clamp(27px,3.4vw,38px);font-weight:900;letter-spacing:-.065em}
+.axon-dashboard .axon-hub-tools .hub-tools-heading p {color:#a5ada5;font-size:13px}
+.axon-dashboard .axon-hub-tools .hub-tools-eyebrow {color:#c4ec8b;font-size:9px;font-weight:900;letter-spacing:.2em}
+.axon-dashboard .axon-hub-tools .hub-tools-card,.axon-dashboard .axon-hub-tools.hub-tools-card {
+  min-width:0;padding:20px;border:1px solid #2b3135;border-radius:17px;
+  background:linear-gradient(145deg,#171b1e 0%,#111417 100%);box-shadow:0 12px 34px rgba(0,0,0,.12)
+}
+.axon-dashboard .axon-hub-tools .hub-tools-card-inset {padding:14px;border-radius:13px;background:#101316;border-color:#2a3032;box-shadow:none}
+.axon-dashboard .axon-hub-tools .hub-tools-card h3,.axon-dashboard .axon-hub-tools.hub-tools-card h3 {color:#f0f3ed!important;font-weight:850}
+.axon-dashboard .axon-hub-tools .hub-tools-card p,.axon-dashboard .axon-hub-tools.hub-tools-card p {color:#aab1a9!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card span {color:#c1c9c0}
+.axon-dashboard .axon-hub-tools .hub-tools-kpi {padding:18px;border:1px solid #30363a;border-radius:15px;background:linear-gradient(145deg,#1b2023,#121619)}
+.axon-dashboard .axon-hub-tools .hub-tools-kpi p {color:#8d9990!important;font-size:10px;font-weight:800}
+.axon-dashboard .axon-hub-tools .hub-tools-value {color:#f2f6ec;font-size:27px;font-weight:900;letter-spacing:-.055em}
+.axon-dashboard .axon-hub-tools table {color:#d8dfd6}
+.axon-dashboard .axon-hub-tools th {color:#8f9a91!important;border-color:#30363a!important}
+.axon-dashboard .axon-hub-tools td {color:#d3dbd2!important;border-color:#2b3135!important}
+.axon-dashboard .axon-hub-tools tr {border-color:#2b3135!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .text-\[\#141414\] {color:#e6ece3!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .text-\[\#6f6e68\],.axon-dashboard .axon-hub-tools .hub-tools-card .text-\[\#9a988f\] {color:#aab1a9!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .bg-\[\#e8f0fc\] {background:rgba(190,242,100,.10)!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .text-\[\#2f6fe0\] {color:#c9ed96!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .border-\[\#e7e4dc\] {border-color:#30363a!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .bg-\[\#f6f5f2\] {background:#151a1c!important}
+.axon-dashboard .axon-hub-tools .hub-tools-card .text-\[\#b07a3a\] {color:#e9bd75!important}
+
+.axon-dashboard .axon-archive-button,.axon-dashboard .axon-restore-button {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:31px;padding:0 10px;
+  border:1px solid #414a41;border-radius:9px;background:#171d19;color:#c8e9a0;font-size:10px;font-weight:850;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease
+}
+.axon-dashboard .axon-archive-button:hover,.axon-dashboard .axon-restore-button:hover {background:#222d20;border-color:#789455;transform:translateY(-1px)}
+.axon-dashboard .axon-archive-button:disabled {opacity:.34;cursor:not-allowed;transform:none}
+.axon-dashboard .axon-restore-button {border-color:#394752;background:#151c22;color:#b8d7ed}
+.axon-dashboard .axon-restore-button:hover {background:#1c2933;border-color:#577b91}
+.axon-dashboard .axon-archived-section {margin-top:28px;padding:20px;border:1px solid #2b3135;border-radius:18px;background:linear-gradient(145deg,#15191c,#101316)}
+.axon-dashboard .axon-archived-section>header {display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:0 0 17px;border:0;border-bottom:1px solid #2b3135;background:transparent}
+.axon-dashboard .axon-archived-section h2 {margin:5px 0;color:#f1f4ed;font-size:21px;font-weight:900;letter-spacing:-.05em}
+.axon-dashboard .axon-archived-section header p:not(.axon-eyebrow) {color:#9ca79c;font-size:11px}
+.axon-dashboard .axon-archived-count {flex:none;padding:6px 9px;border:1px solid #394338;border-radius:99px;background:rgba(190,242,100,.07);color:#c7e99b;font-size:10px;font-weight:850}
+.axon-dashboard .axon-archived-list {display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.axon-dashboard .axon-archived-item {display:flex;align-items:center;gap:12px;min-width:0;padding:12px;border:1px solid #2b3135;border-radius:13px;background:#14191b}
+.axon-dashboard .axon-archived-icon {display:grid;place-items:center;width:35px;height:35px;flex:none;border:1px solid #3b4540;border-radius:11px;background:#202820;color:#c7e99b}
+.axon-dashboard .axon-archived-copy {display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.axon-dashboard .axon-archived-copy strong {overflow:hidden;color:#edf2e9;font-size:12px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}
+.axon-dashboard .axon-archived-copy small {overflow:hidden;color:#929d94;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:767px) {
+  .axon-dashboard .axon-sidebar {display:none}
+  .axon-dashboard main {padding-inline:16px}
+  .axon-dashboard .axon-archived-section>header {flex-direction:column}
+  .axon-dashboard .axon-archived-item {align-items:flex-start;flex-wrap:wrap}
+  .axon-dashboard .axon-archived-item .axon-restore-button {margin-left:auto}
+}
