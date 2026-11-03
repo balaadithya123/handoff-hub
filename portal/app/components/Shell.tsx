@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, ReactNode } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
 import {
-  LayoutDashboard, Plug, FolderKanban, Bot, Wrench, Activity,
+  LayoutDashboard, Puzzle, FolderKanban, Bot, Wrench, Activity,
   PanelLeftClose, PanelLeftOpen, Search, ChevronsUpDown,
 } from "lucide-react";
 import { NAV, NAV_GROUPS } from "../../lib/nav";
@@ -14,7 +14,7 @@ import SignOutButton from "./SignOutButton";
 export type Tab = "overview" | "integrations" | "projects" | "ai" | "tools" | "activity";
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
-  overview: LayoutDashboard, integrations: Plug, projects: FolderKanban,
+  overview: LayoutDashboard, integrations: Puzzle, projects: FolderKanban,
   ai: Bot, tools: Wrench, activity: Activity,
 };
 
@@ -26,13 +26,6 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
   const [cmdOpen, setCmdOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px) and (max-width: 1023px)");
-    const apply = () => setCollapsed(mq.matches);
-    apply(); mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -47,13 +40,13 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
   const displayName = name || email;
   const initial = displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join("") || "?";
-  const rail = collapsed ? "md:w-[64px]" : "md:w-[176px]";
-  const offset = collapsed ? "md:pl-[64px]" : "md:pl-[176px]";
+  const rail = collapsed ? "md:w-[72px]" : "md:w-[208px]";
+  const offset = collapsed ? "md:pl-[72px]" : "md:pl-[208px]";
 
   return (
     <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
       <aside className={`axon-sidebar fixed inset-y-0 left-0 z-50 hidden md:flex flex-col border-r border-white/10 bg-[#09090b] ${rail}`}>
-        <div className="flex h-[54px] items-center border-b border-white/10 px-4">
+        <div className="flex h-[64px] items-center border-b border-white/10 px-4">
           <Link href="/overview" title="Axon workspace" className="flex min-w-0 items-center gap-3">
             <Logo size={30} className="shrink-0" />
             {!collapsed && <span className="min-w-0"><span className="block text-[15px] font-semibold tracking-tight text-white">Axon</span><span className="block truncate text-[11px] text-zinc-500">Workspace</span></span>}
@@ -61,7 +54,7 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
           {!collapsed && <span className="ml-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-zinc-500">BETA</span>}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-5">
+        <div className="flex-1 overflow-y-auto px-3 py-6">
           {NAV_GROUPS.map((group, gi) => {
             const items = NAV.filter((n) => n.group === group);
             return <section key={group} className={gi ? "mt-7" : ""}>
@@ -72,10 +65,10 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
                   const active = tab === item.id;
                   return <Link key={item.id} href={item.href} title={collapsed ? item.label : undefined}
                     aria-current={active ? "page" : undefined}
-                    className={`group flex h-10 items-center gap-3 rounded-md px-3 text-[13px] transition-colors ${collapsed ? "justify-center px-0" : ""} ${active ? "bg-white/[.10] text-white ring-1 ring-inset ring-white/[.08]" : "text-zinc-400 hover:bg-white/[.05] hover:text-zinc-100"}`}>
+                    className={`group flex h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors ${collapsed ? "justify-center px-0" : ""} ${active ? "bg-white/[.10] text-white ring-1 ring-inset ring-white/[.08]" : "text-zinc-400 hover:bg-white/[.05] hover:text-zinc-100"}`}>
                     <Icon className={`h-[17px] w-[17px] shrink-0 ${active ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"}`} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
-                    {!collapsed && active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-400" />}
+                    {!collapsed && active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-zinc-300" />}
                   </Link>;
                 })}
               </nav>
@@ -104,7 +97,7 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
             <p className="mt-0.5 truncate text-[11px] text-zinc-500">{sub}</p>
           </div>
           <div className="flex-1" />
-          <button type="button" onClick={() => setCmdOpen(true)} className="hidden h-9 items-center gap-2 rounded-md border border-white/10 bg-white/[.03] px-3 text-xs text-zinc-500 hover:border-white/20 hover:text-zinc-200 sm:flex">
+          <button type="button" onClick={() => setCmdOpen(true)} className="hidden h-9 w-full max-w-[420px] items-center gap-2 rounded-full border border-white/10 bg-white/[.035] px-4 text-xs text-zinc-500 hover:border-white/20 hover:text-zinc-200 sm:flex">
             <Search className="h-3.5 w-3.5"/> Search workspace <kbd className="ml-5 rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600">⌘ K</kbd>
           </button>
           <div className="relative" ref={menuRef}>
