@@ -14,10 +14,10 @@ export type NavItem = {
 
 export const NAV: NavItem[] = [
   { id: "overview", label: "Overview", href: "/overview", group: "Workspace", icon: LayoutDashboard, hint: "home dashboard summary" },
-  { id: "integrations", label: "Integrations", href: "/integrations", group: "Workspace", icon: Plug, hint: "connect apps" },
-  { id: "projects", label: "Projects", href: "/projects", group: "Workspace", icon: FolderKanban, hint: "memory pools" },
-  { id: "ai", label: "AI accounts", href: "/ai", group: "AI", icon: Bot, hint: "claude chatgpt link" },
-  { id: "tools", label: "Hub tools", href: "/tools", group: "AI", icon: Wrench, hint: "claims approvals allowlist health brief" },
+  { id: "integrations", label: "Plugins", href: "/integrations", group: "Workspace", icon: Plug, hint: "connect apps" },
+  { id: "projects", label: "Projects & Pools", href: "/projects", group: "Workspace", icon: FolderKanban, hint: "memory pools" },
+  { id: "ai", label: "AI Accounts", href: "/ai", group: "AI", icon: Bot, hint: "claude chatgpt link" },
+  { id: "tools", label: "Hub Tools", href: "/tools", group: "AI", icon: Wrench, hint: "claims approvals allowlist health brief" },
   { id: "activity", label: "Activity", href: "/activity", group: "Monitor", icon: Activity, hint: "timeline log events" },
 ];
 
