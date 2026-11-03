@@ -424,3 +424,24 @@ button:not(:disabled),
   .axon-dashboard .activity-event time { font-size:9px; }
   .axon-dashboard .activity-event-description { display:-webkit-box; white-space:normal; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 }
+
+
+/* Route loading and transition layer — effects are confined to Axon's loading state. */
+.axon-loading-screen{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;min-height:100dvh;color:#f4f4f5;background:#09090b;font-family:"Manrope",Inter,ui-sans-serif,system-ui,sans-serif}
+.axon-loading-glow{position:absolute;top:42%;left:50%;width:min(72vw,620px);height:min(72vw,620px);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(161,161,170,.10),rgba(63,63,70,.045) 35%,transparent 70%);filter:blur(12px)}
+.axon-loading-center{position:relative;display:flex;flex-direction:column;align-items:center;width:min(90vw,360px);text-align:center}
+.axon-loading-mark{position:relative;display:grid;place-items:center;width:88px;height:88px;margin-bottom:21px}
+.axon-loading-logo{position:relative;z-index:2;width:38px;height:38px}
+.axon-loading-orbit{position:absolute;inset:4px;border:1px solid rgba(212,212,216,.14);border-radius:28px}
+.axon-loading-orbit-one{transform:rotate(28deg) scaleX(.68)}
+.axon-loading-orbit-two{inset:12px;border-color:rgba(161,161,170,.22);border-radius:50%}
+.axon-loading-orbit-one:after,.axon-loading-orbit-two:after{content:"";position:absolute;top:50%;left:-3px;width:6px;height:6px;border-radius:50%;background:#d4d4d8;box-shadow:0 0 14px rgba(228,228,231,.55)}
+.axon-loading-brand{color:#f4f4f5;font-size:12px;font-weight:800;letter-spacing:.28em}
+.axon-loading-caption{margin-top:7px;color:#85858f;font-size:12px}
+.axon-loading-track{position:relative;width:150px;height:2px;overflow:hidden;margin-top:23px;border-radius:99px;background:#27272d}
+.axon-loading-progress{position:absolute;inset:0;width:55%;border-radius:99px;background:linear-gradient(90deg,transparent,#d4d4d8,transparent)}
+.axon-loading-dots{display:flex;align-items:center;gap:5px;margin-top:14px}
+.axon-loading-dots span{width:4px;height:4px;border-radius:50%;background:#a1a1aa}
+.axon-loading-footnote{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));color:#52525b;font-size:8px;font-weight:700;letter-spacing:.2em}
+.axon-route-content{width:100%;min-width:0;will-change:opacity,transform}
+@media(prefers-reduced-motion:reduce){.axon-loading-screen *,.axon-route-content{animation-duration:.01ms!important;transition-duration:.01ms!important}}
