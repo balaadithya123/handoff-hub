@@ -1,61 +1,58 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Pencil, X } from "lucide-react";
 
 const MAX = 40;
 
-/** Shows an AI account's name. The original name is fixed; the nickname is an optional label for identification. */
 export default function AccountName({ id, label, nickname }: { id: string; label: string; nickname: string | null }) {
   const router = useRouter();
   const [saved, setSaved] = useState<string | null>(nickname);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(nickname ?? "");
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
+  const [error, setError] = useState("");
 
-  function start() { setValue(saved ?? ""); setErr(""); setEditing(true); }
-  function cancel() { setEditing(false); setErr(""); }
   async function save() {
     if (busy) return;
-    setBusy(true);
-    setErr("");
-    const r = await fetch("/api/rename", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, nickname: value.trim() === "" ? null : value }) }).catch(() => null);
-    const d = r ? await r.json().catch(() => ({})) : {};
+    setBusy(true); setError("");
+    const response = await fetch("/api/rename", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, nickname: value.trim() || null }),
+    }).catch(() => null);
+    const data = response ? await response.json().catch(() => ({})) : {};
     setBusy(false);
-    if (r && r.ok) { setSaved(d.nickname ?? null); setEditing(false); router.refresh(); }
-    else setErr(d?.error || "Could not save the name.");
-  }
-
-  if (editing) {
-    return (
-      <div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          <input
-            autoFocus
-            value={value}
-            maxLength={MAX}
-            aria-label={"Nickname for " + label}
-            placeholder={label}
-            onChange={e => setValue(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); save(); } else if (e.key === "Escape") cancel(); }}
-            style={{ border: "1px solid var(--border-strong)", borderRadius: 4, padding: "6px 8px", font: "inherit", fontSize: 13, background: "var(--bg-surface)", color: "var(--text-main)", minWidth: 160, maxWidth: "100%" }}
-          />
-          <button type="button" className="shBtn" onClick={save} disabled={busy}>{busy ? "Saving…" : "Save"}</button>
-          <button type="button" className="shBtn ghost" onClick={cancel} disabled={busy}>Cancel</button>
-        </div>
-        <div className="shMuted" style={{ marginTop: 4 }}>Original name: {label} (cannot be changed). Leave empty to remove the nickname.</div>
-        {err && <p className="shErr" role="alert">{err}</p>}
-      </div>
-    );
+    if (response?.ok) { setSaved(data.nickname ?? null); setEditing(false); router.refresh(); }
+    else setError(data?.error || "Could not save this account label.");
   }
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <b>{saved || label}</b>
-        <button type="button" className="shBtn ghost" onClick={start} aria-label={"Edit nickname for " + label}>Edit nickname</button>
-      </div>
-      {saved && <div className="shMuted" style={{ marginTop: 2 }}>Original: {label}</div>}
+    <div className="axon-account-name-control">
+      {editing ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            autoFocus value={value} maxLength={MAX}
+            aria-label={"Nickname for " + label} placeholder={label}
+            onChange={event => setValue(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === "Enter") { event.preventDefault(); save(); }
+              if (event.key === "Escape") { setEditing(false); setError(""); }
+            }}
+            className="axon-inline-input"
+          />
+          <button type="button" className="axon-action-button primary" onClick={save} disabled={busy}><Check size={13} />{busy ? "Saving…" : "Save"}</button>
+          <button type="button" className="axon-action-button" onClick={() => { setEditing(false); setError(""); }} disabled={busy}><X size={13} />Cancel</button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <strong>{saved || label}</strong>
+          <button type="button" className="axon-action-button" onClick={() => { setValue(saved ?? ""); setError(""); setEditing(true); }}><Pencil size={13} />Edit label</button>
+          {saved && <small>Original: {label}</small>}
+        </div>
+      )}
+      {error && <p className="axon-inline-error" role="alert">{error}</p>}
     </div>
   );
 }
