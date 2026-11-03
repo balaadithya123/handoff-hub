@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, ReactNode } from "react";
+import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import Link from "next/link";
 import Logo from "./Logo";
 import {
@@ -112,7 +113,20 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
         <main className="mx-auto w-full max-w-[1600px] px-4 pb-24 pt-5 md:px-7 md:pb-12 md:pt-5">
           {notice && <div role="status" className={`mb-6 rounded-md border px-4 py-3 text-sm ${notice.kind === "ok" ? "border-blue-400/20 bg-blue-400/[.07] text-blue-200" : "border-red-400/20 bg-red-400/[.07] text-red-200"}`}>{notice.text}</div>}
-          {children}
+          <MotionConfig reducedMotion="user">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={tab}
+                className="axon-route-content"
+                initial={{ opacity: 0, y: 9, filter: "blur(3px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -5, filter: "blur(2px)" }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </MotionConfig>
         </main>
       </div>
 
