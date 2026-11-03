@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plug, Bot, FolderKanban, Activity, ArrowRight, ShieldCheck, Clock3, ChevronRight, Plus, Compass } from "lucide-react";
+import { Plug, Bot, FolderKanban, Activity, ArrowRight, Clock3, ChevronRight, Plus, Compass } from "lucide-react";
 import { getAiApps, getProjects, getHubOverview } from "../../lib/data";
 import { ago } from "../../lib/format";
 import ActivityLog from "./ActivityLog";
@@ -63,7 +63,7 @@ export default async function Overview({ token, connected }: { token: string; co
           {projectRows.map((p:any,i:number) => <Link key={p.id ?? p.name ?? i} href="/projects" className="flex min-h-[58px] items-center gap-3 px-4 py-2 hover:bg-white/[.025]">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#252529] text-[12px] font-semibold text-zinc-300">{String(p.name ?? "P").charAt(0).toUpperCase()}</span>
             <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-medium text-zinc-100">{p.name ?? "Untitled project"}</span><span className="block truncate text-[10px] text-zinc-500">{p.description ?? "Project workspace"}</span></span>
-            <span className="hidden text-[10px] text-zinc-500 sm:block"> </span><span className="rounded-full border border-emerald-400/15 bg-emerald-400/[.07] px-2 py-0.5 text-[9px] text-emerald-300">Active</span><ChevronRight className="h-3.5 w-3.5 text-zinc-600"/>
+            <ChevronRight className="h-3.5 w-3.5 text-zinc-600"/>
           </Link>)}
         </div> : <div className="px-4 py-8 text-center"><p className="text-xs text-zinc-400">No projects yet</p><Link href="/projects" className="mt-2 inline-flex items-center gap-1 text-[11px] text-zinc-200">Create your first project <Plus size={12}/></Link></div>}
       </div>
