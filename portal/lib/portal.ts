@@ -1,7 +1,7 @@
 export const SESSION_COOKIE = "portal_session";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 14;
 
-export type SessionUser = { email: string };
+export type SessionUser = { email: string; name: string };
 
 /** Calls a Postgres function in Supabase via PostgREST using the publishable key. */
 export async function rpc<T = unknown>(fn: string, args: Record<string, unknown>): Promise<T> {
@@ -22,8 +22,13 @@ export async function rpc<T = unknown>(fn: string, args: Record<string, unknown>
 export async function sessionUser(token?: string | null): Promise<SessionUser | null> {
   if (!token) return null;
   try {
-    const d = await rpc<{ ok?: boolean; email?: string } | null>("portal_session", { p_token: token });
-    return d && d.ok && d.email ? { email: d.email } : null;
+    const d = await rpc<{ ok?: boolean; email?: string; name?: string; full_name?: string; display_name?: string } | null>("portal_session", { p_token: token });
+    if (!d?.ok || !d.email) return null;
+    // Prefer a profile name if the session RPC provides one; otherwise use this account's email handle.
+    const profileName = d.display_name || d.full_name || d.name;
+    const emailName = d.email.split("@")[0].replace(/[._+-]+/g, " ").trim();
+    const fallbackName = emailName.replace(/\b\w/g, (char) => char.toUpperCase());
+    return { email: d.email, name: profileName?.trim() || fallbackName || "there" };
   } catch {
     return null;
   }
