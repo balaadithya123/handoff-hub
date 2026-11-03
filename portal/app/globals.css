@@ -67,7 +67,7 @@ button:not(:disabled),
   color-scheme: dark;
   color: var(--axon-ink);
   background: var(--axon-bg);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: Inter, var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -.012em;
 }
 .axon-dashboard aside { background: var(--axon-bg); border-color: var(--axon-line); }
@@ -93,6 +93,25 @@ button:not(:disabled),
 .axon-dashboard .marketplace-app-row { min-width: 0; height: 100%; }
 .axon-dashboard .marketplace-app-meta { min-width: 0; }
 .axon-dashboard .marketplace-app-meta > span:last-child { white-space: normal; }
+.axon-dashboard .marketplace-app-row { min-height: 82px; padding: 14px; }
+.axon-dashboard .marketplace-app-meta > span:first-child { font-size: 13px; }
+.axon-dashboard .marketplace-app-meta > span:last-child { font-size: 11px; line-height: 1.45; }
+.axon-dashboard .axon-ai-accounts { color: var(--axon-ink); }
+.axon-dashboard .axon-ai-accounts .aiCard { background: #101012; border: 1px solid #29292d; border-radius: 12px; color: #ededed; }
+.axon-dashboard .axon-ai-accounts .aiName { color: #f4f4f5; }
+.axon-dashboard .axon-ai-accounts .aiMeta,.axon-dashboard .axon-ai-accounts .aiFacts dt { color: #a1a1aa; }
+.axon-dashboard .axon-ai-accounts .aiFacts dd { color: #e4e4e7; }
+.axon-dashboard .axon-ai-accounts .aiAvatar { background: #27272a; color: #f4f4f5; }
+.axon-dashboard .axon-ai-accounts .shInput { background: #18181b; color: #f4f4f5; border-color: #3f3f46; }
+.axon-dashboard .axon-ai-accounts .shBtn { background: #27272a; color: #f4f4f5; border-color: #3f3f46; }
+.axon-dashboard .axon-ai-accounts .shBtn.danger { color: #fca5a5; }
+.axon-dashboard .axon-ai-accounts .shErr { color: #fca5a5; }
+.axon-dashboard .axon-ai-accounts .aiState.on { color: #6ee7b7; }
+.axon-dashboard .axon-ai-accounts .aiState.idle { color: #a1a1aa; }
+.axon-dashboard .axon-ai-accounts .aiFacts { border-color: #29292d; }
+.axon-dashboard .axon-ai-accounts .aiFacts > div { border-color: #29292d; }
+.axon-dashboard .axon-sidebar nav a { min-height: 42px; }
+.axon-dashboard .marketplace-connected-grid button { min-height: 108px; }
 .axon-dashboard nav.axon-mobile-nav { background: rgba(9,9,11,.97); border-color: var(--axon-line); }
 @media (max-width: 1100px) {
   .axon-dashboard .marketplace-app-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
