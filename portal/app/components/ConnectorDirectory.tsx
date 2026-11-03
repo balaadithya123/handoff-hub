@@ -94,10 +94,6 @@ export default function ConnectorDirectory({
         <div><p className="axon-eyebrow">WORKSPACE / PLUGINS</p><h1>Your plugins</h1>
         <p>Connect and manage the apps your Axon workspace uses.</p></div><div className="axon-heading-mark"><PuzzleIcon /></div>
       </div>
-      <div className="space-y-1 sr-only">
-          Connect the apps your workspace uses. Review availability, manage connections and add new tools.
-        </p>
-      </div>
       <div className="marketplace-search relative max-w-[640px]">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search integrations..." className="h-10 rounded-lg border-white/10 bg-[#111113] pl-10 text-sm text-zinc-100 placeholder:text-zinc-500" />
