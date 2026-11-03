@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowRightLeft, AlertCircle } from "lucide-react";
+import { Plus, ArrowRightLeft, AlertCircle, Archive, RotateCcw } from "lucide-react";
 
 async function call(body: Record<string, unknown>): Promise<{ ok: boolean; error: string }> {
   const response = await fetch("/api/projects", {
@@ -69,6 +69,63 @@ export function ProjectCreate({ hubUser }: { hubUser: string }) {
         <Plus size={14} />{busy ? "Creating…" : "Create pool"}
       </button>
       {error && <p className="axon-inline-error"><AlertCircle size={13} />{error}</p>}
+    </div>
+  );
+}
+
+
+export function ProjectArchiveButton({ hubUser, project, isPortal = false }: {
+  hubUser: string; project: string; isPortal?: boolean;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function archive() {
+    if (busy || isPortal || project === "default") return;
+    const confirmed = window.confirm("Archive this project pool? Its memories and activity will be kept, and you can restore it later.");
+    if (!confirmed) return;
+    setBusy(true);
+    setError("");
+    const result = await call({ action: "archive", hub_user: hubUser, project });
+    setBusy(false);
+    if (result.ok) router.refresh();
+    else setError(result.error);
+  }
+
+  return (
+    <div className="inline-flex flex-col items-end gap-1">
+      <button type="button" onClick={archive} disabled={busy || isPortal || project === "default"}
+        title={isPortal ? "Choose another portal feed before archiving this pool" : "Archive this project pool"}
+        className="axon-archive-button">
+        <Archive size={13} />{busy ? "Archiving…" : "Archive"}
+      </button>
+      {error && <span className="text-[11px] text-red-300">{error}</span>}
+    </div>
+  );
+}
+
+export function ProjectRestoreButton({ hubUser, project }: { hubUser: string; project: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function restore() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    const result = await call({ action: "restore", hub_user: hubUser, project });
+    setBusy(false);
+    if (result.ok) router.refresh();
+    else setError(result.error);
+  }
+
+  return (
+    <div className="inline-flex flex-col items-end gap-1">
+      <button type="button" onClick={restore} disabled={busy} className="axon-restore-button">
+        <RotateCcw size={13} />{busy ? "Restoring…" : "Restore"}
+      </button>
+      {error && <span className="text-[11px] text-red-300">{error}</span>}
     </div>
   );
 }
