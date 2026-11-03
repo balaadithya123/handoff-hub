@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Filter, Activity } from "lucide-react";
+import { Activity, Filter } from "lucide-react";
 import { rpc } from "../../lib/portal";
-import { ago, human } from "../../lib/format";
+import { ago } from "../../lib/format";
 import ActivityExplorer from "./ActivityExplorer";
 
 type Ev = { at: string; agent?: string; action?: string; text?: string; project?: string; project_name?: string };
@@ -14,124 +14,71 @@ export default async function ActivityLog({
   project = "",
   filters = false,
 }: {
-  token: string;
-  limit?: number;
-  project?: string;
-  filters?: boolean;
+  token: string; limit?: number; project?: string; filters?: boolean;
 }) {
   let rows: Ev[] = [];
   let failed = false;
   try {
-    rows =
-      (await rpc<Ev[] | null>("portal_hub_events", {
-        p_token: token,
-        p_limit: filters ? Math.max(limit, 100) : limit,
-        p_project: project || null,
-      })) ?? [];
-  } catch {
-    failed = true;
-  }
+    rows = (await rpc<Ev[] | null>("portal_hub_events", {
+      p_token: token,
+      p_limit: filters ? Math.max(limit, 100) : limit,
+      p_project: project || null,
+    })) ?? [];
+  } catch { failed = true; }
 
-  let chips: { id: string; name: string }[] = [];
+  let projects: { id: string; name: string }[] = [];
   if (filters) {
     try {
-      const d = await rpc<ProjRes>("portal_projects", { p_token: token });
+      const data = await rpc<ProjRes>("portal_projects", { p_token: token });
       const seen = new Set<string>();
-      for (const a of d?.accounts ?? []) {
-        for (const p of a.projects ?? []) {
-          if (!seen.has(p.id)) {
-            seen.add(p.id);
-            chips.push({ id: p.id, name: p.name });
-          }
+      for (const account of data?.accounts ?? []) {
+        for (const item of account.projects ?? []) {
+          if (!seen.has(item.id)) { seen.add(item.id); projects.push(item); }
         }
       }
-    } catch {
-      chips = [];
-    }
+    } catch { projects = []; }
   }
 
-  const agents = new Set(rows.map((r) => r.agent || "unknown")).size;
-  const actions = new Set(rows.map((r) => r.action || "event")).size;
-  const last = rows[0] ? ago(rows[0].at) : "—";
+  const agentCount = new Set(rows.map(row => row.agent || "unknown")).size;
+  const actionCount = new Set(rows.map(row => row.action || "event")).size;
+  const latest = rows[0] ? ago(rows[0].at) : "—";
 
   return (
-    <div className="space-y-8">
+    <div className={filters ? "axon-page axon-activity-page" : "axon-activity-preview"}>
       {filters && (
-        <div className="space-y-1">
-          <h1 className="text-[30px] md:text-[34px] font-semibold tracking-tight text-white">Activity</h1>
-          <p className="text-sm text-zinc-400 max-w-xl">
-            What your AI accounts did through Axon. Newest first.
-          </p>
-        </div>
-      )}
-
-      {filters && !failed && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: "Events", value: String(rows.length) },
-            { label: "Agents", value: String(agents) },
-            { label: "Actions", value: String(actions) },
-            { label: "Latest", value: last },
-          ].map((k) => (
-            <div
-              key={k.label}
-              className="rounded-xl border border-white/[.08] bg-[#101012] px-4 py-4"
-            >
-              <p className="text-xs text-zinc-500">{k.label}</p>
-              <p className="mt-1.5 text-xl font-semibold tracking-tight text-zinc-100 tabular-nums">
-                {k.value}
-              </p>
+        <>
+          <section className="axon-page-heading">
+            <div>
+              <p className="axon-eyebrow">MONITOR / ACTIVITY</p>
+              <h1>Activity timeline</h1>
+              <p>Follow actions from your connected AI clients, search the history and inspect individual events.</p>
             </div>
-          ))}
-        </div>
-      )}
-
-      {filters && chips.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="text-xs text-[#9a988f] flex items-center gap-1.5 shrink-0">
-            <Filter className="w-3.5 h-3.5" />
-            Project
-          </span>
-          <Link
-            href="/activity"
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-              project === ""
-                ? "bg-white text-black"
-                : "bg-[#101012] text-zinc-400 border border-white/10 hover:text-white"
-            }`}
-          >
-            All
-          </Link>
-          {chips.map((c) => (
-            <Link
-              key={c.id}
-              href={"/activity?project=" + encodeURIComponent(c.id)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                project === c.id
-                  ? "bg-[#141414] text-[#f6f5f2]"
-                  : "bg-white text-[#6f6e68] border border-[#e7e4dc] hover:text-[#141414]"
-              }`}
-            >
-              {c.name}
-            </Link>
-          ))}
-        </div>
+            <div className="axon-heading-mark"><Activity size={21} /></div>
+          </section>
+          {!failed && (
+            <section className="axon-stat-grid activity-stat-grid" aria-label="Activity summary">
+              <div className="axon-stat-card"><span className="axon-stat-icon"><Activity size={17} /></span><span className="axon-stat-copy"><strong>{rows.length}</strong><small>Events loaded</small></span></div>
+              <div className="axon-stat-card"><span className="axon-stat-icon"><Filter size={17} /></span><span className="axon-stat-copy"><strong>{agentCount}</strong><small>AI clients</small></span></div>
+              <div className="axon-stat-card"><span className="axon-stat-icon"><Activity size={17} /></span><span className="axon-stat-copy"><strong>{actionCount}</strong><small>Action types</small></span></div>
+              <div className="axon-stat-card"><span className="axon-stat-icon"><Activity size={17} /></span><span className="axon-stat-copy"><strong className="activity-latest">{latest}</strong><small>Most recent event</small></span></div>
+            </section>
+          )}
+          {projects.length > 0 && (
+            <nav className="activity-project-filter" aria-label="Filter activity by project">
+              <span>Project pool</span>
+              <Link href="/activity" aria-current={!project ? "page" : undefined}>All pools</Link>
+              {projects.map(item => (
+                <Link key={item.id} href={"/activity?project=" + encodeURIComponent(item.id)} aria-current={project === item.id ? "page" : undefined}>{item.name}</Link>
+              ))}
+            </nav>
+          )}
+        </>
       )}
 
       {failed ? (
-        <div className="rounded-xl border border-white/[.08] bg-[#101012] px-6 py-16 text-center">
-          <Activity className="mx-auto mb-3 h-8 w-8 text-[#9a988f]" />
-          <p className="text-sm font-medium text-zinc-100">Couldn’t load activity</p>
-          <p className="mt-1 text-xs text-zinc-500">Try again in a moment.</p>
-        </div>
+        <div className="axon-empty-state compact"><Activity size={26} /><h3>Activity couldn’t be loaded</h3><p>Axon couldn’t retrieve the event history. Refresh and try again.</p></div>
       ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-[#e7e4dc] bg-white px-6 py-16 text-center">
-          <Activity className="mx-auto mb-3 h-8 w-8 text-[#9a988f]" />
-          <p className="text-sm font-medium text-[#141414]">No events yet</p>
-          <p className="mt-1 text-xs text-[#6f6e68]">
-            When an AI uses Axon, each action is recorded here.
-          </p>
-        </div>
+        <div className="axon-empty-state compact"><Activity size={26} /><h3>No activity yet</h3><p>When a connected AI client performs an action through Axon, its event will appear here.</p></div>
       ) : (
         <ActivityExplorer rows={rows} />
       )}
