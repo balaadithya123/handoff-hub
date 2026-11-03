@@ -5,7 +5,7 @@ import Link from "next/link";
 import Logo from "./Logo";
 import {
   LayoutDashboard, Puzzle, FolderKanban, Bot, Wrench, Activity, LifeBuoy,
-  PanelLeftClose, PanelLeftOpen, Search, LifeBuoy,
+  PanelLeftClose, PanelLeftOpen, Search,
 } from "lucide-react";
 import { NAV, NAV_GROUPS } from "../../lib/nav";
 import { CommandPalette } from "./ui/CommandPalette";
