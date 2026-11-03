@@ -91,9 +91,9 @@ export default function ConnectorDirectory({
   return (
     <div className="integration-marketplace space-y-5">
       <div className="space-y-1">
-        <p className="text-[10px] font-semibold tracking-wide text-blue-300">Integrations</p><h1 className="text-[27px] md:text-[30px] font-semibold tracking-tight text-white">Discover powerful integrations</h1>
+        <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-zinc-500">Workspace / Plugins</p><h1 className="text-[30px] md:text-[34px] font-semibold tracking-tight text-white">Your plugins</h1>
         <p className="text-sm text-[#6f6e68] max-w-xl">
-          Connect the tools you love and supercharge your Axon workspace.
+          Connect the apps your workspace uses. Review availability, manage connections and add new tools.
         </p>
       </div>
       <div className="marketplace-search relative max-w-[640px]">
@@ -116,12 +116,12 @@ export default function ConnectorDirectory({
       </div>
       {cat === "All" && !query && connectedApps.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-base font-semibold text-[#141414]">Connected</h2>
+          <div className="flex items-center justify-between"><h2 className="text-sm font-semibold text-zinc-100">Connected plugins</h2><span className="text-xs text-zinc-500">{connectedApps.length} connected</span></div>
           <div className="marketplace-connected-grid grid grid-cols-2 sm:grid-cols-4 gap-3">
             {connectedApps.map(([id, name]) => (
               <button key={id} type="button" onClick={() => setSelectedAppId(id)}
                 className="flex flex-col items-center gap-3 rounded-xl border border-white/[.08] bg-[#101012] px-3 py-5 text-center hover:border-white/20 hover:bg-[#171719]">
-                <span className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-[#1d1d20]"><AppMark id={id} size={22} /></span>
+                <span className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white"><AppMark id={id} size={24} /></span>
                 <span className="text-xs font-medium text-zinc-100">{name}</span>
               </button>
             ))}
@@ -145,7 +145,7 @@ export default function ConnectorDirectory({
                     <li key={id}>
                       <div className="marketplace-app-row flex min-h-[64px] items-center gap-3 rounded-xl border border-white/[.08] bg-[#101012] px-3 py-3 hover:border-white/20 hover:bg-[#171719]">
                         <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => setSelectedAppId(id)} onKeyDown={openOnKey(id)}>
-                          <span className="marketplace-app-icon flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1d20] border border-white/10"><AppMark id={id} size={20} /></span>
+                          <span className="marketplace-app-icon flex size-10 shrink-0 items-center justify-center rounded-xl bg-white border border-white/10"><AppMark id={id} size={23} /></span>
                           <span className="marketplace-app-meta min-w-0">
                             <span className="block truncate text-[11px] font-semibold text-zinc-100">{name}</span>
                             <span className="mt-0.5 block line-clamp-2 text-[10px] leading-4 text-zinc-500">{desc}</span>
@@ -165,13 +165,13 @@ export default function ConnectorDirectory({
         {selectedApp && (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center rounded-xl border border-white/10 bg-[#1d1d20]"><AppMark id={selectedApp[0]} size={24} /></span>
+              <span className="flex size-12 items-center justify-center rounded-xl border border-white/10 bg-white"><AppMark id={selectedApp[0]} size={26} /></span>
               <div>
-                <span className="text-base font-semibold text-[#141414] block">{selectedApp[1]}</span>
-                <span className="text-xs font-mono text-[#9a988f] block">{selectedApp[2]}</span>
+                <span className="text-base font-semibold text-zinc-100 block">{selectedApp[1]}</span>
+                <span className="text-xs text-zinc-500 block">{selectedApp[2]}</span>
               </div>
             </div>
-            <p className="text-sm text-[#6f6e68] leading-relaxed">{selectedApp[3]}</p>
+            <p className="text-sm text-zinc-300 leading-relaxed">{selectedApp[3]}</p>
             {selectedIsConnected ? (
               <div className="p-3.5 rounded-xl border border-[rgba(47,111,224,0.28)] bg-[#e8f0fc] text-xs text-[#2f6fe0] space-y-1">
                 <div className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /><span>Connected</span></div>
