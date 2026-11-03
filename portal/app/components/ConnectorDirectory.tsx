@@ -89,14 +89,14 @@ export default function ConnectorDirectory({
   };
 
   return (
-    <div className="integration-marketplace space-y-8">
+    <div className="integration-marketplace space-y-5">
       <div className="space-y-1">
-        <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight text-[#141414]">Apps</h1>
+        <p className="text-[10px] font-semibold tracking-wide text-blue-300">Integrations</p><h1 className="text-[27px] md:text-[30px] font-semibold tracking-tight text-white">Discover powerful integrations</h1>
         <p className="text-sm text-[#6f6e68] max-w-xl">
-          Sign in with the app itself. Axon stores the token. It never sees your password.
+          Connect the tools you love and supercharge your Axon workspace.
         </p>
       </div>
-      <div className="marketplace-categories w-full overflow-x-auto pb-1">
+      <div className="marketplace-search relative max-w-[640px]">\n        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a988f]" />\n        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search integrations..." className="pl-10 h-10 rounded-full bg-white border-[#e7e4dc]" />\n      </div>\n      <div className="marketplace-categories w-full overflow-x-auto pb-1">
         <div className="flex w-max gap-2">
           {cats.map((c) => {
             const active = cat === c;
@@ -134,21 +134,21 @@ export default function ConnectorDirectory({
           <Button type="button" variant="ghost" size="sm" onClick={() => { setQ(""); setCat("All"); }} className="mt-3">Clear filters</Button>
         </div>
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-5">
           {sections.map(({ title, rows }) => (
             <section key={title} className="space-y-2">
-              <h2 className="text-base font-semibold text-[#141414]">{title}</h2>
-              <ul className="marketplace-app-list grid gap-1 md:grid-cols-2 md:gap-x-10">
+              <h2 className="text-[12px] font-semibold text-zinc-300">{title}</h2>
+              <ul className="marketplace-app-list grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {rows.map(([id, name, category, desc, live]) => {
                   const isOn = on.has(id);
                   return (
                     <li key={id}>
-                      <div className="marketplace-app-row flex items-center gap-3 rounded-2xl px-2 py-3 hover:bg-[#efeee9]">
+                      <div className="marketplace-app-row flex items-center gap-3 rounded-xl border border-white/[.08] bg-[#101012] px-3 py-3 hover:bg-[#171719]">
                         <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => setSelectedAppId(id)} onKeyDown={openOnKey(id)}>
-                          <span className="marketplace-app-icon flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white border border-[#e7e4dc]"><AppMark id={id} size={20} /></span>
+                          <span className="marketplace-app-icon flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1d20] border border-white/10"><AppMark id={id} size={20} /></span>
                           <span className="marketplace-app-meta min-w-0">
-                            <span className="block truncate text-sm font-medium text-[#141414]">{name}</span>
-                            <span className="block truncate text-xs text-[#6f6e68]">{desc}</span>
+                            <span className="block truncate text-[11px] font-semibold text-zinc-100">{name}</span>
+                            <span className="block truncate text-[10px] text-zinc-500">{desc}</span>
                           </span>
                         </button>
                         <ConnectionButton provider={id} connected={isOn} available={live} state={availability[id]?.state} reason={availability[id]?.reason} />
