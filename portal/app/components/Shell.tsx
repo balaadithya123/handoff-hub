@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, ReactNode } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
 import {
-  LayoutDashboard, Puzzle, FolderKanban, Bot, Wrench, Activity,
-  PanelLeftClose, PanelLeftOpen, Search, ChevronsUpDown,
+  LayoutDashboard, Puzzle, FolderKanban, Bot, Wrench, Activity, LifeBuoy,
+  PanelLeftClose, PanelLeftOpen, Search, LifeBuoy,
 } from "lucide-react";
 import { NAV, NAV_GROUPS } from "../../lib/nav";
 import { CommandPalette } from "./ui/CommandPalette";
@@ -40,8 +40,8 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
   const displayName = name || email;
   const initial = displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join("") || "?";
-  const rail = collapsed ? "md:w-[72px]" : "md:w-[208px]";
-  const offset = collapsed ? "md:pl-[72px]" : "md:pl-[208px]";
+  const rail = collapsed ? "md:w-[72px]" : "md:w-[220px]";
+  const offset = collapsed ? "md:pl-[72px]" : "md:pl-[220px]";
 
   return (
     <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
@@ -58,7 +58,7 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
           {NAV_GROUPS.map((group, gi) => {
             const items = NAV.filter((n) => n.group === group);
             return <section key={group} className={gi ? "mt-7" : ""}>
-              {!collapsed && <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-600">{group === "AI" ? "AI engine" : group}</p>}
+              {!collapsed && <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-600">{group === "AI" ? "AI tools" : group}</p>}
               <nav className="space-y-1">
                 {items.map((item) => {
                   const Icon = ICONS[item.id] || LayoutDashboard;
@@ -77,20 +77,21 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
         </div>
 
         <div className="border-t border-white/10 p-3">
+          {!collapsed && <Link href="/support" className="mb-2 flex h-9 items-center gap-3 rounded-lg px-3 text-[12px] text-zinc-400 hover:bg-white/[.05] hover:text-zinc-100"><LifeBuoy className="h-4 w-4" />Help &amp; Support</Link>}
           <button type="button" onClick={() => setCollapsed(v => !v)} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={`flex h-9 w-full items-center gap-3 rounded-md px-3 text-xs text-zinc-500 hover:bg-white/[.05] hover:text-zinc-200 ${collapsed ? "justify-center px-0" : ""}`}>
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             {!collapsed && "Collapse sidebar"}
           </button>
           {!collapsed && <div className="mt-3 flex items-center gap-2 border-t border-white/[.07] px-2 pt-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-semibold text-zinc-200">{initial}</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-[11px] font-semibold text-zinc-100">{initial}</span>
             <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-300">{displayName}</span>
           </div>}
         </div>
       </aside>
 
       <div className={`min-h-screen min-w-0 ${offset}`}>
-        <header className="axon-topbar sticky top-0 z-40 flex h-[54px] items-center gap-4 border-b border-white/10 bg-[#09090b]/95 px-4 backdrop-blur-xl md:px-8">
+        <header className="axon-topbar sticky top-0 z-40 flex h-[64px] items-center gap-4 border-b border-white/10 bg-[#09090b]/95 px-4 backdrop-blur-xl md:px-8">
           <div className="flex items-center gap-2 md:hidden"><Logo size={29}/><span className="text-sm font-semibold">Axon</span></div>
           <div className="hidden min-w-0 md:block">
             <p className="truncate text-[13px] font-medium text-zinc-100">{title}</p>
