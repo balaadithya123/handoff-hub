@@ -3,7 +3,7 @@ import { SESSION_COOKIE, rpc } from "../../../lib/portal";
 
 export const dynamic = "force-dynamic";
 
-type Res = { ok?: boolean; error?: string; id?: string; ops_project?: string } | null;
+type Res = { ok?: boolean; error?: string; id?: string; ops_project?: string; archived?: string; restored?: string } | null;
 
 export async function POST(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -24,6 +24,17 @@ export async function POST(req: NextRequest) {
       if (!project) return NextResponse.json({ error: "Invalid project." }, { status: 400 });
       const d = await rpc<Res>("portal_project_set_portal", { p_token: token, p_hub_user: hub, p_project: project });
       return d?.ok ? NextResponse.json({ ok: true, ops_project: d.ops_project ?? null }) : NextResponse.json({ error: d?.error || "Could not switch the project." }, { status: 400 });
+    }
+    if (action === "archive" || action === "restore") {
+      const project = typeof body.project === "string" ? body.project.trim() : "";
+      if (!/^[a-z0-9._-]{1,60}$/.test(project) || project === "default") {
+        return NextResponse.json({ error: "Invalid project pool." }, { status: 400 });
+      }
+      const fn = action === "archive" ? "portal_project_archive" : "portal_project_restore";
+      const d = await rpc<Res>(fn, { p_token: token, p_hub_user: hub, p_project: project });
+      return d?.ok
+        ? NextResponse.json({ ok: true, project })
+        : NextResponse.json({ error: d?.error || `Could not ${action} the project pool.` }, { status: 400 });
     }
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   } catch {
