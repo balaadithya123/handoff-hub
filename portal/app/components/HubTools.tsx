@@ -33,7 +33,7 @@ function Surface({
 
 function Kpi({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
   return (
-    <div className="rounded-xl border border-[#e7e4dc] bg-white p-4">
+    <div className="hub-tools-kpi">
       <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f] mb-2">{label}</p>
       <div className="text-2xl font-semibold font-mono text-[#141414]">{value}</div>
       {hint ? <p className="text-[11px] text-[#9a988f] mt-1.5">{hint}</p> : null}
@@ -47,7 +47,7 @@ export default async function HubTools({ token }: { token: string }) {
 
   if (hubs.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#e7e4dc] bg-white p-10 text-center">
+      <div className="axon-hub-tools hub-tools-card p-10 text-center">
         <Wrench className="w-8 h-8 text-[#9a988f] mx-auto mb-3" />
         <h3 className="text-sm font-semibold text-[#141414]">No AI account linked yet</h3>
         <p className="text-xs text-[#6f6e68] max-w-md mx-auto mt-1">
@@ -60,17 +60,17 @@ export default async function HubTools({ token }: { token: string }) {
   const now = Date.now();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e7e4dc] pb-5">
+    <div className="axon-hub-tools">
+      <div className="hub-tools-heading">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
+            <span className="hub-tools-eyebrow">
               HUB CONTROL
             </span>
             <span className="text-xs font-mono text-[#9a988f]">{hubs.length} instance{hubs.length === 1 ? "" : "s"}</span>
           </div>
-          <h1 className="text-2xl font-semibold text-[#141414] tracking-tight">Hub Tools & Control</h1>
-          <p className="text-sm text-[#6f6e68] mt-1 max-w-2xl">
+          <h1>Hub Tools & Control</h1>
+          <p>
             Allowlists, workload, claims, approvals, health checks, and context briefs.
           </p>
         </div>
@@ -108,7 +108,7 @@ export default async function HubTools({ token }: { token: string }) {
             </div>
 
             <Surface>
-              <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f] mb-1">Security allowlist</p>
+              <p className="hub-tools-eyebrow mb-1">Security allowlist</p>
               <h3 className="text-sm font-semibold text-[#141414] mb-1">Permitted integrations & repos</h3>
               <p className="text-xs text-[#6f6e68] mb-4">Changes apply instantly without redeploying the Hub.</p>
               <div className="space-y-4">
@@ -290,7 +290,7 @@ export default async function HubTools({ token }: { token: string }) {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl bg-[#f6f5f2] border border-[#e7e4dc] space-y-1">
+                <div className="hub-tools-card space-y-1">
                   <span className="text-[10px] font-mono uppercase text-[#9a988f]">Summary</span>
                   <p className="text-xs text-[#141414]">{asText(h.summary) || "No summary recorded."}</p>
                 </div>
