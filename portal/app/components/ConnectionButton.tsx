@@ -1,77 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Unplug } from "lucide-react";
 
 export default function ConnectionButton({
-  provider,
-  connected,
-  available = true,
-  state,
-  reason,
+  provider, connected, available = true, state, reason,
 }: {
   provider: string;
   connected: boolean;
   available?: boolean;
-  /** What the Hub reported for this app: only "ready" (or unknown) can start a sign-in. */
   state?: "ready" | "needs_app" | "unavailable" | "unknown";
   reason?: string | null;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  if (!available) {
-    return (
-      <span className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#9a988f]">
-        Soon
-      </span>
-    );
-  }
-
-  // The Hub already knows this app cannot connect right now, so say so instead of sending the user into an error.
+  if (!available) return <span className="plugin-status-soon">Coming soon</span>;
   if (!connected && (state === "needs_app" || state === "unavailable")) {
-    return (
-      <span
-        title={reason ?? undefined}
-        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium text-[#9a988f] border border-dashed border-[#e7e4dc]"
-      >
-        {state === "needs_app" ? "Setup needed" : "Unavailable"}
-      </span>
-    );
+    return <span title={reason ?? undefined} className="plugin-status-soon">{state === "needs_app" ? "Setup needed" : "Unavailable"}</span>;
   }
 
   if (!connected) {
-    return (
-      <a
-        href={`/api/connect/${provider}`}
-        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium border border-[#e7e4dc] bg-white text-[#141414] hover:bg-[#141414] hover:text-[#f6f5f2] transition-colors"
-      >
-        Add
-      </a>
-    );
+    return <a href={`/api/connect/${provider}`} className="plugin-connect-button">Connect</a>;
   }
 
   async function disconnect() {
-    setBusy(true);
-    setError("");
-    const r = await fetch(`/api/disconnect/${provider}`, { method: "POST" });
-    if (r.ok) window.location.reload();
-    else {
-      setError("Could not disconnect.");
-      setBusy(false);
-    }
+    if (busy) return;
+    setBusy(true); setError("");
+    const response = await fetch(`/api/disconnect/${provider}`, { method: "POST" }).catch(() => null);
+    if (response?.ok) { window.location.reload(); return; }
+    setError("Could not disconnect.");
+    setBusy(false);
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={disconnect}
-        disabled={busy}
-        className="inline-flex items-center h-8 px-3.5 rounded-full text-xs font-medium bg-[#e8f0fc] border border-[rgba(47,111,224,0.28)] text-[#2f6fe0] hover:bg-[#d6e6fb] transition-colors disabled:opacity-50"
-      >
-        {busy ? "Disconnecting…" : "Connected"}
+    <div className="plugin-connected-control">
+      <button type="button" onClick={disconnect} disabled={busy} className="plugin-connected-button">
+        <Check size={13} />{busy ? "Removing…" : "Connected"}
+        <Unplug size={12} className="plugin-disconnect-icon" />
       </button>
-      {error && <small className="text-[10px] text-[#c44]">{error}</small>}
+      {error && <small>{error}</small>}
     </div>
   );
 }
