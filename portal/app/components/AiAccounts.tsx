@@ -1,4 +1,4 @@
-import { Bot, Sparkles } from "lucide-react";
+import { ArrowUpRight, Bot, CheckCircle2, CircleHelp, KeyRound, Link2, PlugZap, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { getAiApps } from "../../lib/data";
 import { ago } from "../../lib/format";
 import LinkCodeButton from "./LinkCodeButton";
@@ -10,140 +10,162 @@ const MCP_URL = (process.env.NEXT_PUBLIC_HUB_URL || "https://handoff-mcp.vercel.
 const DAY = 24 * 60 * 60 * 1000;
 
 export default async function AiAccounts({ token }: { token: string }) {
-  const d = await getAiApps(token).catch(() => null);
-  const accts = d?.accounts ?? [];
-  const now = Date.now();
-  const appCount = accts.reduce((n, a) => n + a.clients.length, 0);
+  const data = await getAiApps(token).catch(() => null);
+  const accounts = data?.accounts ?? [];
+  const clients = accounts.flatMap(account => account.clients ?? []);
+  const activeCount = clients.filter(client => {
+    const timestamp = Date.parse(client.last_active);
+    return Number.isFinite(timestamp) && Date.now() - timestamp < DAY;
+  }).length;
 
   return (
-    <div className="axon-ai-accounts space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+    <div className="axon-page axon-ai-page">
+      <section className="axon-page-heading">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-emerald-400/10 text-emerald-300 border-emerald-400/20">
-              {appCount} AI CLIENT{appCount === 1 ? "" : "S"} ACTIVE
-            </span>
-            <span className="text-xs font-mono text-zinc-500">{accts.length} Hub account{accts.length === 1 ? "" : "s"}</span>
+          <p className="axon-eyebrow">WORKSPACE / AI ACCOUNTS</p>
+          <h1>AI Accounts</h1>
+          <p>Manage the AI clients connected to your Axon workspace and control how they access your shared context.</p>
+        </div>
+        <div className="axon-heading-mark"><Bot size={21} /></div>
+      </section>
+
+      <section className="axon-stat-grid" aria-label="AI account summary">
+        <div className="axon-stat-card">
+          <span className="axon-stat-icon"><Users size={17} /></span>
+          <span className="axon-stat-copy"><strong>{accounts.length}</strong><small>Linked Hub accounts</small></span>
+        </div>
+        <div className="axon-stat-card">
+          <span className="axon-stat-icon"><PlugZap size={17} /></span>
+          <span className="axon-stat-copy"><strong>{clients.length}</strong><small>Connected AI clients</small></span>
+        </div>
+        <div className="axon-stat-card">
+          <span className="axon-stat-icon"><CheckCircle2 size={17} /></span>
+          <span className="axon-stat-copy"><strong>{activeCount}</strong><small>Active in last 24 hours</small></span>
+        </div>
+      </section>
+
+      <section className="axon-content-section">
+        <div className="axon-content-heading">
+          <div><h2>Connected accounts</h2><p>Each Hub account has its own connected AI clients and project pools.</p></div>
+          <span className="axon-count-label">{accounts.length} {accounts.length === 1 ? "account" : "accounts"}</span>
+        </div>
+
+        {accounts.length === 0 ? (
+          <div className="axon-empty-state compact">
+            <Bot size={27} />
+            <h3>No AI accounts linked</h3>
+            <p>Connect ChatGPT, Claude or another MCP-compatible AI client using the setup details below.</p>
           </div>
-          <h1 className="text-[30px] md:text-[34px] font-semibold text-white tracking-tight">AI Accounts</h1>
-          <p className="text-sm text-zinc-400 mt-1 max-w-2xl">
-            Manage AI apps (Claude Desktop, ChatGPT, Claude Code) authorized to use your memory pools and integrations.
-          </p>
-        </div>
-      </div>
-
-      {accts.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/15 bg-[#101012] p-10 text-center">
-          <Bot className="w-8 h-8 text-[#9a988f] mx-auto mb-3" />
-          <h3 className="text-sm font-semibold text-zinc-100">No AI account linked yet</h3>
-          <p className="text-xs text-zinc-400 max-w-md mx-auto mt-1">
-            Connect Claude, ChatGPT, or Cursor using the MCP endpoint below.
-          </p>
-        </div>
-      ) : (
-        accts.map((a) => (
-          <div key={a.id} className="rounded-xl border border-white/[.08] bg-[#101012] p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#e8f0fc] border border-[rgba(47,111,224,0.28)] flex items-center justify-center text-[#2f6fe0]">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-[#141414]">{a.nickname || a.label}</h2>
-                  <span className="text-xs text-[#9a988f]">Hub account · Linked {ago(a.linked_at)}</span>
-                </div>
-              </div>
-              <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
-                {a.clients.length} {a.clients.length === 1 ? "AI client" : "AI clients"}
-              </span>
-            </div>
-
-            {a.clients.length === 0 ? (
-              <div className="p-4 rounded-xl bg-white/[.04] text-xs text-[#6f6e68] text-center">
-                No AI client currently signed in under this Hub account.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {a.clients.map((c, i) =>
-                  c.client_id ? (
-                    <AiClientCard
-                      key={c.client_id}
-                      hub={a.id}
-                      clientId={c.client_id}
-                      name={c.name}
-                      nickname={c.nickname ?? null}
-                      active={now - Date.parse(c.last_active) < DAY}
-                      lastText={ago(c.last_active)}
-                      connectedText={c.connected_at ? ago(c.connected_at) : "—"}
-                    />
-                  ) : (
-                    <div key={i} className="p-3 rounded-xl bg-[#f6f5f2] border border-[#e7e4dc] text-xs text-[#141414]">
-                      {c.name}
+        ) : (
+          <div className="axon-ai-account-list">
+            {accounts.map(account => {
+              const accountActive = account.clients.filter(client => {
+                const timestamp = Date.parse(client.last_active);
+                return Number.isFinite(timestamp) && Date.now() - timestamp < DAY;
+              }).length;
+              return (
+                <article className="axon-ai-account" key={account.id}>
+                  <header className="axon-ai-account-header">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="axon-ai-account-icon"><Bot size={19} /></span>
+                      <div className="min-w-0">
+                        <h3>{account.nickname || account.label}</h3>
+                        <p>{account.nickname ? account.label + " · " : ""}Linked {ago(account.linked_at)}</p>
+                      </div>
                     </div>
-                  )
-                )}
-              </div>
-            )}
+                    <div className="axon-ai-account-status">
+                      <span className="axon-status-chip success"><span />{account.clients.length} {account.clients.length === 1 ? "client" : "clients"}</span>
+                      <span className="axon-status-chip neutral">{accountActive} recently active</span>
+                    </div>
+                  </header>
 
-            <div className="pt-3 border-t border-[#e7e4dc] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f6f5f2]/70 p-3 rounded-xl">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-xs font-mono text-[#9a988f]">Account settings</span>
-                <AccountName id={a.id} label={a.label} nickname={a.nickname ?? null} />
-              </div>
-              <UnlinkButton id={a.id} name={a.nickname || a.label} />
-            </div>
-          </div>
-        ))
-      )}
+                  <div className="axon-ai-account-body">
+                    <div className="axon-ai-clients-heading">
+                      <span>Connected clients</span>
+                      <small>{account.clients.length} total</small>
+                    </div>
+                    {account.clients.length === 0 ? (
+                      <div className="axon-inline-empty">
+                        <CircleHelp size={17} />
+                        <span><strong>No clients connected to this account</strong><small>Create a link code below and use it from your AI client.</small></span>
+                      </div>
+                    ) : (
+                      <div className="axon-ai-client-grid">
+                        {account.clients.map((client, index) => (
+                          client.client_id ? (
+                            <AiClientCard
+                              key={client.client_id}
+                              hub={account.id}
+                              clientId={client.client_id}
+                              name={client.name}
+                              nickname={client.nickname ?? null}
+                              active={Date.now() - Date.parse(client.last_active) < DAY}
+                              lastText={ago(client.last_active)}
+                              connectedText={client.connected_at ? ago(client.connected_at) : "—"}
+                            />
+                          ) : (
+                            <div className="axon-ai-legacy-client" key={index}>
+                              <span className="axon-ai-client-initial">{client.name.charAt(0).toUpperCase()}</span>
+                              <span><strong>{client.name}</strong><small>Connected AI client</small></span>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-        <div className="rounded-xl border border-white/[.08] bg-[#101012] p-5 space-y-3">
-          <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Step 1</p>
-          <h3 className="text-sm font-semibold text-[#141414]">Connect an AI app</h3>
-          <p className="text-xs text-[#6f6e68]">Add this MCP server endpoint to your AI client.</p>
-          <div className="p-2.5 rounded-lg bg-[#f6f5f2] border border-[#e7e4dc] font-mono text-xs text-[#141414] select-all break-all">
-            {MCP_URL}
+                  <footer className="axon-ai-account-footer">
+                    <div className="axon-ai-account-rename">
+                      <span className="axon-footer-label">Account label</span>
+                      <AccountName id={account.id} label={account.label} nickname={account.nickname ?? null} />
+                    </div>
+                    <UnlinkButton id={account.id} name={account.nickname || account.label} />
+                  </footer>
+                </article>
+              );
+            })}
           </div>
-          <div className="space-y-2 text-xs text-[#6f6e68] pt-1">
-            <div className="p-2.5 rounded-lg bg-[#f6f5f2]/80 border border-[#e7e4dc]">
-              <strong className="text-[#141414] block mb-0.5">Claude Desktop / Web</strong>
-              Settings → Custom Connectors → Add endpoint
-            </div>
-            <div className="p-2.5 rounded-lg bg-[#f6f5f2]/80 border border-[#e7e4dc]">
-              <strong className="text-[#141414] block mb-0.5">Claude Code CLI</strong>
-              <code className="text-[11px] font-mono text-[#2f6fe0] block mt-0.5">
-                claude mcp add --transport http handoff {MCP_URL}
-              </code>
-            </div>
-            <div className="p-2.5 rounded-lg bg-[#f6f5f2]/80 border border-[#e7e4dc]">
-              <strong className="text-[#141414] block mb-0.5">ChatGPT Custom GPT</strong>
-              Settings → Connectors → Developer mode → Add endpoint
-            </div>
+        )}
+      </section>
+
+      <section className="axon-connect-guide">
+        <div className="axon-content-heading">
+          <div><h2>Connect another AI client</h2><p>Use the Axon MCP endpoint to give another AI app access to your workspace.</p></div>
+          <span className="axon-guide-icon"><Link2 size={18} /></span>
+        </div>
+        <div className="axon-endpoint-row">
+          <div><span className="axon-field-label">MCP endpoint</span><code>{MCP_URL}</code></div>
+          <span className="axon-secure-note"><ShieldCheck size={14} />Secure connection</span>
+        </div>
+        <div className="axon-guide-steps">
+          <div className="axon-guide-step">
+            <span className="axon-step-number">01</span>
+            <div><strong>Add the connector</strong><p>Paste the endpoint into your AI app’s custom connector or MCP settings.</p></div>
+          </div>
+          <div className="axon-guide-step">
+            <span className="axon-step-number">02</span>
+            <div><strong>Create a one-time code</strong><p>Generate a link code below. It expires after 10 minutes and can only be used once.</p></div>
+          </div>
+          <div className="axon-guide-step">
+            <span className="axon-step-number">03</span>
+            <div><strong>Link your account</strong><p>In the new AI chat, ask it to call <code>link_portal_account</code> with your code.</p></div>
           </div>
         </div>
-
-        <div className="rounded-2xl border border-[#e7e4dc] bg-white p-5 space-y-3">
-          <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Step 2</p>
-          <h3 className="text-sm font-semibold text-[#141414]">Link to Portal</h3>
-          <p className="text-xs text-[#6f6e68]">
-            {d?.needs_unlock
-              ? "Linking an additional Hub account requires an unlock code."
-              : "Generate a link code and enter it during AI assistant sign-in."}
-          </p>
-          <div className="p-3.5 rounded-xl bg-[#f6f5f2] border border-[#e7e4dc] text-xs text-[#6f6e68] space-y-2">
-            <div className="flex items-center gap-2 text-[#2f6fe0]">
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span className="font-semibold text-[#141414]">One-time authorization code</span>
-            </div>
-            <p className="text-[11px] leading-relaxed">
-              Codes expire after 10 minutes and bind the AI client to your portal account.
-            </p>
-          </div>
-          <div className="pt-1">
-            <LinkCodeButton linked={Boolean(d?.linked)} needsUnlock={Boolean(d?.needs_unlock)} />
-          </div>
+        <div className="axon-link-code-area">
+          <div><span className="axon-field-label">One-time authorization</span><p>Generate a code, then share it only with the AI client you are connecting.</p></div>
+          <LinkCodeButton linked={Boolean(data?.linked)} needsUnlock={Boolean(data?.needs_unlock)} />
         </div>
-      </div>
+        <details className="axon-client-help">
+          <summary>Where do I add the endpoint?</summary>
+          <div className="axon-client-help-grid">
+            <p><strong>Claude Desktop / Web</strong><span>Settings → Connectors → Add custom connector</span></p>
+            <p><strong>Claude Code</strong><code>claude mcp add --transport http handoff {MCP_URL}</code></p>
+            <p><strong>ChatGPT</strong><span>Settings → Apps &amp; Connectors → Developer mode</span></p>
+          </div>
+        </details>
+      </section>
+
+      <p className="axon-page-footnote"><Sparkles size={13} />Each AI client can be renamed or unlinked independently. Removing one client does not disconnect the others.</p>
     </div>
   );
 }
