@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type KeyboardEvent } from "react";
-import { Search, CheckCircle2, ShieldCheck, AlertCircle } from "lucide-react";
+import { Search, CheckCircle2, ShieldCheck, AlertCircle, Puzzle as PuzzleIcon } from "lucide-react";
 import ConnectionButton from "./ConnectionButton";
 import AppMark from "./AppMark";
 import { Sheet } from "./ui/Sheet";
@@ -89,10 +89,12 @@ export default function ConnectorDirectory({
   };
 
   return (
-    <div className="integration-marketplace space-y-5">
-      <div className="space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-zinc-500">Workspace / Plugins</p><h1 className="text-[30px] md:text-[34px] font-semibold tracking-tight text-white">Your plugins</h1>
-        <p className="text-sm text-[#6f6e68] max-w-xl">
+    <div className="axon-page axon-plugin-page integration-marketplace">
+      <div className="axon-page-heading">
+        <div><p className="axon-eyebrow">WORKSPACE / PLUGINS</p><h1>Your plugins</h1>
+        <p>Connect and manage the apps your Axon workspace uses.</p></div><div className="axon-heading-mark"><PuzzleIcon /></div>
+      </div>
+      <div className="space-y-1 sr-only">
           Connect the apps your workspace uses. Review availability, manage connections and add new tools.
         </p>
       </div>
@@ -173,27 +175,27 @@ export default function ConnectorDirectory({
             </div>
             <p className="text-sm text-zinc-300 leading-relaxed">{selectedApp[3]}</p>
             {selectedIsConnected ? (
-              <div className="p-3.5 rounded-xl border border-[rgba(47,111,224,0.28)] bg-[#e8f0fc] text-xs text-[#2f6fe0] space-y-1">
+              <div className="p-3.5 rounded-xl border border-emerald-400/20 bg-emerald-400/[.07] text-xs text-emerald-300 space-y-1">
                 <div className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /><span>Connected</span></div>
-                {selectedAccountName ? <p className="text-[11px] text-[#6f6e68]">Account: {selectedAccountName}</p> : null}
+                {selectedAccountName ? <p className="text-[11px] text-zinc-400">Account: {selectedAccountName}</p> : null}
               </div>
             ) : selectedApp[4] && (selectedAvailability?.state === "needs_app" || selectedAvailability?.state === "unavailable") ? (
-              <div className="p-3.5 rounded-xl border border-[#e7e4dc] bg-white text-xs text-[#6f6e68] space-y-2">
-                <span className="font-semibold text-[#141414] flex items-center gap-1.5"><AlertCircle className="w-4 h-4" /><span>{selectedAvailability.state === "needs_app" ? "Setup needed" : "Can't be connected yet"}</span></span>
+              <div className="p-3.5 rounded-xl border border-white/10 bg-[#171719] text-xs text-zinc-300 space-y-2">
+                <span className="font-semibold text-zinc-100 flex items-center gap-1.5"><AlertCircle className="w-4 h-4" /><span>{selectedAvailability.state === "needs_app" ? "Setup needed" : "Can't be connected yet"}</span></span>
                 {selectedAvailability.reason ? <p className="text-[11px] leading-relaxed">{selectedAvailability.reason}</p> : null}
                 {selectedAvailability.setup ? (
-                  <p className="text-[11px] leading-relaxed">Redirect URI to register: <code className="font-mono text-[#141414] break-all">{selectedAvailability.setup.redirect_uri}</code></p>
+                  <p className="text-[11px] leading-relaxed">Redirect URI to register: <code className="font-mono text-zinc-100 break-all">{selectedAvailability.setup.redirect_uri}</code></p>
                 ) : null}
               </div>
             ) : selectedApp[4] ? (
-              <div className="p-3.5 rounded-xl border border-[#e7e4dc] bg-white text-xs text-[#6f6e68]">
-                <span className="font-semibold text-[#141414]">Not connected yet</span>
+              <div className="p-3.5 rounded-xl border border-white/10 bg-[#171719] text-xs text-zinc-300">
+                <span className="font-semibold text-zinc-100">Not connected yet</span>
                 <p className="text-[11px] mt-1">Authorize via official OAuth below.</p>
               </div>
             ) : (
-              <div className="p-3.5 rounded-xl border border-[#e7e4dc] bg-white text-xs text-[#9a988f]">Coming soon</div>
+              <div className="p-3.5 rounded-xl border border-white/10 bg-[#171719] text-xs text-zinc-400">Coming soon</div>
             )}
-            <div className="flex items-center gap-2 text-xs text-[#6f6e68]"><ShieldCheck className="w-4 h-4" /><span>OAuth only. Axon never sees your password.</span></div>
+            <div className="flex items-center gap-2 text-xs text-zinc-400"><ShieldCheck className="w-4 h-4" /><span>OAuth only. Axon never sees your password.</span></div>
             <ConnectionButton provider={selectedApp[0]} connected={selectedIsConnected} available={selectedApp[4]} state={selectedAvailability?.state} reason={selectedAvailability?.reason} />
           </div>
         )}
