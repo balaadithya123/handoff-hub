@@ -33,11 +33,18 @@ export type ProjectRecent = { at?: string | null; agent?: string | null; action?
 export type ProjectCounts = { memories: number; events: number; tasks: number; pending_tasks: number; blockers: number; claims: number };
 export type Project = { id: string; name: string; description?: string | null; updated_at?: string | null; is_portal: boolean; summary?: string | null; counts: ProjectCounts; recent: ProjectRecent[] };
 export type ProjectAccount = { id: string; label: string; nickname: string | null; ops_project: string; projects: Project[] };
-export type ProjectsRes = { ok?: boolean; accounts?: ProjectAccount[] } | null;
+export type ArchivedProject = { id: string; name: string; description?: string | null; archived_at?: string | null };
+export type ArchivedProjectAccount = { id: string; label: string; nickname: string | null; projects: ArchivedProject[] };
+export type ProjectsRes = { ok?: boolean; accounts?: ProjectAccount[]; archived_accounts?: ArchivedProjectAccount[] } | null;
 
 export async function getProjects(token: string): Promise<ProjectsRes> {
   try {
-    return await rpc<ProjectsRes>("portal_projects", { p_token: token });
+    const [active, archived] = await Promise.all([
+      rpc<ProjectsRes>("portal_projects", { p_token: token }),
+      rpc<{ ok?: boolean; accounts?: ArchivedProjectAccount[] } | null>("portal_archived_projects", { p_token: token }).catch(() => null),
+    ]);
+    if (!active) return null;
+    return { ...active, archived_accounts: archived?.accounts ?? [] };
   } catch {
     return null;
   }
