@@ -20,11 +20,11 @@ type Notice = { kind: "error" | "ok"; text: string } | null;
 
 const META: Record<Tab, [string, string]> = {
   overview: ["Overview", "Your Axon account at a glance."],
-  integrations: ["Integrations", "Connect your tools with their own sign-in. Axon never sees your passwords."],
+  integrations: ["Plugins", "Connect and manage the apps available to your Axon workspace."],
   projects: ["Projects & Pools", "Separate memory pools your AI apps can save to."],
-  ai: ["AI Accounts", "Link the AI accounts that use your connections."],
+  ai: ["AI Accounts", "Manage connected AI clients, sessions and access."],
   tools: ["Hub Tools & Controls", "Allowlist, workload, claims, approvals, health checks and context brief."],
-  activity: ["Activity & Telemetry", "What your AI accounts did through the Hub, across all projects."],
+  activity: ["Activity", "A clear timeline of actions performed by your connected AI clients."],
 };
 
 async function Dashboard({
