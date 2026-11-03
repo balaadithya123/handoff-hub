@@ -27,7 +27,7 @@ function Surface({
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-[#e7e4dc] bg-white p-5 ${className}`}>{children}</div>
+    <div className={`hub-tools-card ${className}`}>{children}</div>
   );
 }
 
@@ -35,7 +35,7 @@ function Kpi({ label, value, hint }: { label: string; value: React.ReactNode; hi
   return (
     <div className="hub-tools-kpi">
       <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f] mb-2">{label}</p>
-      <div className="text-2xl font-semibold font-mono text-[#141414]">{value}</div>
+      <div className="hub-tools-value font-mono">{value}</div>
       {hint ? <p className="text-[11px] text-[#9a988f] mt-1.5">{hint}</p> : null}
     </div>
   );
@@ -294,13 +294,13 @@ export default async function HubTools({ token }: { token: string }) {
                   <span className="text-[10px] font-mono uppercase text-[#9a988f]">Summary</span>
                   <p className="text-xs text-[#141414]">{asText(h.summary) || "No summary recorded."}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#f6f5f2] border border-[#e7e4dc] space-y-1">
+                <div className="hub-tools-card hub-tools-card-inset space-y-1">
                   <span className="text-[10px] font-mono uppercase text-[#9a988f]">Blockers</span>
                   <p className="text-xs text-[#141414]">
                     {asArray(h.blockers).length === 0 ? "None" : asArray(h.blockers).map(asText).join(" · ")}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#f6f5f2] border border-[#e7e4dc] space-y-1">
+                <div className="hub-tools-card hub-tools-card-inset space-y-1">
                   <span className="text-[10px] font-mono uppercase text-[#9a988f]">Decisions</span>
                   <p className="text-xs text-[#141414]">
                     {asArray(h.decisions).length === 0 ? "None" : asArray(h.decisions).map(asText).join(" · ")}
