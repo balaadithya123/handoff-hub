@@ -54,67 +54,55 @@ button:not(:disabled),
 
 
 
-/* Authenticated Axon workspace. Public landing and login remain on the original theme. */
+/* Authenticated Axon workspace — isolated from the public landing and login. */
 .axon-dashboard {
-  color-scheme: dark; --axon-bg:#09090b; --axon-panel:#101012; --axon-panel-raised:#161619;
-  --axon-line:#29292d; --axon-ink:#ededed; --axon-muted:#a1a1aa; --axon-soft:#71717a;
-  min-height:100dvh; background:var(--axon-bg)!important; color:var(--axon-ink)!important;
-  font-family:var(--font-geist-sans),ui-sans-serif,system-ui,sans-serif!important; letter-spacing:-.012em;
+  --axon-bg: #09090b;
+  --axon-panel: #101012;
+  --axon-panel-raised: #171719;
+  --axon-line: #29292d;
+  --axon-ink: #ededed;
+  --axon-muted: #a1a1aa;
+  --axon-soft: #71717a;
+  min-height: 100dvh;
+  color-scheme: dark;
+  color: var(--axon-ink);
+  background: var(--axon-bg);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -.012em;
 }
-.axon-dashboard aside{background:#09090b!important;border-color:var(--axon-line)!important;box-shadow:none!important}
-.axon-dashboard header{background:rgba(9,9,11,.94)!important;border-color:var(--axon-line)!important;box-shadow:none!important;backdrop-filter:blur(14px)}
-.axon-dashboard main{max-width:1440px!important;padding-top:32px!important;padding-bottom:56px!important}
-.axon-dashboard [class*="bg-white"],.axon-dashboard [class*="bg-[#f6f5f2]"],.axon-dashboard [class*="bg-[#efeee9]"],.axon-dashboard [class*="bg-[#e8f0fc]"],.axon-dashboard [class*="bg-[#eaf1ff]"]{background-color:var(--axon-panel)!important}
-.axon-dashboard [class*="border-[#e7e4dc]"],.axon-dashboard [class*="border-[#d9d5cb]"],.axon-dashboard [class*="border-[rgba(47,111,224"]{border-color:var(--axon-line)!important}
-.axon-dashboard [class*="text-[#141414]"],.axon-dashboard [class*="text-[#2f6fe0]"],.axon-dashboard [class*="text-[#2457c5]"],.axon-dashboard [class*="text-[#3975e8]"]{color:var(--axon-ink)!important}
-.axon-dashboard [class*="text-[#6f6e68]"],.axon-dashboard [class*="text-[#9a988f]"],.axon-dashboard [class*="text-[#b07a3a]"]{color:var(--axon-muted)!important}
-.axon-dashboard [class*="rounded-xl"],.axon-dashboard [class*="rounded-2xl"]{border-radius:10px!important}
-.axon-dashboard aside nav a{min-height:40px;border-radius:7px!important;font-size:13px!important;font-weight:500!important}
-.axon-dashboard aside nav a[class*="bg-[#141414]"]{background:#1c1c1f!important;color:#fafafa!important;box-shadow:inset 2px 0 0 #e4e4e7!important}
-.axon-dashboard aside nav a:hover{background:#18181b!important;color:#fafafa!important}
-.axon-dashboard aside>div:first-child>div:first-child a{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
-.axon-dashboard header button,.axon-dashboard input,.axon-dashboard select,.axon-dashboard textarea{background:#111113!important;color:var(--axon-ink)!important;border:1px solid var(--axon-line)!important;border-radius:8px!important}
-.axon-dashboard input::placeholder,.axon-dashboard textarea::placeholder{color:var(--axon-soft)!important}
-.axon-dashboard input:focus,.axon-dashboard select:focus,.axon-dashboard textarea:focus{outline:2px solid rgba(212,212,216,.12)!important;border-color:#52525b!important}
-.axon-dashboard a,.axon-dashboard button{transition:background-color .16s ease,border-color .16s ease,color .16s ease}
-.axon-dashboard main a[class*="group"]:hover,.axon-dashboard main button:hover{border-color:#52525b}
-.axon-dashboard [class*="shadow-"]{box-shadow:none!important}
-.axon-dashboard h1,.axon-dashboard h2,.axon-dashboard h3{letter-spacing:-.035em}
-.axon-dashboard h1{font-size:clamp(26px,3vw,34px)!important}
-.axon-dashboard p{line-height:1.6}
-.axon-dashboard nav.md\:hidden{background:rgba(9,9,11,.97)!important;border-color:var(--axon-line)!important;box-shadow:none!important}
-.axon-dashboard nav.md\:hidden a{border-radius:8px!important}
-/* Integrations marketplace */
-.axon-dashboard .integration-marketplace{display:flex;flex-direction:column;gap:24px}
-.axon-dashboard .marketplace-categories{display:flex;flex-wrap:wrap;gap:7px}
-.axon-dashboard .marketplace-categories button{border:1px solid var(--axon-line)!important;border-radius:7px!important;background:transparent!important;color:var(--axon-muted)!important;padding:7px 11px!important;font-size:12px!important}
-.axon-dashboard .marketplace-categories button[aria-pressed="true"]{background:#ededed!important;color:#09090b!important;border-color:#ededed!important}
-.axon-dashboard .marketplace-search{max-width:560px!important}
-.axon-dashboard .marketplace-connected-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.axon-dashboard .marketplace-connected-grid button{background:var(--axon-panel)!important;border:1px solid var(--axon-line)!important;border-radius:10px!important;padding:16px!important}
-.axon-dashboard .marketplace-app-list{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr))!important;gap:10px!important}
-.axon-dashboard .marketplace-app-list>li{min-width:0;border:1px solid var(--axon-line);border-radius:10px;background:var(--axon-panel);padding:14px}
-.axon-dashboard .marketplace-app-list>li:hover{background:var(--axon-panel-raised)}
-.axon-dashboard .marketplace-app-row{display:flex;align-items:flex-start;gap:12px;min-height:100%}
-.axon-dashboard .marketplace-app-row>button:first-child{align-items:flex-start;gap:11px}
-.axon-dashboard .marketplace-app-icon{width:40px;height:40px;flex:0 0 40px;border:1px solid var(--axon-line)!important;border-radius:9px!important;background:#18181b!important}
-.axon-dashboard .marketplace-app-meta{min-width:0;padding-top:1px}
-.axon-dashboard .marketplace-app-meta>span:first-child{font-size:13px!important}
-.axon-dashboard .marketplace-app-meta>span:last-child{white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11px!important;line-height:1.45!important}
-.axon-dashboard [role="dialog"]{background:#101012!important;color:var(--axon-ink)!important;border-color:var(--axon-line)!important}
-@media(max-width:767px){.axon-dashboard main{padding:22px 16px 96px!important}.axon-dashboard header{min-height:58px;padding-inline:16px}.axon-dashboard .marketplace-categories{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px}.axon-dashboard .marketplace-categories button{flex:0 0 auto}.axon-dashboard .marketplace-app-list{grid-template-columns:1fr!important}}
-@media(prefers-reduced-motion:reduce){.axon-dashboard *,.axon-dashboard *::before,.axon-dashboard *::after{transition-duration:.01ms!important}}
-
-/* Reference-matched Axon dashboard and app marketplace */
-.axon-dashboard aside { width:176px; }
-.axon-dashboard main { padding-top:20px!important; }
-.axon-dashboard .axon-overview { gap:20px!important; }
-.axon-dashboard .marketplace-app-list { grid-template-columns:repeat(4,minmax(0,1fr))!important; gap:10px!important; }
-.axon-dashboard .marketplace-app-list>li { border:0!important; background:transparent!important; padding:0!important; }
-.axon-dashboard .marketplace-app-row { min-height:56px!important; border-radius:10px!important; }
-.axon-dashboard .integration-marketplace { gap:16px!important; }
-.axon-dashboard .marketplace-search { max-width:640px!important; }
-.axon-dashboard .marketplace-categories button { border-radius:999px!important; padding:6px 13px!important; }
-.axon-dashboard .marketplace-app-icon { border-radius:9px!important; }
-@media(max-width:1100px){.axon-dashboard .marketplace-app-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-@media(max-width:767px){.axon-dashboard aside{width:auto}.axon-dashboard .marketplace-app-list{grid-template-columns:1fr!important}}
+.axon-dashboard aside { background: var(--axon-bg); border-color: var(--axon-line); }
+.axon-dashboard header { background: rgba(9,9,11,.96); border-color: var(--axon-line); backdrop-filter: blur(14px); }
+.axon-dashboard main { max-width: 1600px; padding-top: 20px; padding-bottom: 56px; }
+.axon-dashboard h1,.axon-dashboard h2,.axon-dashboard h3 { letter-spacing: -.035em; }
+.axon-dashboard input,.axon-dashboard select,.axon-dashboard textarea {
+  color: var(--axon-ink); background: #111113; border-color: var(--axon-line);
+}
+.axon-dashboard input::placeholder,.axon-dashboard textarea::placeholder { color: var(--axon-soft); }
+.axon-dashboard input:focus,.axon-dashboard select:focus,.axon-dashboard textarea:focus {
+  outline: 2px solid rgba(212,212,216,.14); border-color: #52525b;
+}
+.axon-dashboard a,.axon-dashboard button { transition: background-color .16s ease,border-color .16s ease,color .16s ease; }
+.axon-dashboard [role="dialog"] { color: var(--axon-ink); background: var(--axon-panel); border-color: var(--axon-line); }
+.axon-dashboard .axon-overview { display: flex; flex-direction: column; gap: 20px; }
+.axon-dashboard .integration-marketplace { display: flex; flex-direction: column; gap: 16px; }
+.axon-dashboard .marketplace-search { width: 100%; max-width: 640px; }
+.axon-dashboard .marketplace-categories { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; }
+.axon-dashboard .marketplace-connected-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 10px; }
+.axon-dashboard .marketplace-app-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.axon-dashboard .marketplace-app-list > li { min-width: 0; }
+.axon-dashboard .marketplace-app-row { min-width: 0; height: 100%; }
+.axon-dashboard .marketplace-app-meta { min-width: 0; }
+.axon-dashboard .marketplace-app-meta > span:last-child { white-space: normal; }
+.axon-dashboard nav.axon-mobile-nav { background: rgba(9,9,11,.97); border-color: var(--axon-line); }
+@media (max-width: 1100px) {
+  .axon-dashboard .marketplace-app-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 767px) {
+  .axon-dashboard main { padding: 22px 16px 96px; }
+  .axon-dashboard header { min-height: 58px; padding-inline: 16px; }
+  .axon-dashboard .marketplace-app-list { grid-template-columns: 1fr; }
+  .axon-dashboard .marketplace-categories { padding-bottom: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .axon-dashboard *,.axon-dashboard *::before,.axon-dashboard *::after { transition-duration: .01ms !important; }
+}
