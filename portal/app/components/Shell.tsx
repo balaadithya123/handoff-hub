@@ -45,48 +45,43 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
   return (
     <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
-      <aside className={`axon-sidebar fixed inset-y-0 left-0 z-50 hidden md:flex flex-col border-r border-white/10 bg-[#09090b] ${rail}`}>
-        <div className="flex h-[64px] items-center border-b border-white/10 px-4">
-          <Link href="/overview" title="Axon workspace" className="flex min-w-0 items-center gap-3">
-            <Logo size={30} className="shrink-0" />
-            {!collapsed && <span className="min-w-0"><span className="block text-[15px] font-semibold tracking-tight text-white">Axon</span><span className="block truncate text-[11px] text-zinc-500">Workspace</span></span>}
+      <aside className={`axon-sidebar fixed inset-y-0 left-0 z-50 hidden md:flex flex-col ${rail}`}>
+        <div className="axon-sidebar-brand">
+          <Link href="/overview" title="Axon workspace" className="axon-brand-link">
+            <span className="axon-brand-symbol"><Logo size={29} /></span>
+            {!collapsed && <span className="axon-brand-copy"><strong>axon</strong><small>YOUR AI WORKSPACE</small></span>}
           </Link>
-          {!collapsed && <span className="ml-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-zinc-500">BETA</span>}
+          {!collapsed && <span className="axon-brand-beta">BETA</span>}
         </div>
-
-        <div className="flex-1 overflow-y-auto px-3 py-6">
-          {NAV_GROUPS.map((group, gi) => {
-            const items = NAV.filter((n) => n.group === group);
-            return <section key={group} className={gi ? "mt-7" : ""}>
-              {!collapsed && <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-600">{group === "AI" ? "AI tools" : group}</p>}
-              <nav className="space-y-1">
-                {items.map((item) => {
+        <div className="axon-sidebar-scroll">
+          {NAV_GROUPS.map((group) => {
+            const items = NAV.filter(item => item.group === group);
+            return <section key={group} className="axon-nav-group">
+              {!collapsed && <p className="axon-nav-caption">{group === "AI" ? "AI MANAGEMENT" : group.toUpperCase()}</p>}
+              <nav className="axon-nav-list">
+                {items.map(item => {
                   const Icon = ICONS[item.id] || LayoutDashboard;
                   const active = tab === item.id;
                   return <Link key={item.id} href={item.href} title={collapsed ? item.label : undefined}
                     aria-current={active ? "page" : undefined}
-                    className={`group flex h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors ${collapsed ? "justify-center px-0" : ""} ${active ? "bg-white/[.10] text-white ring-1 ring-inset ring-white/[.08]" : "text-zinc-400 hover:bg-white/[.05] hover:text-zinc-100"}`}>
-                    <Icon className={`h-[17px] w-[17px] shrink-0 ${active ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"}`} />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                    {!collapsed && active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-zinc-300" />}
+                    className={`axon-nav-item ${active ? "is-active" : ""} ${collapsed ? "is-collapsed" : ""}`}>
+                    <span className="axon-nav-icon"><Icon size={17} strokeWidth={1.8}/></span>
+                    {!collapsed && <><span className="axon-nav-label">{item.label}</span>{active && <span className="axon-nav-active-dot"/>}</>}
                   </Link>;
                 })}
               </nav>
             </section>;
           })}
         </div>
-
-        <div className="border-t border-white/10 p-3">
-          {!collapsed && <Link href="/support" className="mb-2 flex h-9 items-center gap-3 rounded-lg px-3 text-[12px] text-zinc-400 hover:bg-white/[.05] hover:text-zinc-100"><LifeBuoy className="h-4 w-4" />Help &amp; Support</Link>}
-          <button type="button" onClick={() => setCollapsed(v => !v)} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={`flex h-9 w-full items-center gap-3 rounded-md px-3 text-xs text-zinc-500 hover:bg-white/[.05] hover:text-zinc-200 ${collapsed ? "justify-center px-0" : ""}`}>
-            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            {!collapsed && "Collapse sidebar"}
+        <div className="axon-sidebar-bottom">
+          {!collapsed && <Link href="/support" className="axon-support-link"><LifeBuoy size={16}/>Help &amp; Support<span>↗</span></Link>}
+          <button type="button" className={`axon-collapse-button ${collapsed ? "is-collapsed" : ""}`} onClick={() => setCollapsed(v => !v)} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+            {collapsed ? <PanelLeftOpen size={17}/> : <><PanelLeftClose size={17}/>Collapse sidebar</>}
           </button>
-          {!collapsed && <div className="mt-3 flex items-center gap-2 border-t border-white/[.07] px-2 pt-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-[11px] font-semibold text-zinc-100">{initial}</span>
-            <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-300">{displayName}</span>
-          </div>}
+          <div className={`axon-sidebar-profile ${collapsed ? "is-collapsed" : ""}`}>
+            <span className="axon-profile-avatar">{initial}</span>
+            {!collapsed && <span className="axon-profile-copy"><strong>{displayName}</strong><small>{email}</small></span>}
+          </div>
         </div>
       </aside>
 
@@ -112,7 +107,7 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
         <main className="mx-auto w-full max-w-[1600px] px-4 pb-24 pt-5 md:px-7 md:pb-12 md:pt-5">
           {notice && <div role="status" className={`mb-6 rounded-md border px-4 py-3 text-sm ${notice.kind === "ok" ? "border-blue-400/20 bg-blue-400/[.07] text-blue-200" : "border-red-400/20 bg-red-400/[.07] text-red-200"}`}>{notice.text}</div>}
-          {children}ionConfig>
+          {children}
         </main>
       </div>
 
