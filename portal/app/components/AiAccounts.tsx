@@ -16,34 +16,34 @@ export default async function AiAccounts({ token }: { token: string }) {
   const appCount = accts.reduce((n, a) => n + a.clients.length, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e7e4dc] pb-5">
+    <div className="axon-ai-accounts space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#e8f0fc] text-[#2f6fe0] border-[rgba(47,111,224,0.28)]">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-emerald-400/10 text-emerald-300 border-emerald-400/20">
               {appCount} AI CLIENT{appCount === 1 ? "" : "S"} ACTIVE
             </span>
-            <span className="text-xs font-mono text-[#9a988f]">{accts.length} Hub account{accts.length === 1 ? "" : "s"}</span>
+            <span className="text-xs font-mono text-zinc-500">{accts.length} Hub account{accts.length === 1 ? "" : "s"}</span>
           </div>
-          <h1 className="text-2xl font-semibold text-[#141414] tracking-tight">AI Accounts</h1>
-          <p className="text-sm text-[#6f6e68] mt-1 max-w-2xl">
+          <h1 className="text-[30px] md:text-[34px] font-semibold text-white tracking-tight">AI Accounts</h1>
+          <p className="text-sm text-zinc-400 mt-1 max-w-2xl">
             Manage AI apps (Claude Desktop, ChatGPT, Claude Code) authorized to use your memory pools and integrations.
           </p>
         </div>
       </div>
 
       {accts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#e7e4dc] bg-white p-10 text-center">
+        <div className="rounded-xl border border-dashed border-white/15 bg-[#101012] p-10 text-center">
           <Bot className="w-8 h-8 text-[#9a988f] mx-auto mb-3" />
-          <h3 className="text-sm font-semibold text-[#141414]">No AI account linked yet</h3>
-          <p className="text-xs text-[#6f6e68] max-w-md mx-auto mt-1">
+          <h3 className="text-sm font-semibold text-zinc-100">No AI account linked yet</h3>
+          <p className="text-xs text-zinc-400 max-w-md mx-auto mt-1">
             Connect Claude, ChatGPT, or Cursor using the MCP endpoint below.
           </p>
         </div>
       ) : (
         accts.map((a) => (
-          <div key={a.id} className="rounded-2xl border border-[#e7e4dc] bg-white p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e7e4dc]">
+          <div key={a.id} className="rounded-xl border border-white/[.08] bg-[#101012] p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#e8f0fc] border border-[rgba(47,111,224,0.28)] flex items-center justify-center text-[#2f6fe0]">
                   <Bot className="w-5 h-5" />
@@ -59,7 +59,7 @@ export default async function AiAccounts({ token }: { token: string }) {
             </div>
 
             {a.clients.length === 0 ? (
-              <div className="p-4 rounded-xl bg-[#f6f5f2] text-xs text-[#6f6e68] text-center">
+              <div className="p-4 rounded-xl bg-white/[.04] text-xs text-[#6f6e68] text-center">
                 No AI client currently signed in under this Hub account.
               </div>
             ) : (
@@ -97,7 +97,7 @@ export default async function AiAccounts({ token }: { token: string }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-        <div className="rounded-2xl border border-[#e7e4dc] bg-white p-5 space-y-3">
+        <div className="rounded-xl border border-white/[.08] bg-[#101012] p-5 space-y-3">
           <p className="text-[11px] font-mono uppercase tracking-wider text-[#9a988f]">Step 1</p>
           <h3 className="text-sm font-semibold text-[#141414]">Connect an AI app</h3>
           <p className="text-xs text-[#6f6e68]">Add this MCP server endpoint to your AI client.</p>
