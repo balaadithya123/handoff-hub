@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 /**
  * Real brand marks for integration cards (Simple Icons paths via CDN).
  * Site branding stays separate — this is only for third-party apps.
@@ -49,12 +53,14 @@ export default function AppMark({
   className?: string;
 }) {
   const slug = SLUG[id];
-  if (slug) {
+  const [failed, setFailed] = useState(false);
+  if (slug && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={`https://cdn.simpleicons.org/${slug}`}
-        alt=""
+        alt={id + " logo"}
+        onError={() => setFailed(true)}
         width={size}
         height={size}
         className={className}
@@ -65,8 +71,8 @@ export default function AppMark({
   const letter = (id?.[0] || "?").toUpperCase();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
-      <rect width="24" height="24" rx="6" fill="#efeee9" />
-      <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="600" fill="#141414">
+      <rect width="24" height="24" rx="6" fill="#f4f4f5" />
+      <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="600" fill="#18181b">
         {letter}
       </text>
     </svg>
