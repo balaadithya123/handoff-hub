@@ -125,3 +125,6 @@ button:not(:disabled),
 @media (prefers-reduced-motion: reduce) {
   .axon-dashboard *,.axon-dashboard *::before,.axon-dashboard *::after { transition-duration: .01ms !important; }
 }
+
+/* Activity explorer: consistent dark surfaces and readable event hierarchy. */
+.axon-dashboard .activity-explorer input,.axon-dashboard .activity-explorer select{background:#111113;color:#ededed;border-color:#29292d}.axon-dashboard .activity-explorer input::placeholder{color:#71717a}.axon-dashboard .activity-explorer .activity-list li+li{border-color:#29292d}.axon-dashboard .activity-explorer .activity-detail .detail-card{background:#171719;border-color:#29292d}.axon-dashboard .activity-explorer .activity-detail .detail-label{color:#a1a1aa}.axon-dashboard .activity-explorer .activity-detail .detail-value{color:#f4f4f5}.axon-dashboard .activity-explorer .activity-detail pre{background:#09090b;color:#e4e4e7}
