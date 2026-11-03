@@ -369,3 +369,58 @@ button:not(:disabled),
   .axon-dashboard .axon-project-create-form { align-items:stretch; flex-direction:column; }
   .axon-dashboard .axon-project-create-form > * { width:100%; }
 }
+
+
+/* Activity timeline and plugin controls use the same surface/contrast rules as the rest of the workspace. */
+.axon-dashboard .activity-toolbar { display:flex; align-items:center; gap:10px; }
+.axon-dashboard .activity-search { display:flex; align-items:center; gap:10px; flex:1; min-width:0; height:42px; padding:0 13px; border:1px solid #303038; border-radius:11px; color:#85858f; background:#111114; }
+.axon-dashboard .activity-search input { width:100%; min-width:0; height:100%; padding:0; outline:0; border:0; color:#f4f4f5; background:transparent; font:inherit; font-size:12px; box-shadow:none; }
+.axon-dashboard .activity-search input:focus { outline:0; border:0; box-shadow:none; }
+.axon-dashboard .activity-search input::placeholder { color:#71717a; }
+.axon-dashboard .activity-toolbar select { width:auto; min-width:155px; height:42px; padding:0 12px; border:1px solid #303038; border-radius:11px; color:#d4d4d8; background:#111114; font:inherit; font-size:11px; }
+.axon-dashboard .activity-results-label { display:flex; align-items:center; justify-content:space-between; color:#85858f; font-size:10px; }
+.axon-dashboard .activity-results-label span:last-child { color:#71717a; }
+.axon-dashboard .activity-event-list { overflow:hidden; border:1px solid #29292f; border-radius:14px; background:#101012; }
+.axon-dashboard .activity-event-list li+li { border-top:1px solid #27272d; }
+.axon-dashboard .activity-event { display:flex; align-items:flex-start; gap:12px; width:100%; padding:15px; color:#e4e4e7; background:transparent; text-align:left; }
+.axon-dashboard .activity-event:hover { background:#17171b; }
+.axon-dashboard .activity-event-marker { display:flex; align-items:center; justify-content:center; width:31px; height:31px; flex:none; margin-top:1px; border:1px solid #33333a; border-radius:9px; color:#c4c4cc; background:#202025; }
+.axon-dashboard .activity-event-content { display:flex; flex:1; flex-direction:column; min-width:0; gap:5px; }
+.axon-dashboard .activity-event-heading { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.axon-dashboard .activity-event-heading strong { color:#f4f4f5; font-size:12px; font-weight:700; text-transform:capitalize; }
+.axon-dashboard .activity-agent-tag { padding:3px 7px; border:1px solid #34343b; border-radius:999px; color:#c4c4cc; background:#1b1b20; font-size:9px; }
+.axon-dashboard .activity-event-description { overflow:hidden; color:#92929c; font-size:11px; line-height:1.5; text-overflow:ellipsis; }
+.axon-dashboard .activity-event-project { color:#71717a; font-size:9px; }
+.axon-dashboard .activity-event time { flex:none; color:#85858f; font-size:10px; white-space:nowrap; }
+.axon-dashboard .activity-detail { position:fixed; inset:0; z-index:70; display:flex; justify-content:flex-end; background:rgba(0,0,0,.74); backdrop-filter:blur(5px); }
+.axon-dashboard .activity-detail aside { display:flex; flex-direction:column; width:min(100%,480px); height:100%; overflow:hidden; border-left:1px solid #303038; color:#ededed; background:#101012; box-shadow:-20px 0 60px rgba(0,0,0,.35); }
+.axon-dashboard .activity-detail header { position:static; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px; border-bottom:1px solid #29292f; background:#101012; }
+.axon-dashboard .activity-detail header h2 { margin-top:5px; color:#f4f4f5; font-size:17px; font-weight:700; }
+.axon-dashboard .activity-detail-actions { display:flex; align-items:center; gap:7px; }
+.axon-dashboard .activity-close { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid #34343b; border-radius:9px; color:#a1a1aa; background:#1b1b20; }
+.axon-dashboard .activity-detail-body { display:flex; flex-direction:column; gap:11px; overflow-y:auto; padding:16px; }
+.axon-dashboard .activity-detail-body section,.axon-dashboard .activity-detail-grid>div { display:flex; flex-direction:column; gap:5px; padding:12px; border:1px solid #2b2b32; border-radius:10px; background:#17171b; }
+.axon-dashboard .activity-detail-body small,.axon-dashboard .activity-detail-grid small { color:#777782; font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.axon-dashboard .activity-detail-body strong,.axon-dashboard .activity-detail-grid strong { color:#e4e4e7; font-size:11px; font-weight:600; overflow-wrap:anywhere; }
+.axon-dashboard .activity-detail-body p { color:#d4d4d8; font-size:11px; line-height:1.6; overflow-wrap:anywhere; }
+.axon-dashboard .activity-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.axon-dashboard .activity-detail-body pre { max-height:280px; overflow:auto; padding:11px; border-radius:8px; color:#d4d4d8; background:#09090b; font-family:"IBM Plex Mono",monospace; font-size:10px; line-height:1.5; }
+.axon-dashboard .activity-project-filter { display:flex; align-items:center; gap:7px; overflow-x:auto; padding-bottom:2px; }
+.axon-dashboard .activity-project-filter>span { flex:none; margin-right:3px; color:#85858f; font-size:10px; font-weight:700; }
+.axon-dashboard .activity-project-filter a { flex:none; padding:6px 10px; border:1px solid #303038; border-radius:999px; color:#a1a1aa; background:#121215; font-size:10px; }
+.axon-dashboard .activity-project-filter a[aria-current="page"] { border-color:#dedee2; color:#111113; background:#dedee2; }
+.axon-dashboard .activity-latest { font-size:17px !important; }
+.axon-dashboard .plugin-connect-button { display:inline-flex; align-items:center; justify-content:center; min-width:76px; padding:7px 11px; border:1px solid #e4e4e7; border-radius:8px; color:#111113; background:#e4e4e7; font-size:10px; font-weight:700; }
+.axon-dashboard .plugin-connect-button:hover { color:#000; background:#fff; }
+.axon-dashboard .plugin-status-soon { display:inline-flex; align-items:center; min-height:29px; padding:6px 9px; border:1px solid #303038; border-radius:8px; color:#85858f; background:#17171b; font-size:9px; white-space:nowrap; }
+.axon-dashboard .plugin-connected-control { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.axon-dashboard .plugin-connected-button { display:inline-flex; align-items:center; gap:6px; min-height:30px; padding:6px 8px; border:1px solid rgba(52,211,153,.23); border-radius:8px; color:#6ee7b7; background:rgba(16,185,129,.08); font-size:9px; font-weight:700; white-space:nowrap; }
+.axon-dashboard .plugin-disconnect-icon { opacity:.55; }
+.axon-dashboard .plugin-connected-control small { color:#fca5a5; font-size:9px; }
+@media(max-width:640px) {
+  .axon-dashboard .activity-toolbar { align-items:stretch; flex-direction:column; }
+  .axon-dashboard .activity-toolbar select { width:100%; }
+  .axon-dashboard .activity-event { padding:12px; }
+  .axon-dashboard .activity-event time { font-size:9px; }
+  .axon-dashboard .activity-event-description { display:-webkit-box; white-space:normal; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+}
