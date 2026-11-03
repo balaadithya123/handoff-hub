@@ -1,89 +1,87 @@
 import Link from "next/link";
-import { Plug, Bot, FolderKanban, Activity, ArrowUpRight, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
+import { Plug, Bot, FolderKanban, Activity, ArrowRight, ShieldCheck, Clock3, ChevronRight, Plus, Compass } from "lucide-react";
 import { getAiApps, getProjects, getHubOverview } from "../../lib/data";
 import { ago } from "../../lib/format";
 import ActivityLog from "./ActivityLog";
 
 export default async function Overview({ token, connected }: { token: string; connected: number }) {
   const [aiData, projectsData, hubData] = await Promise.all([
-    getAiApps(token).catch(() => null),
-    getProjects(token).catch(() => null),
-    getHubOverview(token).catch(() => null),
+    getAiApps(token).catch(() => null), getProjects(token).catch(() => null), getHubOverview(token).catch(() => null),
   ]);
-  const checks = (hubData?.hubs ?? []).flatMap(h => h.health ?? []).filter(c => c.at);
-  checks.sort((a,b) => String(b.at).localeCompare(String(a.at)));
+  const checks = (hubData?.hubs ?? []).flatMap(h => h.health ?? []).filter(c => c.at).sort((a,b) => String(b.at).localeCompare(String(a.at)));
   const lastCheck = checks[0];
   const issues = lastCheck?.anomalies?.length ?? 0;
   const accounts = aiData?.accounts ?? [];
-  const clients = accounts.reduce((n,a) => n + (a.clients?.length ?? 0), 0);
-  const projects = (projectsData?.accounts ?? []).reduce((n,a) => n + (a.projects?.length ?? 0), 0);
-  const setup = [
-    { label: "Connect an integration", href: "/integrations", done: connected > 0, action: "Browse integrations" },
-    { label: "Link an AI account", href: "/ai", done: accounts.length > 0, action: "Connect AI account" },
-    { label: "Create a memory pool", href: "/projects", done: projects > 0, action: "Open projects" },
-  ];
-  const complete = setup.every(s => s.done);
+  const projects = (projectsData?.accounts ?? []).flatMap(a => a.projects ?? []);
+  const clientCount = accounts.reduce((n,a) => n + (a.clients?.length ?? 0), 0);
+  const projectRows = projects.slice(0, 3);
   const metrics = [
-    { label: "Connected apps", value: String(connected), note: "OAuth connections", href: "/integrations", Icon: Plug },
-    { label: "AI accounts", value: String(accounts.length), note: `${clients} linked clients`, href: "/ai", Icon: Bot },
-    { label: "Projects", value: String(projects), note: "Memory pools", href: "/projects", Icon: FolderKanban },
-    { label: "Hub health", value: !lastCheck ? "—" : issues ? String(issues) : "OK", note: lastCheck?.at ? ago(lastCheck.at) : "No checks recorded", href: "/tools", Icon: ShieldCheck },
+    { label: "Projects", value: projects.length, Icon: FolderKanban, href: "/projects" },
+    { label: "Integrations", value: connected, Icon: Plug, href: "/integrations" },
+    { label: "AI Accounts", value: accounts.length, Icon: Bot, href: "/ai" },
   ];
-
-  return <div className="axon-overview space-y-8">
-    <section className="flex flex-col justify-between gap-5 border-b border-white/10 pb-7 lg:flex-row lg:items-end">
-      <div>
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.16em] text-zinc-500">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/>
-          Workspace
-          {lastCheck?.version && <span className="font-mono normal-case tracking-normal text-zinc-600">· Hub v{lastCheck.version}</span>}
+  const healthLabel = !lastCheck ? "Status unavailable" : issues ? "Attention needed" : "All systems operational";
+  return <div className="axon-overview space-y-5">
+    <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,.72fr)] lg:items-start">
+      <div className="pt-2">
+        <div className="mb-4 h-[2px] w-9 bg-[#9ca3af]" />
+        <p className="text-[13px] text-zinc-400">Welcome back,</p>
+        <h1 className="text-[32px] font-semibold leading-[1.08] tracking-[-.045em] text-white md:text-[38px]">Your Axon workspace</h1>
+        <p className="mt-2 max-w-[470px] text-[13px] leading-5 text-zinc-400">Your AI workspace is ready. Build, automate and collaborate with the power of Axon.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/projects" className="inline-flex h-9 items-center gap-2 rounded-full bg-white px-4 text-[11px] font-semibold text-black hover:bg-zinc-200">New Project <ArrowRight size={14}/></Link>
+          <Link href="/integrations" className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[.035] px-4 text-[11px] text-zinc-200 hover:bg-white/[.08]">Explore Features</Link>
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-white md:text-[38px]">Overview</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">Your connected tools, AI runtimes and shared context in one place.</p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link href="/integrations" className="inline-flex h-10 items-center gap-2 rounded-md bg-white px-4 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200"><Plug className="h-3.5 w-3.5"/> Add integration <ArrowUpRight className="h-3.5 w-3.5"/></Link>
-        <Link href="/ai" className="inline-flex h-10 items-center gap-2 rounded-md border border-white/15 bg-white/[.03] px-4 text-xs font-medium text-zinc-200 hover:bg-white/[.07]"><Bot className="h-3.5 w-3.5"/> Link AI account</Link>
+      <div className="flex min-h-[72px] items-center gap-3 rounded-xl border border-white/[.09] bg-[#101012] px-4 py-4 lg:mt-2">
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${!lastCheck ? "bg-zinc-500" : issues ? "bg-amber-400" : "bg-emerald-400"}`} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-semibold text-zinc-100">Axon {lastCheck && !issues ? "is operational" : "workspace status"}</p>
+          <p className="mt-1 text-[10px] text-zinc-500">{healthLabel}{lastCheck?.at ? " · Checked " + ago(lastCheck.at) : ""}</p>
+        </div>
+        <Activity className="h-7 w-7 text-zinc-600"/>
       </div>
     </section>
 
-    <section className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map(({label,value,note,href,Icon}) => <Link key={label} href={href} className="group min-h-[142px] bg-[#101012] p-5 transition hover:bg-[#151518]">
-        <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">{label}</span><Icon className="h-4 w-4 text-zinc-600 transition group-hover:text-zinc-300"/></div>
-        <div className="mt-5 flex items-end justify-between"><span className="font-mono text-[32px] font-medium tracking-tight text-zinc-100">{value}</span><ArrowUpRight className="mb-1 h-4 w-4 text-zinc-700 group-hover:text-zinc-300"/></div>
-        <p className="mt-1 text-[11px] text-zinc-500">{note}</p>
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {metrics.map(({label,value,Icon,href}) => <Link key={label} href={href} className="group flex h-[62px] items-center gap-4 rounded-xl border border-white/[.08] bg-[#101012] px-4 hover:border-white/20 hover:bg-[#151518]">
+        <Icon className="h-6 w-6 shrink-0 text-zinc-300"/>
+        <div className="min-w-0 flex-1"><p className="text-[15px] font-semibold leading-5 text-zinc-100">{value}</p><p className="text-[10px] text-zinc-500">{label}</p></div>
+        <ChevronRight className="h-4 w-4 text-zinc-500"/>
       </Link>)}
+      <Link href="/activity" className="group flex h-[62px] items-center gap-4 rounded-xl border border-white/[.08] bg-[#101012] px-4 hover:border-white/20 hover:bg-[#151518]">
+        <Clock3 className="h-6 w-6 shrink-0 text-zinc-300"/>
+        <div className="min-w-0 flex-1"><p className="text-[12px] font-semibold text-zinc-100">Recent Activity</p><p className="text-[10px] text-zinc-500">Activity log</p></div>
+        <ChevronRight className="h-4 w-4 text-zinc-500"/>
+      </Link>
     </section>
 
-    {!complete && <section className="overflow-hidden rounded-lg border border-white/10 bg-[#101012]">
-      <div className="flex flex-col gap-2 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 className="text-sm font-semibold text-zinc-100">Set up your workspace</h2><p className="mt-1 text-xs text-zinc-500">A few steps to get your Axon workspace ready.</p></div>
-        <span className="font-mono text-[11px] text-zinc-500">{setup.filter(s=>s.done).length} / 3 complete</span>
+    <section className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(270px,.8fr)]">
+      <div className="min-w-0 rounded-xl border border-white/[.08] bg-[#101012]">
+        <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3"><h2 className="text-[13px] font-semibold text-zinc-100">Your Projects</h2><Link href="/projects" className="text-[10px] text-zinc-400 hover:text-white">View all <ArrowRight className="ml-1 inline h-3 w-3"/></Link></div>
+        {projectRows.length ? <div className="divide-y divide-white/[.06]">
+          {projectRows.map((p:any,i:number) => <Link key={p.id ?? p.name ?? i} href="/projects" className="flex min-h-[58px] items-center gap-3 px-4 py-2 hover:bg-white/[.025]">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#252529] text-[12px] font-semibold text-zinc-300">{String(p.name ?? "P").charAt(0).toUpperCase()}</span>
+            <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-medium text-zinc-100">{p.name ?? "Untitled project"}</span><span className="block truncate text-[10px] text-zinc-500">{p.description ?? "Project workspace"}</span></span>
+            <span className="hidden text-[10px] text-zinc-500 sm:block"> </span><span className="rounded-full border border-emerald-400/15 bg-emerald-400/[.07] px-2 py-0.5 text-[9px] text-emerald-300">Active</span><ChevronRight className="h-3.5 w-3.5 text-zinc-600"/>
+          </Link>)}
+        </div> : <div className="px-4 py-8 text-center"><p className="text-xs text-zinc-400">No projects yet</p><Link href="/projects" className="mt-2 inline-flex items-center gap-1 text-[11px] text-zinc-200">Create your first project <Plus size={12}/></Link></div>}
       </div>
-      <div className="divide-y divide-white/[.07]">
-        {setup.map((s,i)=><div key={s.label} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
-          <span className="w-7 font-mono text-[11px] text-zinc-600">0{i+1}</span>
-          {s.done ? <CheckCircle2 className="h-4 w-4 text-emerald-400"/> : <span className="h-4 w-4 rounded-full border border-zinc-600"/>}
-          <span className={`flex-1 text-sm ${s.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{s.label}</span>
-          <Link href={s.href} className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-white">{s.done ? "Review" : s.action}<ArrowRight className="h-3 w-3"/></Link>
-        </div>)}
-      </div>
-    </section>}
-
-    <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
-      <div className="min-w-0 rounded-lg border border-white/10 bg-[#101012]">
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4"><div className="flex items-center gap-2"><Activity className="h-4 w-4 text-zinc-500"/><h2 className="text-sm font-semibold text-zinc-100">Recent activity</h2></div><Link href="/activity" className="text-xs text-zinc-500 hover:text-white">View all <ArrowUpRight className="ml-1 inline h-3 w-3"/></Link></div>
-        <div className="p-5"><ActivityLog token={token} limit={8}/></div>
-      </div>
-      <div className="rounded-lg border border-white/10 bg-[#101012]">
-        <div className="border-b border-white/10 px-5 py-4"><h2 className="text-sm font-semibold text-zinc-100">System status</h2><p className="mt-1 text-xs text-zinc-500">Latest recorded Hub health check</p></div>
-        <div className="space-y-4 p-5">
-          <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Health</span><span className={`inline-flex items-center gap-2 text-xs ${!lastCheck ? "text-zinc-500" : issues ? "text-amber-300" : "text-emerald-300"}`}><span className={`h-1.5 w-1.5 rounded-full ${!lastCheck ? "bg-zinc-600" : issues ? "bg-amber-300" : "bg-emerald-400"}`}/>{!lastCheck ? "Not checked" : issues ? `${issues} issue(s)` : "Operational"}</span></div>
-          <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Last check</span><span className="text-xs text-zinc-300">{lastCheck?.at ? ago(lastCheck.at) : "—"}</span></div>
-          <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Hub version</span><span className="font-mono text-xs text-zinc-300">{lastCheck?.version || "—"}</span></div>
-          <div className="border-t border-white/10 pt-4"><Link href="/tools" className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-white">Open Hub tools <ArrowRight className="h-3 w-3"/></Link></div>
+      <div className="rounded-xl border border-white/[.08] bg-[#101012]">
+        <div className="border-b border-white/[.07] px-4 py-3"><h2 className="text-[13px] font-semibold text-zinc-100">Quick Actions</h2></div>
+        <div className="p-2">
+          {[
+            {label:"Manage Integrations",href:"/integrations",Icon:Plug},
+            {label:"Explore Tools",href:"/tools",Icon:Compass},
+            {label:"View Activity",href:"/activity",Icon:Activity},
+            {label:"AI Accounts",href:"/ai",Icon:Bot},
+          ].map(({label,href,Icon})=><Link key={href} href={href} className="flex h-10 items-center gap-3 rounded-lg px-2 text-[11px] text-zinc-300 hover:bg-white/[.05] hover:text-white"><Icon className="h-[17px] w-[17px] text-zinc-400"/><span className="flex-1">{label}</span><ArrowRight className="h-3.5 w-3.5 text-zinc-500"/></Link>)}
         </div>
       </div>
+    </section>
+    <section className="rounded-xl border border-white/[.08] bg-[#101012]">
+      <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3"><h2 className="text-[13px] font-semibold text-zinc-100">Recent Activity</h2><Link href="/activity" className="text-[10px] text-zinc-400 hover:text-white">View all <ArrowRight className="ml-1 inline h-3 w-3"/></Link></div>
+      <div className="p-4"><ActivityLog token={token} limit={4}/></div>
     </section>
   </div>;
 }
