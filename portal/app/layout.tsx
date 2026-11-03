@@ -2,6 +2,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import Fx from "./components/Fx";
+import RouteMotion from "./components/RouteMotion";
 import { GeistSans } from "geist/font/sans";
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <Fx />
         </Suspense>
-        {children}
+        <RouteMotion>{children}</RouteMotion>
       </body>
     </html>
   );
