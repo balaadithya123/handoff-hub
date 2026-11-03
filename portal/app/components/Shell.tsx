@@ -18,8 +18,8 @@ const ICONS: Record<string, typeof LayoutDashboard> = {
   ai: Bot, tools: Wrench, activity: Activity,
 };
 
-export default function Shell({ email, tab, title, sub, notice, children }: {
-  email: string; tab: Tab; title: string; sub: string;
+export default function Shell({ email, name, tab, title, sub, notice, children }: {
+  email: string; name: string; tab: Tab; title: string; sub: string;
   notice: { kind: "error" | "ok"; text: string } | null; children: ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -45,7 +45,8 @@ export default function Shell({ email, tab, title, sub, notice, children }: {
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [userMenuOpen]);
 
-  const initial = (email || "?").charAt(0).toUpperCase();
+  const displayName = name || email;
+  const initial = displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join("") || "?";
   const rail = collapsed ? "md:w-[64px]" : "md:w-[176px]";
   const offset = collapsed ? "md:pl-[64px]" : "md:pl-[176px]";
 
@@ -90,7 +91,7 @@ export default function Shell({ email, tab, title, sub, notice, children }: {
           </button>
           {!collapsed && <div className="mt-3 flex items-center gap-2 border-t border-white/[.07] px-2 pt-3">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-semibold text-zinc-200">{initial}</span>
-            <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-400">{email}</span>
+            <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-300">{displayName}</span>
           </div>}
         </div>
       </aside>
@@ -110,7 +111,7 @@ export default function Shell({ email, tab, title, sub, notice, children }: {
             <button type="button" onClick={() => setUserMenuOpen(v => !v)} aria-expanded={userMenuOpen}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-xs font-semibold text-white hover:bg-zinc-700">{initial}</button>
             {userMenuOpen && <div className="absolute right-0 mt-2 w-60 rounded-lg border border-white/10 bg-[#151518] p-2 shadow-2xl">
-              <p className="truncate px-2 py-2 text-xs text-zinc-400">{email}</p><div className="my-1 border-t border-white/10"/><SignOutButton />
+              <div className="px-2 py-2"><p className="truncate text-xs font-medium text-zinc-100">{displayName}</p><p className="mt-1 truncate text-[11px] text-zinc-500">{email}</p></div><div className="my-1 border-t border-white/10"/><SignOutButton />
             </div>}
           </div>
         </header>
