@@ -96,23 +96,23 @@ export default function ConnectorDirectory({
           Connect the tools you love and supercharge your Axon workspace.
         </p>
       </div>
-      <div className="marketplace-search relative max-w-[640px]">\n        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a988f]" />\n        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search integrations..." className="pl-10 h-10 rounded-full bg-white border-[#e7e4dc]" />\n      </div>\n      <div className="marketplace-categories w-full overflow-x-auto pb-1">
+      <div className="marketplace-search relative max-w-[640px]">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search integrations..." className="h-10 rounded-lg border-white/10 bg-[#111113] pl-10 text-sm text-zinc-100 placeholder:text-zinc-500" />
+      </div>
+      <div className="marketplace-categories w-full overflow-x-auto pb-1">
         <div className="flex w-max gap-2">
           {cats.map((c) => {
             const active = cat === c;
             const count = c === "All" ? APPS.length : APPS.filter((a) => a[2] === c).length;
             return (
               <button key={c} onClick={() => setCat(c)} aria-pressed={active}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${active ? "bg-[#141414] text-[#f6f5f2]" : "bg-white text-[#6f6e68] border border-[#e7e4dc] hover:text-[#141414] hover:bg-[#efeee9]"}`}>
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${active ? "border-white bg-white text-black" : "border-white/10 bg-transparent text-zinc-400 hover:border-white/20 hover:bg-white/[.05] hover:text-white"}`}>
                 {c}<span className={`ml-1.5 text-[11px] font-mono ${active ? "opacity-50" : "opacity-40"}`}>{count}</span>
               </button>
             );
           })}
         </div>
-      </div>
-      <div className="marketplace-search relative max-w-xl">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a988f]" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name" className="pl-10 h-11 rounded-full bg-white border-[#e7e4dc]" />
       </div>
       {cat === "All" && !query && connectedApps.length > 0 && (
         <div className="space-y-3">
@@ -120,9 +120,9 @@ export default function ConnectorDirectory({
           <div className="marketplace-connected-grid grid grid-cols-2 sm:grid-cols-4 gap-3">
             {connectedApps.map(([id, name]) => (
               <button key={id} type="button" onClick={() => setSelectedAppId(id)}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-[#e7e4dc] bg-white px-3 py-6 text-center hover:border-[#141414]">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-[#efeee9]"><AppMark id={id} size={22} /></span>
-                <span className="text-sm font-medium text-[#141414]">{name}</span>
+                className="flex flex-col items-center gap-3 rounded-xl border border-white/[.08] bg-[#101012] px-3 py-5 text-center hover:border-white/20 hover:bg-[#171719]">
+                <span className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-[#1d1d20]"><AppMark id={id} size={22} /></span>
+                <span className="text-xs font-medium text-zinc-100">{name}</span>
               </button>
             ))}
           </div>
@@ -130,7 +130,7 @@ export default function ConnectorDirectory({
       )}
       {filtered.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-sm text-[#6f6e68]">Nothing matches.</p>
+          <p className="text-sm text-zinc-400">Nothing matches.</p>
           <Button type="button" variant="ghost" size="sm" onClick={() => { setQ(""); setCat("All"); }} className="mt-3">Clear filters</Button>
         </div>
       ) : (
@@ -143,12 +143,12 @@ export default function ConnectorDirectory({
                   const isOn = on.has(id);
                   return (
                     <li key={id}>
-                      <div className="marketplace-app-row flex items-center gap-3 rounded-xl border border-white/[.08] bg-[#101012] px-3 py-3 hover:bg-[#171719]">
+                      <div className="marketplace-app-row flex min-h-[64px] items-center gap-3 rounded-xl border border-white/[.08] bg-[#101012] px-3 py-3 hover:border-white/20 hover:bg-[#171719]">
                         <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => setSelectedAppId(id)} onKeyDown={openOnKey(id)}>
                           <span className="marketplace-app-icon flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#1d1d20] border border-white/10"><AppMark id={id} size={20} /></span>
                           <span className="marketplace-app-meta min-w-0">
                             <span className="block truncate text-[11px] font-semibold text-zinc-100">{name}</span>
-                            <span className="block truncate text-[10px] text-zinc-500">{desc}</span>
+                            <span className="mt-0.5 block line-clamp-2 text-[10px] leading-4 text-zinc-500">{desc}</span>
                           </span>
                         </button>
                         <ConnectionButton provider={id} connected={isOn} available={live} state={availability[id]?.state} reason={availability[id]?.reason} />
@@ -165,7 +165,7 @@ export default function ConnectorDirectory({
         {selectedApp && (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-white border border-[#e7e4dc]"><AppMark id={selectedApp[0]} size={24} /></span>
+              <span className="flex size-12 items-center justify-center rounded-xl border border-white/10 bg-[#1d1d20]"><AppMark id={selectedApp[0]} size={24} /></span>
               <div>
                 <span className="text-base font-semibold text-[#141414] block">{selectedApp[1]}</span>
                 <span className="text-xs font-mono text-[#9a988f] block">{selectedApp[2]}</span>
