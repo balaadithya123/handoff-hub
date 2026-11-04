@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowRightLeft, AlertCircle, Archive, RotateCcw } from "lucide-react";
+import { Plus, ArrowRightLeft, AlertCircle, Archive, RotateCcw, Trash2 } from "lucide-react";
 
 async function call(body: Record<string, unknown>): Promise<{ ok: boolean; error: string }> {
   const response = await fetch("/api/projects", {
@@ -74,15 +74,15 @@ export function ProjectCreate({ hubUser }: { hubUser: string }) {
 }
 
 
-export function ProjectArchiveButton({ hubUser, project, isPortal = false }: {
-  hubUser: string; project: string; isPortal?: boolean;
+export function ProjectArchiveButton({ hubUser, project, isPortal = false, isDefault = false }: {
+  hubUser: string; project: string; isPortal?: boolean; isDefault?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function archive() {
-    if (busy || isPortal || project === "default") return;
+    if (busy || isPortal || isDefault || project === "default") return;
     const confirmed = window.confirm("Archive this project pool? Its memories and activity will be kept, and you can restore it later.");
     if (!confirmed) return;
     setBusy(true);
@@ -96,10 +96,12 @@ export function ProjectArchiveButton({ hubUser, project, isPortal = false }: {
   return (
     <div className="inline-flex flex-col items-end gap-1">
       <button type="button" onClick={archive} disabled={busy || isPortal || project === "default"}
-        title={isPortal ? "Choose another portal feed before archiving this pool" : "Archive this project pool"}
+        title={isPortal ? "Choose another portal feed before archiving this pool" : isDefault ? "The default pool is protected" : "Archive this project pool"}
         className="axon-archive-button">
         <Archive size={13} />{busy ? "Archiving…" : "Archive"}
       </button>
+      {isPortal && <span className="axon-action-note">Move the portal feed to another pool first.</span>}
+      {isDefault && <span className="axon-action-note">The default pool is protected.</span>}
       {error && <span className="text-[11px] text-red-300">{error}</span>}
     </div>
   );
@@ -124,6 +126,47 @@ export function ProjectRestoreButton({ hubUser, project }: { hubUser: string; pr
     <div className="inline-flex flex-col items-end gap-1">
       <button type="button" onClick={restore} disabled={busy} className="axon-restore-button">
         <RotateCcw size={13} />{busy ? "Restoring…" : "Restore"}
+      </button>
+      {error && <span className="text-[11px] text-red-300">{error}</span>}
+    </div>
+  );
+}
+
+
+export function ProjectDeleteButton({ hubUser, project, projectName }: {
+  hubUser: string; project: string; projectName: string;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function removePermanently() {
+    if (busy) return;
+    const typed = window.prompt(
+      `Permanently delete "${projectName}"? This removes its archived memories and activity and cannot be undone. Type the project name exactly to continue:`
+    );
+    if (typed === null) return;
+    if (typed !== projectName) {
+      setError("Name did not match. Nothing was deleted.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const response = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", hub_user: hubUser, project, confirm_name: typed }),
+    }).catch(() => null);
+    const data = response ? await response.json().catch(() => ({})) : {};
+    setBusy(false);
+    if (response?.ok) router.refresh();
+    else setError(typeof data?.error === "string" ? data.error : "Could not permanently delete the archived pool.");
+  }
+
+  return (
+    <div className="inline-flex flex-col items-end gap-1">
+      <button type="button" onClick={removePermanently} disabled={busy} className="axon-delete-button">
+        <Trash2 size={13} />{busy ? "Deleting…" : "Delete permanently"}
       </button>
       {error && <span className="text-[11px] text-red-300">{error}</span>}
     </div>
