@@ -3,7 +3,7 @@ import { SESSION_COOKIE, rpc } from "../../../lib/portal";
 
 export const dynamic = "force-dynamic";
 
-type Res = { ok?: boolean; error?: string; id?: string; ops_project?: string; archived?: string; restored?: string } | null;
+type Res = { ok?: boolean; error?: string; id?: string; ops_project?: string; archived?: string; restored?: string; deleted?: string } | null;
 
 export async function POST(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -35,6 +35,22 @@ export async function POST(req: NextRequest) {
       return d?.ok
         ? NextResponse.json({ ok: true, project })
         : NextResponse.json({ error: d?.error || `Could not ${action} the project pool.` }, { status: 400 });
+    }
+    if (action === "delete") {
+      const project = typeof body.project === "string" ? body.project.trim() : "";
+      const confirmName = typeof body.confirm_name === "string" ? body.confirm_name : "";
+      if (!/^[a-z0-9._-]{1,60}$/.test(project)) {
+        return NextResponse.json({ error: "Invalid project pool." }, { status: 400 });
+      }
+      if (!confirmName || confirmName.length > 80) {
+        return NextResponse.json({ error: "Type the project name to confirm deletion." }, { status: 400 });
+      }
+      const d = await rpc<Res>("portal_project_delete", {
+        p_token: token, p_hub_user: hub, p_project: project, p_confirm_name: confirmName,
+      });
+      return d?.ok
+        ? NextResponse.json({ ok: true, deleted: project })
+        : NextResponse.json({ error: d?.error || "Could not permanently delete the archived pool." }, { status: 400 });
     }
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   } catch {
