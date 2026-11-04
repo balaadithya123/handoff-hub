@@ -153,7 +153,7 @@ export default async function AiAccounts({ token }: { token: string }) {
         </div>
         <div className="axon-link-code-area">
           <div><span className="axon-field-label">One-time authorization</span><p>Generate a code, then share it only with the AI client you are connecting.</p></div>
-          <LinkCodeButton linked={Boolean(data?.linked)} needsUnlock={Boolean(data?.needs_unlock)} />
+          <LinkCodeButton linked={Boolean(data?.linked)}  />
         </div>
         <details className="axon-client-help">
           <summary>Where do I add the endpoint?</summary>
