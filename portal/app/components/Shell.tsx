@@ -40,18 +40,17 @@ export default function Shell({ email, name, tab, title, sub, notice, children }
 
   const displayName = name || email;
   const initial = displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join("") || "?";
-  const rail = collapsed ? "md:w-[76px]" : "md:w-[260px]";
-  const offset = collapsed ? "md:pl-[76px]" : "md:pl-[260px]";
+  const rail = collapsed ? "md:w-[68px]" : "md:w-[224px]";
+  const offset = collapsed ? "md:pl-[68px]" : "md:pl-[224px]";
 
   return (
     <div className="axon-dashboard min-h-screen bg-[#09090b] text-zinc-100 antialiased">
       <aside className={`axon-sidebar fixed inset-y-0 left-0 z-50 hidden md:flex flex-col ${rail}`}>
         <div className="axon-sidebar-brand">
-          <Link href="/overview" title="Axon workspace" className="axon-brand-link">
+          <Link href="/overview" title="Axon" className="axon-brand-link">
             <span className="axon-brand-symbol"><Logo size={29} /></span>
-            {!collapsed && <span className="axon-brand-copy"><strong>AXON</strong><small>WORKSPACE</small></span>}
+            {!collapsed && <span className="axon-brand-copy"><strong>Axon</strong></span>}
           </Link>
-          {!collapsed && <span className="axon-brand-beta">BETA</span>}
         </div>
         <div className="axon-sidebar-scroll">
           {NAV_GROUPS.map((group) => {
