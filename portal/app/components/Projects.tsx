@@ -4,7 +4,7 @@ import {
   FolderKanban, Plus, ShieldAlert, Sparkles, Waypoints,
 } from "lucide-react";
 import { getProjects } from "../../lib/data";
-import { PortalSwitch, ProjectCreate, ProjectArchiveButton, ProjectRestoreButton } from "./ProjectActions";
+import { PortalSwitch, ProjectCreate, ProjectArchiveButton, ProjectRestoreButton, ProjectDeleteButton } from "./ProjectActions";
 
 function dateLabel(value?: string | null) {
   if (!value) return "No activity yet";
@@ -56,7 +56,7 @@ export default async function Projects({ token }: { token: string }) {
         <div>
           <p className="axon-eyebrow">WORKSPACE / PROJECTS</p>
           <h1>Projects &amp; Pools</h1>
-          <p>Keep work, memory and AI activity organised in separate project spaces.</p>
+          <p>Organise work into separate pools. Archive from a project card; permanently delete from Archived Pools.</p>
         </div>
         <div className="axon-heading-mark"><FolderKanban size={21} /></div>
       </section>
@@ -120,11 +120,19 @@ export default async function Projects({ token }: { token: string }) {
                       <article className="axon-project-card" key={project.id}>
                         <div className="axon-project-card-top">
                           <div className="axon-project-symbol"><FolderKanban size={18} /></div>
-                          {project.is_portal ? (
-                            <span className="axon-status-chip success"><span />Portal feed</span>
-                          ) : (
-                            <span className="axon-status-chip neutral">Private pool</span>
-                          )}
+                          <div className="axon-project-card-actions">
+                            {project.is_portal ? (
+                              <span className="axon-status-chip success"><span />Portal feed</span>
+                            ) : (
+                              <span className="axon-status-chip neutral">Private pool</span>
+                            )}
+                            <ProjectArchiveButton
+                              hubUser={account.id}
+                              project={project.id}
+                              isPortal={project.is_portal}
+                              isDefault={project.id === "default"}
+                            />
+                          </div>
                         </div>
                         <div className="axon-project-title">
                           <h3>{project.name}</h3>
@@ -143,7 +151,7 @@ export default async function Projects({ token }: { token: string }) {
                           ) : (
                             <PortalSwitch hubUser={account.id} project={project.id} label="Set as feed" ghost />
                           )}
-                          <ProjectArchiveButton hubUser={account.id} project={project.id} isPortal={project.is_portal} />
+
                         </div>
                         <details className="axon-project-activity">
                           <summary><Activity size={14} />Recent activity <span>{project.recent?.length ?? 0}</span></summary>
@@ -180,8 +188,7 @@ export default async function Projects({ token }: { token: string }) {
           })}
         </div>
       )}
-      {archivedAccounts.some(account => account.projects?.length) && (
-        <section className="axon-archived-section">
+      <section className="axon-archived-section">
           <header>
             <div>
               <p className="axon-eyebrow">RECOVERABLE STORAGE</p>
@@ -191,19 +198,28 @@ export default async function Projects({ token }: { token: string }) {
             <span className="axon-archived-count">{archivedAccounts.reduce((sum, account) => sum + account.projects.length, 0)} archived</span>
           </header>
           <div className="axon-archived-list">
-            {archivedAccounts.map(account => account.projects.map(project => (
-              <article className="axon-archived-item" key={account.id + ":" + project.id}>
-                <span className="axon-archived-icon"><FolderKanban size={17} /></span>
-                <span className="axon-archived-copy">
-                  <strong>{project.name}</strong>
-                  <small>{account.nickname || account.label}{project.description ? " · " + project.description : ""}</small>
-                </span>
-                <ProjectRestoreButton hubUser={account.id} project={project.id} />
-              </article>
-            )))}
+            {archivedAccounts.some(account => account.projects.length > 0) ? (
+              archivedAccounts.flatMap(account => account.projects.map(project => (
+                <article className="axon-archived-item" key={account.id + ":" + project.id}>
+                  <span className="axon-archived-icon"><FolderKanban size={17} /></span>
+                  <span className="axon-archived-copy">
+                    <strong>{project.name}</strong>
+                    <small>{account.nickname || account.label}{project.description ? " · " + project.description : ""}</small>
+                  </span>
+                  <div className="axon-archived-actions">
+                    <ProjectRestoreButton hubUser={account.id} project={project.id} />
+                    <ProjectDeleteButton hubUser={account.id} project={project.id} projectName={project.name} />
+                  </div>
+                </article>
+              )))
+            ) : (
+              <div className="axon-archived-empty">
+                <p>No archived pools yet.</p>
+                <small>Use the Archive button on any non-default project card. Archived pools will appear here.</small>
+              </div>
+            )}
           </div>
         </section>
-      )}
       <p className="axon-page-footnote"><Sparkles size={13} />Pools stay isolated. The portal feed controls which pool appears in Overview and Activity.</p>
     </div>
   );
