@@ -146,7 +146,7 @@ export default function ConnectorDirectory({
                           <span className="marketplace-app-icon flex size-10 shrink-0 items-center justify-center rounded-xl bg-white border border-white/10"><AppMark id={id} size={23} /></span>
                           <span className="marketplace-app-meta min-w-0">
                             <span className="block truncate text-[11px] font-semibold text-zinc-100">{name}</span>
-                            <span className="mt-0.5 block line-clamp-2 text-[10px] leading-4 text-zinc-500">{desc}</span>
+                            
                           </span>
                         </button>
                         <ConnectionButton provider={id} connected={isOn} available={live} state={availability[id]?.state} reason={availability[id]?.reason} />
@@ -169,7 +169,7 @@ export default function ConnectorDirectory({
                 <span className="text-xs text-zinc-500 block">{selectedApp[2]}</span>
               </div>
             </div>
-            <p className="text-sm text-zinc-300 leading-relaxed">{selectedApp[3]}</p>
+            
             {selectedIsConnected ? (
               <div className="p-3.5 rounded-xl border border-emerald-400/20 bg-emerald-400/[.07] text-xs text-emerald-300 space-y-1">
                 <div className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /><span>Connected</span></div>
