@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SESSION_COOKIE, sessionUser } from "../../../../lib/portal";
+import { SESSION_COOKIE, sessionUser } from "../../../lib/portal";
 
 export const dynamic = "force-dynamic";
 
