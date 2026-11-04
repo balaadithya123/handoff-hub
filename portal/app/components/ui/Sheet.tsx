@@ -32,7 +32,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-[100] flex justify-end overflow-hidden">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
@@ -40,7 +40,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
       />
 
       {/* Sheet panel */}
-      <div className="relative w-full max-w-md h-full bg-[#0a0a0a] border-l border-white/10 p-6 flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-200">
+      <div className="relative ml-auto h-[100dvh] w-full min-w-0 max-w-[min(100vw,26rem)] shrink-0 overflow-hidden bg-[#0a0a0a] border-l border-white/10 p-4 sm:p-6 flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-200">
         <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
           <div>
             {title && <h2 className="text-lg font-semibold text-[#ededed] tracking-tight">{title}</h2>}
@@ -54,7 +54,7 @@ export function Sheet({ open, onOpenChange, title, description, children, footer
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6">{children}</div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain py-5">{children}</div>
 
         {footer && <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">{footer}</div>}
       </div>
