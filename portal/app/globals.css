@@ -669,3 +669,94 @@ button:not(:disabled),
 }
 .axon-route-stage {transform-origin:50% 20%}
 @media(prefers-reduced-motion:reduce) {.axon-route-stage {animation:none!important;transition:none!important}}
+
+
+/* Final visual correction: one consistent charcoal system across navigation and project panels. */
+html,body {min-height:100%;background:#090c10!important;color:#f4f6f8}
+html {color-scheme:dark;background-color:#090c10}
+body {background-color:#090c10!important}
+.axon-route-shell,.axon-route-stage,.axon-dashboard {
+  background-color:#090c10!important;
+  background-image:none!important;
+  color:#f4f6f8;
+}
+.axon-route-shell {position:relative;min-height:100dvh;overflow:clip}
+.axon-route-stage {min-height:100dvh;backface-visibility:hidden;will-change:opacity,transform}
+.axon-dashboard .axon-sidebar {
+  background:#090c10!important;
+  border-right:1px solid #252d37!important;
+  box-shadow:none!important;
+}
+.axon-dashboard .axon-sidebar-brand {height:72px;border-bottom-color:#252d37}
+.axon-dashboard .axon-brand-symbol {
+  width:34px;height:34px;border-radius:9px;
+  border:1px solid #303a46;background:#171e27;
+}
+.axon-dashboard .axon-brand-copy {display:block}
+.axon-dashboard .axon-brand-copy strong {
+  color:#fff;font-size:22px;font-weight:900;letter-spacing:-.065em;
+}
+.axon-dashboard .axon-sidebar-scroll {padding:21px 11px 18px}
+.axon-dashboard .axon-nav-group+.axon-nav-group {margin-top:23px}
+.axon-dashboard .axon-nav-caption {font-size:10px;color:#9ba7b5;margin-bottom:8px}
+.axon-dashboard .axon-nav-item {
+  min-height:44px;gap:10px;padding:0 10px;border-radius:9px;
+  color:#c3ccd7;font-size:13px;font-weight:700;
+}
+.axon-dashboard .axon-nav-item:hover {background:#151b23;border-color:#2b3541}
+.axon-dashboard .axon-nav-item.is-active {
+  background:#1a222c;border-color:#354252;
+  box-shadow:inset 2px 0 #e5eaf0;color:#fff;
+}
+.axon-dashboard .axon-nav-icon {width:25px;height:25px;background:transparent;color:#b7c1ce}
+.axon-dashboard .axon-nav-item.is-active .axon-nav-icon {background:transparent;color:#fff}
+.axon-dashboard .axon-sidebar-bottom {border-top-color:#252d37}
+.axon-dashboard .axon-support-link,.axon-dashboard .axon-collapse-button {
+  background:#11171f;border-color:#2a3440;color:#d3dbe5;
+}
+.axon-dashboard .axon-sidebar-profile {border-top-color:#252d37}
+.axon-dashboard .axon-profile-avatar {background:#1b2531;border-color:#3a4858}
+.axon-dashboard .axon-profile-copy strong {font-size:12px;color:#f5f7fa}
+.axon-dashboard .axon-profile-copy small {font-size:11px;color:#b8c3d0}
+
+/* Archive panel deliberately matches the surrounding project cards; actions are compact utility controls. */
+.axon-dashboard .axon-archived-section {
+  margin-top:22px;padding:18px;border:1px solid #2b3541;border-radius:14px;
+  background:#141a22!important;box-shadow:none;
+}
+.axon-dashboard .axon-archived-section>header {border-bottom-color:#2b3541;padding-bottom:13px}
+.axon-dashboard .axon-archived-section h2 {font-size:20px;letter-spacing:-.035em}
+.axon-dashboard .axon-archived-section header p:not(.axon-eyebrow) {font-size:13px;color:#c7d0db}
+.axon-dashboard .axon-archived-count {background:#1a222c;border-color:#3a4654;color:#e4eaf1;font-size:11px;padding:4px 8px}
+.axon-dashboard .axon-archived-item {
+  background:#171f29!important;border-color:#2d3946;border-radius:10px;padding:10px 12px;
+}
+.axon-dashboard .axon-archived-icon {width:32px;height:32px;background:#202b38;border-color:#3a4654}
+.axon-dashboard .axon-archived-copy strong {font-size:13px}
+.axon-dashboard .axon-archived-copy small {font-size:11px;color:#c0cad6}
+.axon-dashboard .axon-archive-button,.axon-dashboard .axon-restore-button,.axon-dashboard .axon-delete-button {
+  min-height:28px!important;height:28px;padding:0 9px!important;gap:5px!important;
+  border-radius:7px!important;font-size:11px!important;font-weight:750!important;
+  box-shadow:none!important;
+}
+.axon-dashboard .axon-archive-button svg,.axon-dashboard .axon-restore-button svg,.axon-dashboard .axon-delete-button svg {
+  width:12px;height:12px;
+}
+.axon-dashboard .axon-archive-button,.axon-dashboard .axon-restore-button {
+  background:#18212b!important;border-color:#354252!important;color:#e1e8f0!important;
+}
+.axon-dashboard .axon-archive-button:hover,.axon-dashboard .axon-restore-button:hover {
+  background:#202b38!important;border-color:#526174!important;
+}
+.axon-dashboard .axon-delete-button {
+  background:#24191d!important;border-color:#56333b!important;color:#f3dadd!important;
+}
+.axon-dashboard .axon-delete-button:hover {background:#302025!important;border-color:#75434e!important}
+.axon-dashboard .axon-archived-actions {gap:6px}
+.axon-dashboard .axon-action-note {font-size:11px;color:#c2ccd8}
+@media(max-width:767px) {
+  .axon-dashboard .axon-sidebar {display:none}
+  .axon-dashboard .axon-archived-section {padding:14px}
+  .axon-dashboard .axon-archived-item {gap:9px}
+  .axon-dashboard .axon-archived-actions {width:auto;margin-left:auto}
+}
