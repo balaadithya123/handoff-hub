@@ -71,6 +71,6 @@ export default async function handler(req, res) {
     await transport.handleRequest(req, res, req.body);
   } catch (error) {
     console.error('MCP request failed:', error);
-    if (!res.headersSent) res.status(500).json({ error: 'MCP request failed', detail: error?.message || String(error) });
+    if (!res.headersSent) res.status(500).json({ error: 'MCP request failed' });
   }
 }
