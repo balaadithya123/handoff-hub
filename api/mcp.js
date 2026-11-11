@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ...info, deep: true, tools });
     } catch (error) {
       console.error('MCP deep health failed:', error);
-      return res.status(503).json({ ...info, status: 'degraded', deep: true, error: error?.message || String(error) });
+      return res.status(503).json({ ...info, status: 'degraded', deep: true });
     }
   }
   if (!['POST', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
@@ -71,6 +71,6 @@ export default async function handler(req, res) {
     await transport.handleRequest(req, res, req.body);
   } catch (error) {
     console.error('MCP request failed:', error);
-    if (!res.headersSent) res.status(500).json({ error: 'MCP request failed', detail: error?.message || String(error) });
+    if (!res.headersSent) res.status(500).json({ error: 'MCP request failed' });
   }
 }
