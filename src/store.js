@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const localFile = userId => path.join('/tmp', `handoff-hub-state-${userId}.json`);
+const safeUserId = id => String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'default';
+const localFile = userId => path.join('/tmp', `handoff-hub-state-${safeUserId(userId)}.json`);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
