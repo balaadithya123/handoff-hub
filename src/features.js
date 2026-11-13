@@ -4,9 +4,19 @@ import { z } from 'zod';
 import { project, getState, mutate, opsProject } from './store.js';
 import { assertOwner } from './owner.js';
 
-export const HUB_VERSION = '0.21.0';
+export const HUB_VERSION = '0.22.0';
 
 const CHANGELOG = [
+  {
+    version: '0.22.0',
+    date: '2026-11-13',
+    changes: [
+      'Renamed to Axon across the portal pages, sign-in page and emails; domain is now linkaxon.vercel.app',
+      'Activity archive: once a day, events older than 30 days are condensed into a short markdown digest per project and month (decisions, blockers, handoffs, issues) and the raw events are deleted. New get_archive tool reads the digests',
+      'Connector sign-in page: account-limit errors now show a readable message instead of a bare code',
+      'Landing page no longer makes claims the product cannot back up (certifications, uptime figures, SDK, on-prem)'
+    ]
+  },
   {
     version: '0.21.0',
     date: '2026-10-17',
@@ -152,7 +162,7 @@ export function registerFeatureTools(server, userId) {
     server.tool(name, description, schema, { title: annotations.title, readOnlyHint: !!annotations.ro, destructiveHint: annotations.ro ? false : !!annotations.destructive, idempotentHint: !!annotations.ro, openWorldHint: !!annotations.open }, handler);
 
   // ----- 1. whats_new -----
-  server.tool('whats_new', 'Show this Handoff Hub server version, its changelog and the exact list of tools it currently offers. If a tool named here is missing from your own tool list, your connector has a stale cached list: disconnect and reconnect the Handoff Hub connector.', { since_version: z.string().optional() }, { title: 'What is new', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, async ({ since_version }) => {
+  server.tool('whats_new', 'Show this Axon server version, its changelog and the exact list of tools it currently offers. If a tool named here is missing from your own tool list, your connector has a stale cached list: disconnect and reconnect the Axon connector.', { since_version: z.string().optional() }, { title: 'What is new', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, async ({ since_version }) => {
     const tools = Object.keys(server._registeredTools || {}).sort();
     const changes = since_version ? CHANGELOG.filter(c => c.version > since_version) : CHANGELOG;
     return text({
@@ -163,6 +173,13 @@ export function registerFeatureTools(server, userId) {
       approval_gates: { redeploy: gateEnabled('redeploy') },
       stale_connector_hint: 'Compare "tools" with the tools you can see. Any name you cannot see means reconnect the connector.'
     });
+  });
+
+  // ----- archive reader -----
+  tool('get_archive', 'Read the markdown digests of old activity. Events older than 30 days are condensed into one digest per project and month and the raw events are deleted. Omit month to list all digests, or pass month as YYYY-MM for one.', { project_id: projectId, month: z.string().regex(/^\d{4}-\d{2}$/).optional() }, { title: 'Read activity archive', ro: true }, async input => {
+    const st = await getState(userId);
+    const digests = (project(st, pid(input.project_id)).archive || []).filter(d => !input.month || d.month === input.month);
+    return text({ count: digests.length, digests: digests.map(d => ({ month: d.month, event_count: d.event_count, markdown: d.markdown })) });
   });
 
   // ----- 2. claims -----

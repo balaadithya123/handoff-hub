@@ -4,7 +4,7 @@ const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
 const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
 
 function requireEnv(value, name) {
-  if (!value) throw new Error(`${name} is not configured on the Handoff Hub server`);
+  if (!value) throw new Error(`${name} is not configured on the Axon server`);
   return value;
 }
 
@@ -19,7 +19,7 @@ function allowedRepos() {
 
 function assertAllowedRepo(repository) {
   if (!allowedRepos().includes(repository)) {
-    throw new Error(`Repository is not allowlisted for Handoff Hub: ${repository}`);
+    throw new Error(`Repository is not allowlisted for Axon: ${repository}`);
   }
 }
 
@@ -34,10 +34,10 @@ function allowedVercelProjects() {
 function assertAllowedVercelProject(projectId) {
   const allowed = allowedVercelProjects();
   if (!allowed.length) {
-    throw new Error('VERCEL_ALLOWED_PROJECTS is not configured on the Handoff Hub server');
+    throw new Error('VERCEL_ALLOWED_PROJECTS is not configured on the Axon server');
   }
   if (!allowed.includes(projectId)) {
-    throw new Error(`Vercel project is not allowlisted for Handoff Hub: ${projectId}`);
+    throw new Error(`Vercel project is not allowlisted for Axon: ${projectId}`);
   }
 }
 

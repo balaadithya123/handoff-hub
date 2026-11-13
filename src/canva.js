@@ -6,7 +6,7 @@ const CLIENT_ID = process.env.CANVA_CLIENT_ID;
 const CLIENT_SECRET = process.env.CANVA_CLIENT_SECRET;
 const SCOPES = process.env.CANVA_SCOPES || 'design:content:write design:meta:read';
 
-function requireEnv(value, name) { if (!value) throw new Error(`${name} is not configured on the Handoff Hub server`); return value; }
+function requireEnv(value, name) { if (!value) throw new Error(`${name} is not configured on the Axon server`); return value; }
 function baseUrl() { return 'https://handoff-mcp.vercel.app'; }
 function redirectUri() { return `${baseUrl()}/api/canva/oauth/callback`; }
 function hash(v) { return crypto.createHash('sha256').update(v).digest('hex'); }
@@ -53,7 +53,7 @@ export async function completeCanvaOAuth(code,state) {
 
 async function connection(userId) {
   const rows=await rest(`canva_connections?user_id=eq.${encodeURIComponent(userId)}&select=access_token,refresh_token,expires_at,scope`);
-  const c=rows?.[0]; if(!c || c.access_token==='pending') throw new Error('Canva is not connected to Handoff Hub. Start Canva OAuth authorization first.');
+  const c=rows?.[0]; if(!c || c.access_token==='pending') throw new Error('Canva is not connected to Axon. Start Canva OAuth authorization first.');
   return c;
 }
 async function api(userId,path,options={}) {

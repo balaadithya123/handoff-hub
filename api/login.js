@@ -76,7 +76,7 @@ function html(res,title,body,status=200){
  res.setHeader('Cache-Control','no-store');
  res.setHeader('X-Frame-Options','DENY');
  res.setHeader('Content-Security-Policy',`default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; form-action 'self'; base-uri 'none'`);
- return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><title>${esc(title)}</title><style>${CSS}</style></head><body><div class="topbar"></div><main class="wrap"><a class="brand" href="/"><span class="logo">H</span>Handoff Hub</a><section class="card">${body}</section><p class="foot">Secure context handoff for AI workflows</p></main><script nonce="${nonce}">${JS}</script></body></html>`);
+ return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><title>${esc(title)}</title><style>${CSS}</style></head><body><div class="topbar"></div><main class="wrap"><a class="brand" href="/"><span class="logo">H</span>Axon</a><section class="card">${body}</section><p class="foot">Secure context handoff for AI workflows</p></main><script nonce="${nonce}">${JS}</script></body></html>`);
 }
 function body(req){if(req.body&&typeof req.body==='object')return req.body;return Object.fromEntries(new URLSearchParams(str(req.body)));}
 async function auth(path,data){const u=process.env.SUPABASE_URL,k=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!u||!k)return{ok:false,error:'Email service is not configured.'};const r=await fetch(`${u}/auth/v1/${path}`,{method:'POST',headers:{apikey:k,Authorization:`Bearer ${k}`,'Content-Type':'application/json'},body:JSON.stringify(data)});let d={};try{d=await r.json()}catch{}return{ok:r.ok,data:d,error:d?.msg||d?.message||d?.error_description||d?.error};}
@@ -88,7 +88,7 @@ async function ensureHubOwner(userId){
  const c=await fetch(`${u}/rest/v1/handoff_state`,{method:'POST',headers:{...h,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({id:userId,user_id:userId,state:{projects:{},memories:[],events:[]},version:0,updated_at:new Date().toISOString()})});return c.ok||c.status===409;
 }
 export default async function handler(req,res){
- if(req.method==='GET')return html(res,'Handoff Hub Login',`<h1>Welcome back</h1><p class="sub">Sign in with your authorised email and we'll send you a one-time code.</p><form method="post"><input type="hidden" name="action" value="send"><label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>${btn('Send verification code')}</form>`);
+ if(req.method==='GET')return html(res,'Axon Login',`<h1>Welcome back</h1><p class="sub">Sign in with your authorised email and we'll send you a one-time code.</p><form method="post"><input type="hidden" name="action" value="send"><label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>${btn('Send verification code')}</form>`);
  if(req.method!=='POST')return res.status(405).end();
  const b=body(req),email=str(b.email).trim().toLowerCase();
  if((b.action==='send'||b.action==='verify')&&!isValidEmail(email)){
@@ -103,11 +103,11 @@ export default async function handler(req,res){
   const r=await auth('verify',{email,token:str(b.otp).trim(),type:'email'});
   if(!r.ok)return html(res,'Invalid code',`${errIcon}<h1>Invalid code</h1><p class="sub">That code is invalid or expired.</p>${retry}`,401);
   const userId=r.data?.user?.id;
-  if(!userId||!(await ensureHubOwner(userId)))return html(res,'Could not create account',`${errIcon}<h1>Something went wrong</h1><p class="sub">Could not create your Handoff Hub account. Please try again.</p>${retry}`,500);
+  if(!userId||!(await ensureHubOwner(userId)))return html(res,'Could not create account',`${errIcon}<h1>Something went wrong</h1><p class="sub">Could not create your Axon account. Please try again.</p>${retry}`,500);
   const token=r.data?.access_token;
-  if(!token)return html(res,'Signed in',`${okIcon}<h1>You're verified</h1><p class="sub">Email verified successfully. Return to your AI app and reconnect Handoff Hub.</p>`);
+  if(!token)return html(res,'Signed in',`${okIcon}<h1>You're verified</h1><p class="sub">Email verified successfully. Return to your AI app and reconnect Axon.</p>`);
   res.setHeader('Set-Cookie',`${cookieName}=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`);
   return html(res,'Signed in',`${okIcon}<h1>You're signed in</h1><p class="sub">Email verified successfully. You can now return to your AI app and reconnect the connector.</p>`);
  }
- return html(res,'Handoff Hub Login','<h1>Invalid request</h1><p class="sub">Something about that request was off.</p>'+retry,400);
+ return html(res,'Axon Login','<h1>Invalid request</h1><p class="sub">Something about that request was off.</p>'+retry,400);
 }

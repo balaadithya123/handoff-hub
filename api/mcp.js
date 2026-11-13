@@ -1,4 +1,4 @@
-const MCP_VERSION = '0.21.0';
+const MCP_VERSION = '0.22.0';
 
 const DEFAULT_ORIGINS = ['https://claude.ai', 'https://www.claude.ai', 'https://claude.com', 'https://chatgpt.com', 'https://chat.openai.com', 'https://platform.openai.com'];
 
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     if (!userId) {
       const base = publicBase();
       if (base) res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${protectedResourceMetadataUrl(base)}"`);
-      return res.status(401).json({ error: 'Authentication required. Connect through OAuth, or send a Handoff Hub API key as Authorization: Bearer <api_key>.' });
+      return res.status(401).json({ error: 'Authentication required. Connect through OAuth, or send a Axon API key as Authorization: Bearer <api_key>.' });
     }
 
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });

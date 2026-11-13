@@ -10,7 +10,7 @@ export default function PublicHeader({ cta = true }: { cta?: boolean }) {
           <div className="w-7 h-7 rounded-md bg-[#2a2a2a] border border-white/[0.08] flex items-center justify-center text-[#60eca8] font-semibold text-sm">
             H
           </div>
-          <span className="text-[13px] font-medium text-[#e5e2e1]">Handoff Hub</span>
+          <span className="text-[13px] font-medium text-[#e5e2e1]">Axon</span>
           <span className="hidden sm:inline px-1.5 rounded font-mono text-[10px] bg-[#3ecf8e]/10 text-[#3ecf8e] border border-[#3ecf8e]/20 leading-4">
             PORTAL
           </span>

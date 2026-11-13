@@ -3,7 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import PublicHeader from "../../components/PublicHeader";
 import Spot from "../../components/landing/Spot";
 
-export const metadata = { title: "Provider setup · Handoff Hub" };
+export const metadata = { title: "Provider setup · Axon" };
 
 const providers = [
   {
@@ -39,7 +39,7 @@ export default function ConnectSetup() {
 
         <h1 className="mt-4 text-[34px] sm:text-[42px] leading-[1.08] font-semibold tracking-[-0.035em]">Provider setup</h1>
         <p className="mt-3 max-w-[640px] text-[15px] text-[#a1a1a1] leading-relaxed">
-          Users never enter provider credentials. Handoff Hub keeps OAuth client credentials and user tokens server-side and
+          Users never enter provider credentials. Axon keeps OAuth client credentials and user tokens server-side and
           performs the provider authorization and token exchange.
         </p>
 
@@ -53,7 +53,7 @@ export default function ConnectSetup() {
                 </span>
               </div>
               <p className="mt-2 text-[13px] text-[#a1a1a1] leading-relaxed">
-                One-time app-owner setup: register the OAuth app and add its client ID/secret to the Handoff Hub production
+                One-time app-owner setup: register the OAuth app and add its client ID/secret to the Axon production
                 environment.
               </p>
               <div className="mt-3 font-mono text-[10px] uppercase tracking-wider text-[#707070]">Callback URL</div>

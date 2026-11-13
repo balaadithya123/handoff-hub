@@ -2,6 +2,7 @@
   "_comment": "Exact list of MCP tools the server must register. Update deliberately when adding/removing a tool, and bump the version.",
   "tools": [
     "remember",
+    "get_archive",
     "recall",
     "record_event",
     "recent_events",
