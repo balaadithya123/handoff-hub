@@ -3,6 +3,7 @@
   "tools": [
     "remember",
     "get_archive",
+    "export_project",
     "recall",
     "record_event",
     "recent_events",

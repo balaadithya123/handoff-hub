@@ -10,3 +10,4 @@ export async function providerStatus(session:string){const d=await call({action:
 export async function startProviderOAuth(session:string,provider:Provider){return (await call({action:"start",portal_session:session,provider})).authorization_url as string}
 export async function consumeProviderOAuth(session:string,provider:Provider,ticket:string){return (await call({action:"consume",portal_session:session,provider,ticket})).ok as boolean}
 export async function deleteConnection(session:string,provider:Provider){return call({action:"disconnect",portal_session:session,provider})}
+export async function exportProject(session:string,hubUser:string,project:string){return (await call({action:"export_project",portal_session:session,hub_user:hubUser,project})) as {ok:boolean;filename:string;markdown:string}}

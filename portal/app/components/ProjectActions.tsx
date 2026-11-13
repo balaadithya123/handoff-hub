@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowRightLeft, AlertCircle, Archive, RotateCcw, Trash2 } from "lucide-react";
+import { Download, Plus, ArrowRightLeft, AlertCircle, Archive, RotateCcw, Trash2 } from "lucide-react";
 
 async function call(body: Record<string, unknown>): Promise<{ ok: boolean; error: string }> {
   const response = await fetch("/api/projects", {
@@ -36,6 +36,15 @@ export function PortalSwitch({ hubUser, project, label, ghost }: {
       </button>
       {error && <span className="text-[11px] text-red-300">{error}</span>}
     </div>
+  );
+}
+
+export function ProjectDownload({ hubUser, project }: { hubUser: string; project: string }) {
+  return (
+    <a className="axon-action-button" title="Download everything about this project as a Markdown file"
+      href={`/api/projects/export?hub_user=${encodeURIComponent(hubUser)}&project=${encodeURIComponent(project)}`} download>
+      <Download size={13} />Download .md
+    </a>
   );
 }
 
