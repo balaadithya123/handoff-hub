@@ -1,6 +1,6 @@
 export type Provider=string;
 const HUB=(process.env.NEXT_PUBLIC_HUB_URL||"https://handoff-mcp.vercel.app").replace(/\/$/,"");
-async function call(body:Record<string,unknown>){const r=await fetch(HUB+"/api/provider-oauth",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});const t=await r.text();let d:any={};try{d=t?JSON.parse(t):{};}catch{}if(!r.ok)throw new Error(d.error||"Handoff Hub OAuth request failed");return d}
+async function call(body:Record<string,unknown>){const r=await fetch(HUB+"/api/provider-oauth",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});const t=await r.text();let d:any={};try{d=t?JSON.parse(t):{};}catch{}if(!r.ok)throw new Error(d.error||"Axon OAuth request failed");return d}
 export async function connectionStatus(session:string){return (await call({action:"status",portal_session:session})).connections as Array<{provider:Provider;provider_account_name:string|null;scope:string|null;updated_at:string}>}
 /** Whether the Hub can really start a sign-in for an app: ready, needs an OAuth app set up, or not connectable. "unknown" = the check timed out. */
 export type ProviderAvailability={provider:Provider;state:"ready"|"needs_app"|"unavailable"|"unknown";reason:string|null;setup:{env:string[];redirect_uri:string}|null};

@@ -193,21 +193,21 @@ mono: ["JetBrains Mono", "monospace"],
 <header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-canvas/80 border-b border-border-hairline transition-all">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-15 py-3.5 flex items-center justify-between gap-4">
 <div class="flex items-center gap-6">
-<a class="flex items-center gap-2.5 group" href="#">
+<a class="flex items-center gap-2.5 group" href="/">
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0" role="img" aria-label="Axon">
 <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="#0f0f0f" stroke="rgba(246,245,242,0.28)" stroke-width="1"/>
 <path d="M16 6.5 C16.55 11.2 17.8 13.8 20.9 15.05 C17.8 16.3 16.55 18.9 16 23.5 C15.45 18.9 14.2 16.3 11.1 15.05 C14.2 13.8 15.45 11.2 16 6.5Z" fill="#f6f5f2"/>
 <circle cx="16" cy="15.05" r="1.35" fill="#0f0f0f" opacity="0.35"/>
 </svg>
 <span class="font-semibold text-[15px] tracking-tight text-text-main group-hover:text-white transition-colors">Axon</span>
-<span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-surface-container border border-border-hairline text-text-soft tracking-wider ml-0.5">MESH 2.0</span>
+<span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-surface-container border border-border-hairline text-text-soft tracking-wider ml-0.5">MCP</span>
 </a>
 <div class="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface border border-border-hairline text-[11px] font-mono text-text-muted">
 <span class="relative flex h-2 w-2">
 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
 <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
 </span>
-<span>System Operational — v2.4</span>
+<span>Early access</span>
 </div>
 </div>
 <nav class="hidden md:flex items-center gap-6 text-[13px] font-medium text-text-muted"><a class="hover:text-text-main transition-colors" href="#how-it-works">How it works</a>
@@ -272,11 +272,11 @@ mono: ["JetBrains Mono", "monospace"],
 <!-- Micro-badge pill -->
 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-border-hairline text-[12px] font-mono shadow-inner">
 <span class="text-primary text-[11px]">✨</span>
-<span class="text-text-main uppercase font-semibold tracking-wider">PORTAL // CONTEXT MESH 2.0</span>
+<span class="text-text-main uppercase font-semibold tracking-wider">PORTAL // SHARED CONTEXT</span>
 <span class="text-text-soft">•</span>
 <span class="text-primary flex items-center gap-1">
 <span class="material-symbols-outlined text-[13px]">verified_user</span>
-<span>SOC2 TYPE II COMPLIANT</span>
+<span>WORKS WITH ANY MCP AI APP</span>
 </span>
 </div>
 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance leading-[1.08]">
@@ -286,7 +286,7 @@ every AI you use.
 </span>
 </h1>
 <p class="text-base sm:text-lg text-text-muted max-w-2xl font-normal leading-relaxed text-balance">
-Save decisions once, pass file locks and project state seamlessly between Claude, ChatGPT, Cursor, and developer tools. Zero third-party passwords stored. Scoped to your private account vault.
+Save decisions once, then pass project state and handoff tasks between Claude, ChatGPT and other MCP-compatible AI apps. Your provider passwords are never stored, and everything stays in your own private account.
 </p>
 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
 <a class="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-neutral-200 shadow-[0_0_25px_rgba(255,255,255,0.25)] transition-all active:scale-[0.98]" href="/login">
@@ -294,8 +294,8 @@ Save decisions once, pass file locks and project state seamlessly between Claude
 <span>Get started with GitHub</span>
 </a>
 <button class="group flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-surface border border-border-hairline hover:border-border-medium font-mono text-[13px] text-text-muted hover:text-white transition-all" id="cliHeroBtn" type="button">
-<span class="text-primary font-bold">$</span>
-<span class="text-text-main font-mono">npx @handoff/cli init</span>
+<span class="text-primary font-bold">MCP</span>
+<span class="text-text-main font-mono">handoff-mcp.vercel.app/mcp</span>
 <span class="material-symbols-outlined text-[16px] text-text-soft group-hover:text-primary transition-colors">content_copy</span>
 </button>
 </div>
@@ -327,12 +327,12 @@ Save decisions once, pass file locks and project state seamlessly between Claude
 <span class="text-text-soft font-mono text-xs">/</span>
 <div class="flex items-center gap-2 font-mono text-xs text-text-main">
 <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-<span>mesh://session/active-trace-9942</span>
+<span>example handoff</span>
 </div>
 </div>
 <div class="flex items-center gap-3 font-mono text-[11px]">
-<span class="text-text-soft">LOCK_LEASE: <span class="text-primary font-medium">ACTIVE (240s)</span></span>
-<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary uppercase font-semibold">Zero-Leak Sandbox</span>
+<span class="text-text-soft">LOCK_LEASE: <span class="text-primary font-medium">ACTIVE (60m)</span></span>
+<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary uppercase font-semibold">Example session</span>
 </div>
 </div>
 <!-- Dual-Pane Layout -->
@@ -347,7 +347,7 @@ Save decisions once, pass file locks and project state seamlessly between Claude
 </div>
 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container border border-border-hairline text-[11px] font-mono text-primary">
 <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-Transferring AST Diffs
+Passing the project brief
 </span>
 </div>
 <!-- Animated Diagram with Context Flow Beam -->
@@ -365,12 +365,12 @@ Transferring AST Diffs
 <div class="w-28 h-full bg-gradient-to-r from-transparent via-secondary to-transparent animate-beam-2"></div>
 </div>
 <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4">
-<!-- Source Node: Claude 3.7 -->
+<!-- Source Node: Claude -->
 <div class="flex flex-col items-center text-center p-3.5 rounded-xl bg-surface-container border border-primary/40 shadow-[0_0_20px_rgba(111,155,255,0.15)] w-44 hover:border-primary transition-all animate-glow-breathe">
 <div class="w-10 h-10 rounded-lg bg-surface border border-border-hairline flex items-center justify-center font-mono font-bold text-primary mb-2 shadow-inner">C</div>
-<span class="font-semibold text-xs text-text-main">Claude 3.7 Sonnet</span>
+<span class="font-semibold text-xs text-text-main">Claude</span>
 <span class="text-[10px] font-mono text-text-soft mt-0.5">Anthropic • Source</span>
-<span class="mt-2 text-[10px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">Brief Exported</span>
+<span class="mt-2 text-[10px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">Brief saved</span>
 </div>
 <!-- Flow Core / Hub Mesh -->
 <div class="flex flex-col items-center">
@@ -380,23 +380,23 @@ Transferring AST Diffs
 <!-- Tiny orbiting particle -->
 <span class="absolute w-1.5 h-1.5 rounded-full bg-primary/80 animate-orbit" style="top:50%; left:50%; margin:-3px 0 0 -3px"></span>
 </div>
-<span class="text-[11px] font-mono text-primary font-medium mt-2">34ms p95</span>
-<span class="text-[10px] font-mono text-text-soft">1,420 tokens</span>
+<span class="text-[11px] font-mono text-primary font-medium mt-2">handoff</span>
+<span class="text-[10px] font-mono text-text-soft">project brief</span>
 </div>
-<!-- Target Node: ChatGPT-4o & Cursor -->
+<!-- Target Nodes: ChatGPT and another MCP app -->
 <div class="flex flex-col gap-2.5 w-44">
 <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-container border border-secondary/40 shadow-sm hover:border-secondary transition-all">
-<div class="w-7 h-7 rounded-lg bg-surface flex items-center justify-center font-mono font-bold text-secondary text-xs">4o</div>
+<div class="w-7 h-7 rounded-lg bg-surface flex items-center justify-center font-mono font-bold text-secondary text-xs">G</div>
 <div class="text-left">
-<div class="font-medium text-xs text-text-main">ChatGPT-4o</div>
-<div class="text-[9px] font-mono text-text-soft">Ingested brief</div>
+<div class="font-medium text-xs text-text-main">ChatGPT</div>
+<div class="text-[9px] font-mono text-text-soft">Reads the brief</div>
 </div>
 </div>
 <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-container border border-border-hairline hover:border-primary/50 transition-colors">
 <div class="w-7 h-7 rounded-lg bg-surface flex items-center justify-center font-mono font-semibold text-text-main text-xs">⚡</div>
 <div class="text-left">
-<div class="font-medium text-xs text-text-main">Cursor IDE</div>
-<div class="text-[9px] font-mono text-text-soft">Lock claimed</div>
+<div class="font-medium text-xs text-text-main">Any MCP app</div>
+<div class="text-[9px] font-mono text-text-soft">Claims the file</div>
 </div>
 </div>
 </div>
@@ -406,16 +406,16 @@ Transferring AST Diffs
 <!-- Metrics bar inside node card -->
 <div class="grid grid-cols-3 gap-3 pt-6 mt-6 border-t border-border-hairline text-left">
 <div>
-<span class="text-[10px] font-mono uppercase text-text-soft block">Payload</span>
-<span class="font-mono text-sm font-semibold text-text-main">1,420 tokens</span>
+<span class="text-[10px] font-mono uppercase text-text-soft block">Shared</span>
+<span class="font-mono text-sm font-semibold text-text-main">Memory + tasks</span>
 </div>
 <div>
-<span class="text-[10px] font-mono uppercase text-text-soft block">Compression</span>
-<span class="font-mono text-sm font-semibold text-primary">68% reduced</span>
+<span class="text-[10px] font-mono uppercase text-text-soft block">Locks</span>
+<span class="font-mono text-sm font-semibold text-primary">Advisory</span>
 </div>
 <div>
-<span class="text-[10px] font-mono uppercase text-text-soft block">Isolation</span>
-<span class="font-mono text-sm font-semibold text-text-main">Tenant #9942</span>
+<span class="text-[10px] font-mono uppercase text-text-soft block">Scope</span>
+<span class="font-mono text-sm font-semibold text-text-main">Your account</span>
 </div>
 </div>
 </div>
@@ -425,32 +425,31 @@ Transferring AST Diffs
 <div class="flex items-center justify-between pb-3 border-b border-border-hairline">
 <div class="flex items-center gap-2">
 <span class="material-symbols-outlined text-primary text-[17px]">terminal</span>
-<span class="font-mono text-xs text-text-main font-medium">telemetry.task.inspect</span>
+<span class="font-mono text-xs text-text-main font-medium">handoff.example</span>
 </div>
-<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface border border-border-hairline text-text-soft">E2E ENCRYPTED</span>
+<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface border border-border-hairline text-text-soft">EXAMPLE</span>
 </div>
 <!-- Code block with syntax highlighting -->
 <div class="mt-4 p-4 rounded-xl bg-canvas border border-border-hairline font-mono text-[11px] leading-relaxed overflow-x-auto text-neutral-300">
-<span class="text-text-soft">// State Shard Handoff Payload</span><br/>
-<span class="text-secondary">"event"</span>: <span class="text-primary">"handoff.state.mesh"</span>,<br/>
-<span class="text-secondary">"source_agent"</span>: <span class="text-text-main">"claude-3.7-sonnet"</span>,<br/>
-<span class="text-secondary">"target_agent"</span>: <span class="text-text-main">"gpt-4o"</span>,<br/>
+<span class="text-text-soft">// Example handoff</span><br/>
+<span class="text-secondary">"event"</span>: <span class="text-primary">"handoff_created"</span>,<br/>
+<span class="text-secondary">"source_agent"</span>: <span class="text-text-main">"claude"</span>,<br/>
+<span class="text-secondary">"target_agent"</span>: <span class="text-text-main">"chatgpt"</span>,<br/>
 <span class="text-secondary">"file_claimed"</span>: <span class="text-text-main">"src/billing/stripe.ts"</span>,<br/>
-<span class="text-secondary">"optimistic_lock"</span>: <span class="text-primary">true</span>,<br/>
-<span class="text-secondary">"crypto_hash"</span>: <span class="text-signal-amber">"sha256:0x7f8a9e21..."</span>,<br/>
-<span class="text-secondary">"context_delta"</span>: {<br/>
-<span class="text-secondary">"ast_diff_lines"</span>: <span class="text-primary">+42</span>,<br/>
-<span class="text-secondary">"tests_passed"</span>: <span class="text-primary">14</span>,<br/>
-<span class="text-secondary">"session_scope"</span>: <span class="text-text-muted">"auth_tokens_isolated"</span><br/>
+<span class="text-secondary">"advisory_claim"</span>: <span class="text-primary">true</span>,<br/>
+<span class="text-secondary">"brief"</span>: {<br/>
+<span class="text-secondary">"decisions"</span>: <span class="text-primary">3</span>,<br/>
+<span class="text-secondary">"pending_tasks"</span>: <span class="text-primary">2</span>,<br/>
+<span class="text-secondary">"blockers"</span>: <span class="text-text-muted">1</span><br/>
 }
 </div>
 </div>
 <div class="mt-4 p-3 rounded-lg bg-surface border border-border-hairline flex items-center justify-between text-xs font-mono">
 <span class="flex items-center gap-1.5 text-text-muted">
 <span class="material-symbols-outlined text-[15px] text-primary">verified</span>
-<span>Signature Validated</span>
+<span>Illustrative only</span>
 </span>
-<span class="text-primary font-semibold">0 leaks detected</span>
+<span class="text-primary font-semibold">Example data</span>
 </div>
 </div>
 </div>
@@ -475,8 +474,6 @@ Works natively across your existing developer toolchain
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-white">Notion</span></span>
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-white">Figma</span></span>
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-signal-red">Sentry</span></span>
-<span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-signal-amber">PostHog</span></span>
-<span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-white">AWS Secrets</span></span>
 <!-- Duplicate items for seamless continuous looping -->
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-bold text-white">GitHub</span></span>
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="text-primary font-bold">▲</span> Vercel</span>
@@ -486,8 +483,6 @@ Works natively across your existing developer toolchain
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-white">Notion</span></span>
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-white">Figma</span></span>
 <span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-signal-red">Sentry</span></span>
-<span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-signal-amber">PostHog</span></span>
-<span class="flex items-center gap-2 hover:text-white transition-colors cursor-default"><span class="font-semibold text-white">AWS Secrets</span></span>
 </div>
 </div>
 </section>
@@ -520,25 +515,25 @@ Works natively across your existing developer toolchain
 </div>
 <div class="p-5 rounded-xl bg-surface border border-border-hairline hover:border-primary/40 transition-all group reveal-on-scroll">
 <div class="flex items-center justify-between text-text-soft text-xs font-mono uppercase tracking-wider mb-2">
-<span>Performance</span>
+<span>Memory</span>
 <span class="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">bolt</span>
 </div>
-<div class="text-3xl font-bold font-mono tracking-tight text-primary">&lt; 38ms</div>
-<div class="text-xs text-text-muted mt-1 font-sans">p95 cross-agent context handoff</div>
+<div class="text-3xl font-bold font-mono tracking-tight text-primary">500</div>
+<div class="text-xs text-text-muted mt-1 font-sans">memories kept per project</div>
 <div class="mt-3 pt-2.5 border-t border-border-hairline flex items-center gap-1.5 text-[11px] font-mono text-text-soft">
-<span>Global Edge KV replication</span>
+<span>Plus the 100 most recent events</span>
 </div>
 </div>
 <div class="p-5 rounded-xl bg-surface border border-border-hairline hover:border-primary/40 transition-all group reveal-on-scroll">
 <div class="flex items-center justify-between text-text-soft text-xs font-mono uppercase tracking-wider mb-2">
-<span>Reliability</span>
+<span>Coordination</span>
 <span class="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">verified</span>
 </div>
-<div class="text-3xl font-bold font-mono tracking-tight text-text-main">99.98%</div>
-<div class="text-xs text-text-muted mt-1 font-sans">Telemetry claim and lock resolution</div>
+<div class="text-3xl font-bold font-mono tracking-tight text-text-main">Claims</div>
+<div class="text-xs text-text-muted mt-1 font-sans">Advisory locks between AIs</div>
 <div class="mt-3 pt-2.5 border-t border-border-hairline flex items-center gap-1.5 text-[11px] font-mono text-primary">
 <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-<span>Conflict-free sync mesh</span>
+<span>So two AIs do not collide</span>
 </div>
 </div>
 </div>
@@ -558,11 +553,11 @@ Works natively across your existing developer toolchain
 </div>
 <h3 class="text-base font-semibold text-text-main mb-2">Claim &amp; Lock</h3>
 <p class="text-xs text-text-muted leading-relaxed">
-When Claude or Cursor begins editing, it claims files via optimistic locks so another assistant won't overwrite ongoing refactors.
+When an AI starts editing, it claims the file or task with an advisory lock, so another assistant can see it is taken.
 </p>
 </div>
 <div class="mt-6 p-2.5 rounded-lg bg-canvas border border-border-hairline font-mono text-[11px] text-text-muted flex items-center justify-between">
-<span class="text-secondary">$ handoff.claim("src/api")</span>
+<span class="text-secondary">$ claim_resource("src/api")</span>
 <span class="text-primary font-medium">LOCKED</span>
 </div>
 </div>
@@ -573,11 +568,11 @@ When Claude or Cursor begins editing, it claims files via optimistic locks so an
 </div>
 <h3 class="text-base font-semibold text-text-main mb-2">Synthesize &amp; Hand Off</h3>
 <p class="text-xs text-text-muted leading-relaxed">
-A context brief is packed in 34ms—summarizing decisions, AST diffs, and failing tests—without sending irrelevant token bloat.
+One handoff_brief call summarizes decisions, blockers, pending tasks and recent events, so the next AI starts from the facts.
 </p>
 </div>
 <div class="mt-6 p-2.5 rounded-lg bg-canvas border border-border-hairline font-mono text-[11px] text-text-muted flex items-center justify-between">
-<span class="text-text-main">Brief 1,420 tkns</span>
+<span class="text-text-main">handoff_brief</span>
 <span class="text-primary font-medium">COMPRESSED</span>
 </div>
 </div>
@@ -588,11 +583,11 @@ A context brief is packed in 34ms—summarizing decisions, AST diffs, and failin
 </div>
 <h3 class="text-base font-semibold text-text-main mb-2">Resume Seamlessly</h3>
 <p class="text-xs text-text-muted leading-relaxed">
-Open ChatGPT-4o, Windsurf, or terminal. The target model ingests the state shard immediately, carrying on with 100% precision.
+Open ChatGPT or any other connected AI app. It reads the brief and carries on where the last one stopped.
 </p>
 </div>
 <div class="mt-6 p-2.5 rounded-lg bg-canvas border border-border-hairline font-mono text-[11px] text-text-muted flex items-center justify-between">
-<span class="text-text-main">GPT-4o runtime</span>
+<span class="text-text-main">Next AI app</span>
 <span class="text-primary font-medium">RESUMED</span>
 </div>
 </div>
@@ -610,7 +605,7 @@ Open ChatGPT-4o, Windsurf, or terminal. The target model ingests the state shard
 Built for developers who jump between models
 </h2>
 <p class="text-xs sm:text-sm text-text-muted mt-1 max-w-xl">
-Persistent context shards, hardware-isolated file leases, and zero raw credentials.
+Shared memory, advisory file claims, and no stored provider passwords.
 </p>
 </div>
 <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-border-hairline text-xs font-mono text-text-muted">
@@ -631,7 +626,7 @@ Persistent context shards, hardware-isolated file leases, and zero raw credentia
 <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary uppercase font-medium">Active</span>
 </div>
 <p class="text-xs text-text-muted leading-relaxed">
-Claude, GPT-4o, and Cursor share verified AST diffs and architectural decisions in one cryptographically isolated state shard.
+Claude, ChatGPT and other connected AI apps read and write the same decisions, blockers and handoff tasks in your private account.
 </p>
 </div>
 <!-- Item 2 -->
@@ -639,12 +634,12 @@ Claude, GPT-4o, and Cursor share verified AST diffs and architectural decisions 
 <div class="flex items-center justify-between mb-2">
 <div class="flex items-center gap-2.5">
 <span class="material-symbols-outlined text-[18px] text-text-soft group-hover:text-primary transition-colors">lock_clock</span>
-<h3 class="text-sm font-semibold text-text-main group-hover:text-white transition-colors">Zero-Retention File Locks</h3>
+<h3 class="text-sm font-semibold text-text-main group-hover:text-white transition-colors">Advisory File Claims</h3>
 </div>
-<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-container text-text-soft uppercase font-medium">Optimistic</span>
+<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-container text-text-soft uppercase font-medium">Advisory</span>
 </div>
 <p class="text-xs text-text-muted leading-relaxed">
-Prevent overwriting code simultaneously. Claim temporary leases with customer-managed AES-GCM-256 keys.
+Claim a file or task for a set time so two AIs do not edit the same thing at once. Claims expire on their own.
 </p>
 </div>
 <!-- Item 3 -->
@@ -657,7 +652,7 @@ Prevent overwriting code simultaneously. Claim temporary leases with customer-ma
 <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-container text-text-soft uppercase font-medium">PKCE</span>
 </div>
 <p class="text-xs text-text-muted leading-relaxed">
-Direct OAuth 2.0 with GitHub, Supabase, and Vercel. Assistants inspect data without ever holding master API secrets.
+Sign in with OAuth 2.0 and PKCE. Provider tokens stay encrypted on the server, so your AI apps never hold your provider passwords.
 </p>
 </div>
 </div>
@@ -668,42 +663,38 @@ Direct OAuth 2.0 with GitHub, Supabase, and Vercel. Assistants inspect data with
 <span class="w-2.5 h-2.5 rounded-full bg-neutral-800 border border-neutral-700"></span>
 <span class="w-2.5 h-2.5 rounded-full bg-neutral-800 border border-neutral-700"></span>
 <span class="w-2.5 h-2.5 rounded-full bg-neutral-800 border border-neutral-700"></span>
-<span class="text-text-soft ml-2">handoff-quickstart.ts</span>
+<span class="text-text-soft ml-2">quickstart</span>
 </div>
 <div class="flex items-center gap-2 text-[11px] font-mono text-text-soft">
 <span class="w-2 h-2 rounded-full bg-primary"></span>
-<span class="text-primary font-medium">TypeScript SDK</span>
+<span class="text-primary font-medium">MCP connector</span>
 </div>
 </div>
 <!-- Code Snippet -->
 <div class="p-5 sm:p-6 font-mono text-xs text-text-main leading-relaxed bg-canvas space-y-3 overflow-x-auto">
 <div>
-<span class="text-text-soft"># 1. Initialize project vault</span><br/>
-<span class="text-primary">$</span> <span class="text-white font-medium">npx @handoff/cli init</span>
+<span class="text-text-soft"># 1. Add the connector in your AI app</span><br/>
+<span class="text-primary">URL</span> <span class="text-white font-medium">https://handoff-mcp.vercel.app/mcp</span>
 </div>
 <div class="pt-2 border-t border-border-hairline/60">
-<span class="text-text-soft">// 2. Attach context hook</span><br/>
-<span class="text-secondary">import</span> { useHandoff } <span class="text-secondary">from</span> <span class="text-primary">"@handoff/sdk"</span>;<br/>
-<span class="text-secondary">const</span> mesh = <span class="text-primary">useHandoff</span>({ vault: <span class="text-signal-amber">"acme-prod"</span> });
+<span class="text-text-soft">// 2. Sign in and approve the connection</span><br/>
+<span class="text-text-muted">Email code or portal code, then connect.</span>
 </div>
 <div class="pt-2 border-t border-border-hairline/60">
-<span class="text-text-soft">// 3. One-line state handoff with optimistic file lock</span><br/>
-<span class="text-secondary">await</span> mesh.<span class="text-primary">transfer</span>({
-<span class="text-text-muted">from</span>: <span class="text-primary">"claude-3.7-sonnet"</span>,
-<span class="text-text-muted">to</span>: <span class="text-secondary">"chatgpt-4o"</span>,
-<span class="text-text-muted">paths</span>: [<span class="text-signal-amber">"src/billing/*"</span>]
-});
+<span class="text-text-soft">// 3. Save context and hand off</span><br/>
+<span class="text-primary">remember</span>(<span class="text-signal-amber">"decision: use Postgres"</span>)<br/>
+<span class="text-primary">hand_off_task</span>({ <span class="text-text-muted">to</span>: <span class="text-signal-amber">"chatgpt"</span> })
 </div>
 </div>
 <!-- Interactive Bar Output -->
 <div class="px-5 py-3 bg-surface-subtle border-t border-border-hairline flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
 <div class="flex items-center gap-2 text-text-muted">
 <span class="material-symbols-outlined text-[15px] text-primary">verified</span>
-<span>Trace: <span class="text-primary">#hnd-9942</span></span>
+<span>Example: <span class="text-primary">handoff_brief</span></span>
 <span class="text-text-soft">•</span>
-<span>1,420 tkns compressed in 34ms</span>
+<span>one call, full context</span>
 </div>
-<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] uppercase font-semibold">Zero Leaks Verified</span>
+<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] uppercase font-semibold">Illustrative</span>
 </div>
 </div>
 </div>
@@ -736,7 +727,7 @@ Axon utilizes standard OAuth 2.0 PKCE and ephemeral scoped tokens. When connecti
 </div>
 <div class="faq-answer mt-2">
 <p class="text-xs text-text-muted leading-relaxed">
-Never. Axon acts purely as an encrypted transit mesh. Context shards and AST diffs are encrypted client-side with tenant-specific keys. Zero customer data is retained for training, and tokens are discarded as soon as handoffs conclude.
+No. Axon does not sell your data or use it to train AI models. What you save stays in your private account, and connection tokens are encrypted on our server.
 </p>
 </div>
 </div>
@@ -748,19 +739,19 @@ Never. Axon acts purely as an encrypted transit mesh. Context shards and AST dif
 </div>
 <div class="faq-answer mt-2">
 <p class="text-xs text-text-muted leading-relaxed">
-The optimistic file-lock system alerts the second assistant that an active lock lease exists on the file (with remaining TTL). The incoming agent can either queue its patch or merge against the published AST brief once the first agent finishes.
+When an AI claims a file or task, a second AI can see who holds it and when the claim expires. Claims are advisory: the second AI can wait or pick other work, and the claim clears on its own.
 </p>
 </div>
 </div>
 <!-- FAQ 4 -->
 <div class="faq-item p-4 rounded-xl bg-surface border border-border-hairline hover:border-border-medium transition-all cursor-pointer reveal-on-scroll">
 <div class="faq-header flex items-center justify-between gap-3">
-<h3 class="font-medium text-text-main text-sm">Can I run Axon entirely on-premises?</h3>
+<h3 class="font-medium text-text-main text-sm">Where does Axon run?</h3>
 <span class="faq-icon material-symbols-outlined text-[18px] text-text-soft transition-transform duration-300">add</span>
 </div>
 <div class="faq-answer mt-2">
 <p class="text-xs text-text-muted leading-relaxed">
-Yes. Enterprise tiers include self-hosted docker configurations and Kubernetes Helm charts that connect directly to your own Redis / Postgres clusters with customer-managed AWS KMS keys.
+Axon is a hosted service on Vercel, with data stored in Supabase. Self-hosting is not offered.
 </p>
 </div>
 </div>
@@ -792,8 +783,8 @@ Spin up an isolated tenant session in 30 seconds. Connect your favorite models, 
 </div>
 <div class="mt-5 flex flex-wrap items-center gap-4 text-xs font-mono text-text-soft">
 <span>✓ No credit card required</span>
-<span>✓ SOC2 Type II certified</span>
-<span>✓ Free tier includes 100 handoffs/mo</span>
+<span>✓ OAuth 2.0 + PKCE sign-in</span>
+<span>✓ One account per AI app included</span>
 </div>
 </div>
 </div>
@@ -807,20 +798,19 @@ Spin up an isolated tenant session in 30 seconds. Connect your favorite models, 
 <div class="flex items-center gap-2 font-mono">
 <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
 <span class="text-white font-semibold">Status:</span>
-<span>All systems operational (100.0% uptime)</span>
+<span>Early access</span>
 </div>
 <!-- Links -->
 <div class="flex items-center flex-wrap justify-center gap-5 font-mono text-xs">
 <a class="hover:text-white transition-colors" href="/terms">Terms of Service</a>
 <a class="hover:text-white transition-colors" href="/privacy">Privacy Policy</a>
-<a class="hover:text-white transition-colors" href="#">Security Whitepaper</a>
 <a class="hover:text-white transition-colors" href="/connect/setup">Documentation</a>
-<a class="hover:text-white transition-colors" href="#">Changelog</a>
+<a class="hover:text-white transition-colors" href="/support">Support</a>
 <a class="hover:text-white transition-colors" href="https://github.com/balaadithya123/handoff-hub">GitHub</a>
 </div>
 <!-- Copyright -->
 <div class="font-mono text-text-soft text-[11px]">
-© 2025 Axon Inc. All rights reserved.
+© 2026 Axon
 </div>
 </div>
 </div>
@@ -870,7 +860,7 @@ icon.classList.remove('text-text-soft');
 const cliHeroBtn = document.getElementById('cliHeroBtn');
 if (cliHeroBtn) {
 cliHeroBtn.addEventListener('click', () => {
-navigator.clipboard.writeText('npx @handoff/cli init').then(() => {
+navigator.clipboard.writeText('https://handoff-mcp.vercel.app/mcp').then(() => {
 const originalHTML = cliHeroBtn.innerHTML;
 cliHeroBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] text-primary">done</span><span class="text-primary font-mono text-[13px]">Copied!</span>';
 setTimeout(() => {

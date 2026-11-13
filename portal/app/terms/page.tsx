@@ -1,12 +1,12 @@
 import Legal from "../components/Legal";
-export const metadata = { title: "Terms of Service · Handoff Hub" };
+export const metadata = { title: "Terms of Service · Axon" };
 
 export default function Terms() {
   return (
     <Legal title="Terms of Service" updated="7 October 2026">
-      <p>By using Handoff Hub you agree to these terms.</p>
+      <p>By using Axon you agree to these terms.</p>
       <h2>The service</h2>
-      <p>Handoff Hub stores context you save, links your AI accounts, and relays requests from your AI apps to the integrations you connected. It is provided as is, and features may change.</p>
+      <p>Axon stores context you save, links your AI accounts, and relays requests from your AI apps to the integrations you connected. It is provided as is, and features may change.</p>
       <h2>Your responsibilities</h2>
       <ul>
         <li>You may only connect accounts you are allowed to use, and you are responsible for what your AI apps do with them.</li>

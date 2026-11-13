@@ -31,7 +31,7 @@ export default async function AiApps({ token }: { token: string }) {
         <h2>AI apps</h2>
         <span className={linked ? "status-pill status-pill-green" : "status-pill status-pill-grey"}>
           <i className="status-dot" aria-hidden="true" />
-          {linked ? "Linked to your Handoff Hub account" : "Not linked yet"}
+          {linked ? "Linked to your Axon account" : "Not linked yet"}
         </span>
       </div>
 

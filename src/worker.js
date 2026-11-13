@@ -2,6 +2,7 @@ import { mutate, project, opsProject, getState } from './store.js';
 import { vercelGetLatestDeployment } from './integrations.js';
 import { purgeOAuthData } from './oauth-store.js';
 import { isOwner } from './owner.js';
+import { archiveOldEvents } from './archive.js';
 
 function vercelProjectId(){return(process.env.VERCEL_ALLOWED_PROJECTS||'').split(',').map(x=>x.trim()).filter(Boolean)[0]||null;}
 function selfBaseUrl(){const host=process.env.VERCEL_PROJECT_PRODUCTION_URL||process.env.VERCEL_URL;return host?`https://${host}`:null;}
@@ -52,11 +53,18 @@ async function checkOAuthCleanup(){
   }catch(error){return{ok:false,error:error.message,oauth_codes:0,oauth_tokens:0,oauth_clients:0};}
 }
 
+async function checkArchive(userId){
+  try{
+    const result=await mutate(userId,state=>archiveOldEvents(state));
+    return{ok:true,...result};
+  }catch(error){return{ok:false,error:error.message,archived_events:0,digests_updated:0};}
+}
+
 export async function runHealthCheck(userId,{agent='worker',project_id}={}){
-  const[vercel,mcp_endpoint,routes,oauth_cleanup]=await Promise.all([
-    checkVercel(userId),checkMcpEndpoint(),checkRoutes(),checkOAuthCleanup()
+  const[vercel,mcp_endpoint,routes,oauth_cleanup,archive]=await Promise.all([
+    checkVercel(userId),checkMcpEndpoint(),checkRoutes(),checkOAuthCleanup(),checkArchive(userId)
   ]);
-  const checks={vercel,mcp_endpoint,routes,oauth_cleanup};
+  const checks={vercel,mcp_endpoint,routes,oauth_cleanup,archive};
   const purge={oauth_codes:oauth_cleanup.oauth_codes||0,oauth_tokens:oauth_cleanup.oauth_tokens||0,oauth_clients:oauth_cleanup.oauth_clients||0};
   let anomalies=Object.entries(checks).filter(([,v])=>v.ok===false).map(([key,v])=>`${key}: ${v.error||'check failed'}`);
   try{
@@ -68,7 +76,7 @@ export async function runHealthCheck(userId,{agent='worker',project_id}={}){
   const state=key=>(checks[key].ok===true?'ok':checks[key].ok===null?'inconclusive':'FAILED');
   const summary=anomalies.length
     ?`Autonomous health check found issues: ${anomalies.join('; ')}`
-    :`Autonomous health check: Vercel ${state('vercel')}, MCP endpoint ${state('mcp_endpoint')}, routes ${state('routes')}, OAuth cleanup removed ${purge.oauth_codes} code(s), ${purge.oauth_tokens} token(s), ${purge.oauth_clients} client(s).`;
+    :`Autonomous health check: Vercel ${state('vercel')}, MCP endpoint ${state('mcp_endpoint')}, routes ${state('routes')}, OAuth cleanup removed ${purge.oauth_codes} code(s), ${purge.oauth_tokens} token(s), ${purge.oauth_clients} client(s), archived ${archive.archived_events||0} old event(s).`;
   const entry=await mutate(userId,current=>{const p=project(current,project_id??opsProject(current));const record={id:crypto.randomUUID(),at:new Date().toISOString(),agent,checks,anomalies};p.health_checks=p.health_checks||[];p.health_checks.unshift(record);p.health_checks=p.health_checks.slice(0,50);p.blockers=(p.blockers||[]).filter(b=>!b.startsWith('[auto]'));if(anomalies.length)p.blockers.push(`[auto] ${summary}`);p.events.unshift({type:'health_check',agent,summary,at:record.at});p.events=p.events.slice(0,100);return record;});
   return{summary,checks,anomalies,at:entry.at};
 }

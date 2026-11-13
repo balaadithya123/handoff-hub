@@ -1,5 +1,5 @@
 /**
- * Optional AI helpers for Handoff Hub 0.21.
+ * Optional AI helpers for Axon 0.21.
  * - Local TF-IDF semantic ranking always available (no API key).
  * - Optional OpenAI-compatible embeddings / chat when HUB_AI_API_KEY or OPENAI_API_KEY is set.
  * Never throws for missing keys: callers get heuristic fallbacks.

@@ -61,7 +61,7 @@ const rnd = (n = 32) => crypto.randomBytes(n).toString('base64url');
 const pkce = v => crypto.createHash('sha256').update(v).digest('base64url');
 const classicReady = p => Boolean(CFG[p] && process.env[CFG[p].client] && process.env[CFG[p].secret]);
 
-function env(v, n) { if (!v) throw new Error(n + ' is not configured on the Handoff Hub server'); return v; }
+function env(v, n) { if (!v) throw new Error(n + ' is not configured on the Axon server'); return v; }
 
 async function rest(path, o = {}) {
   env(SUPABASE_URL, 'SUPABASE_URL');
@@ -175,7 +175,7 @@ async function register(meta, name, pid) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     signal: AbortSignal.timeout(8000),
-    body: JSON.stringify({ client_name: 'Handoff Hub', redirect_uris: [callbackMcp(pid)], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
+    body: JSON.stringify({ client_name: 'Axon', redirect_uris: [callbackMcp(pid)], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' })
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.client_id) throw new Error(name + ' refused the app registration (' + (d.error_description || d.error || r.status) + ').');
@@ -229,14 +229,14 @@ async function resolve(p) {
   const m = MCP[p];
   if (!m) {
     const c = CFG[p];
-    return { state: 'needs_app', method: 'oauth_app', reason: p + ' cannot connect without a registered OAuth app. Set ' + c.client + ' and ' + c.secret + ' on the Handoff Hub server.', setup: { env: [c.client, c.secret], redirect_uri: callback(p) } };
+    return { state: 'needs_app', method: 'oauth_app', reason: p + ' cannot connect without a registered OAuth app. Set ' + c.client + ' and ' + c.secret + ' on the Axon server.', setup: { env: [c.client, c.secret], redirect_uri: callback(p) } };
   }
   const creds = appCreds(m);
   const f = await found(p);
   if (!creds && m.app) {
     // Without an OAuth app, still connect if the server really does let apps register themselves (so nothing that worked before is blocked).
     if (!f.error && f.d.meta.registration_endpoint) return { state: 'ready', method: 'mcp', creds, ...f };
-    return { state: 'needs_app', method: 'mcp', reason: m.name + ' does not allow apps to register themselves. Create an OAuth app with ' + m.name + ', then set ' + m.app.join(' and ') + ' on the Handoff Hub server.', setup: { env: m.app, redirect_uri: callbackMcp(p) } };
+    return { state: 'needs_app', method: 'mcp', reason: m.name + ' does not allow apps to register themselves. Create an OAuth app with ' + m.name + ', then set ' + m.app.join(' and ') + ' on the Axon server.', setup: { env: m.app, redirect_uri: callbackMcp(p) } };
   }
   if (f.error) return { state: 'unavailable', method: 'mcp', reason: !m.server && m.note ? m.note : f.error };
   if (!creds && !f.d.meta.registration_endpoint) return { state: 'unavailable', method: 'mcp', reason: m.name + ' does not allow apps to register themselves, so it cannot be connected without an approved OAuth app.' };
@@ -292,7 +292,7 @@ async function exchangeMcp(p, code, row) {
 
 // ---------- shared ----------
 async function startVercelConnect(id) {
-  const { url } = await startAuthorization(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }, { callbackUrl: 'https://handoff-portal.vercel.app/api/connect/vercel/callback' });
+  const { url } = await startAuthorization(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }, { callbackUrl: 'https://linkaxon.vercel.app/api/connect/vercel/callback' });
   return url;
 }
 async function vercelConnectAuthorized(id) { try { await getToken(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }); return true; } catch { return false; } }

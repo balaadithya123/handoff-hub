@@ -40,7 +40,7 @@ function portalAttemptAllowed(req){
 
 // Consent / sign-in page styling (Obsidian Signal: black canvas, hairline borders, green accent, white primary button).
 const PAGE_CSS=`:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0}body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#000;color:#ededed;font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}main{width:100%;max-width:420px;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:28px}.brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.02em;color:#a1a1a1;margin-bottom:22px}.dot{width:8px;height:8px;border-radius:50%;background:#3ecf8e;box-shadow:0 0 0 3px rgba(62,207,142,.15)}h1{margin:0 0 6px;font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-.01em;color:#fff}.sub{margin:0 0 18px;color:#a1a1a1}.sub strong{color:#fff;font-weight:600}.note{margin:0 0 16px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid}.note.err{background:rgba(255,92,92,.08);border-color:rgba(255,92,92,.35);color:#ffb4b4}.note.info{background:rgba(62,207,142,.08);border-color:rgba(62,207,142,.3);color:#9be7c4}label{display:block;margin:14px 0 6px;font-size:13px;font-weight:500;color:#d4d4d4}label em{font-style:normal;color:#8a8a8a;font-weight:400}input[type=email],input[type=password],input[type=text]{width:100%;height:40px;padding:0 12px;background:#000;color:#fff;border:1px solid #2a2a2a;border-radius:8px;font:inherit;outline:none}input:focus-visible{border-color:#3ecf8e;box-shadow:0 0 0 1px #3ecf8e}input#otp,input#pcode{letter-spacing:.35em;font-variant-numeric:tabular-nums;font-size:18px;text-align:center}input#pcode{text-transform:uppercase}fieldset{margin:18px 0 0;padding:14px;border:1px solid #1f1f1f;border-radius:10px;background:#050505}legend{padding:0 6px;font-size:13px;font-weight:600;color:#fff}.opt{display:flex;gap:10px;align-items:flex-start;margin:6px 0;padding:10px 12px;border:1px solid #1f1f1f;border-radius:8px;cursor:pointer;background:#0a0a0a}.opt:has(input:checked){border-color:#3ecf8e;background:rgba(62,207,142,.06)}.opt input{margin:4px 0 0;accent-color:#3ecf8e}.opt span{display:flex;flex-direction:column}.opt b{font-weight:600;color:#fff;font-size:14px}.opt small{color:#8a8a8a;font-size:12.5px;line-height:1.4}.actions{display:flex;flex-direction:row-reverse;gap:10px;margin-top:22px}button{flex:1;height:40px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;border:1px solid transparent}button.primary{flex:2;background:#fff;color:#000}button.primary:hover{background:#e6e6e6}button.ghost{background:transparent;color:#d4d4d4;border-color:#2a2a2a}button.ghost:hover{background:#111}button:focus-visible{outline:2px solid #3ecf8e;outline-offset:2px}.foot{margin:18px 0 0;font-size:12.5px;color:#7a7a7a}.or{display:flex;align-items:center;gap:10px;margin:24px 0 2px;color:#7a7a7a;font-size:12.5px}.or::before,.or::after{content:"";flex:1;height:1px;background:#1f1f1f}.hint{margin:0 0 8px;color:#8a8a8a;font-size:12.5px;line-height:1.45}`;
-function page(res,status,title,inner){res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Frame-Options','DENY');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main><div class="brand"><span class="dot"></span>Handoff Hub</div>${inner}</main></body></html>`);}
+function page(res,status,title,inner){res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Frame-Options','DENY');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");return res.status(status).send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main><div class="brand"><span class="dot"></span>Axon</div>${inner}</main></body></html>`);}
 const failPage=(res,status,message)=>page(res,status,'Cannot connect',`<h1>Cannot connect</h1><div class="note err" role="alert">${esc(message)}</div><p class="foot">Go back to the app you were connecting and start the connection again.</p>`);
 async function validateAuthRequest(p){if(p.response_type!=='code')return{error:'Only response_type=code is supported.'};const client=await resolveClient(p.client_id);if(!client)return{error:'Unknown client. Remove and re-add the connector so it registers again.'};if(client.static?!staticRedirectAllowed(p.redirect_uri):(!client.redirect_uris.includes(p.redirect_uri)||!redirectUriAllowed(p.redirect_uri)))return{error:'Redirect address is not registered for this client.'};if(p.code_challenge_method!=='S256'||!/^[A-Za-z0-9_-]{43,128}$/.test(p.code_challenge))return{error:'PKCE (S256) is required.'};return{client};}
 
@@ -49,7 +49,7 @@ function hiddenFields(p){return oauthFields.map(k=>`<input type="hidden" name="$
 // NOTE: the primary (approve) button is first in the DOM so pressing Enter approves instead of denying; CSS (row-reverse) shows Deny on the left.
 function emailForm(p,client,error,step='email',email='',extra={}){
   const name=esc(client.client_name||'An app');
-  const head=`<h1>Connect to Handoff Hub</h1><p class="sub"><strong>${name}</strong> wants access to your Handoff Hub.</p>${error?`<div class="note ${extra.info?'info':'err'}" role="alert">${esc(error)}</div>`:''}`;
+  const head=`<h1>Connect to Axon</h1><p class="sub"><strong>${name}</strong> wants access to your Axon.</p>${error?`<div class="note ${extra.info?'info':'err'}" role="alert">${esc(error)}</div>`:''}`;
   const gate=extra.gate?`<fieldset><legend>${name} is already connected to your Hub</legend><label class="opt"><input type="radio" name="mode" value="replace" required${extra.mode==='replace'?' checked':''}><span><b>Replace the old connection</b><small>Same account reconnecting. The old connection is signed out.</small></span></label><label class="opt"><input type="radio" name="mode" value="add" required${extra.mode==='add'?' checked':''}><span><b>Add as another account</b><small>Keeps both connected. Needs your unlock code.</small></span></label><label for="unlock">Unlock code <em>(only for adding another account)</em></label><input id="unlock" name="unlock" type="password" autocomplete="off"></fieldset>`:'';
   if(step==='otp'){
     return head+`<form method="post" action="/oauth/authorize" autocomplete="off">${hiddenFields(p)}<input type="hidden" name="action" value="verify_email"><input type="hidden" name="email" value="${esc(email)}"><label for="otp">Verification code sent to ${esc(email)}</label><input id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" value="${esc(extra.otp||'')}" required>${gate}<div class="actions"><button class="primary" name="decision" value="approve" type="submit">Verify &amp; approve</button><button class="ghost" name="decision" value="deny" type="submit" formnovalidate>Deny</button></div></form>`;
@@ -67,8 +67,8 @@ async function supabaseAuth(path,body){
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   return {ok:r.ok,status:r.status,data,error:data?.msg||data?.message||data?.error_description||data?.error||null};
 }
-const OTP_SUBJECT='Your Handoff Hub verification code';
-const otpHtml=code=>`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Handoff Hub</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`;
+const OTP_SUBJECT='Your Axon verification code';
+const otpHtml=code=>`<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto"><h2>Axon</h2><p>Your verification code is:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p></div>`;
 // Gmail SMTP (GMAIL_USER + GMAIL_APP_PASSWORD, a Google app password) can email any address and needs no domain.
 // Returns null when Gmail is not configured so the caller can fall back to Resend.
 async function sendViaGmail(email,code){
@@ -76,7 +76,7 @@ async function sendViaGmail(email,code){
   if(!user||!pass)return null;
   try{
     const transport=nodemailer.createTransport({host:'smtp.gmail.com',port:465,secure:true,auth:{user,pass},connectionTimeout:10000,socketTimeout:15000});
-    await transport.sendMail({from:`Handoff Hub <${user}>`,to:email,subject:OTP_SUBJECT,html:otpHtml(code),text:`Your Handoff Hub verification code is ${code}. It expires in 10 minutes.`});
+    await transport.sendMail({from:`Axon <${user}>`,to:email,subject:OTP_SUBJECT,html:otpHtml(code),text:`Your Axon verification code is ${code}. It expires in 10 minutes.`});
     return{ok:true,provider:'gmail'};
   }catch(e){
     console.error('Gmail OTP send failed',{code:e?.code,responseCode:e?.responseCode,message:e?.message});
@@ -88,7 +88,7 @@ async function sendViaGmail(email,code){
 async function sendViaResend(email,code){
   const key=process.env.RESEND_API_KEY;
   if(!key)return{ok:false,error:'Email delivery is not configured on the server.'};
-  const from=(process.env.RESEND_FROM||'').trim()||'Handoff Hub <onboarding@resend.dev>';
+  const from=(process.env.RESEND_FROM||'').trim()||'Axon <onboarding@resend.dev>';
   const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({from,to:[email],subject:OTP_SUBJECT,html:otpHtml(code)})});
   const text=await r.text();let data={};try{data=text?JSON.parse(text):{};}catch{}
   const error=data?.message||data?.error||null;
@@ -124,8 +124,18 @@ async function gateClient(userId,clientId,unlock,replace,apply){
     const r=await fetch(`${url}/rest/v1/rpc/hub_client_gate`,{method:'POST',headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({p_user:userId,p_client:clientId,p_unlock:unlock||null,p_replace:Boolean(replace),p_apply:Boolean(apply)})});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)return{ok:false,error:'Could not check your account limit. Try again.'};
-    return d;
+    return readableGate(d);
   }catch{return{ok:false,error:'Could not check your account limit. Try again.'};}
+}
+// The account-limit check can answer with a bare code; never show that to the person.
+function readableGate(d){
+  if(d&&d.ok===false&&(typeof d.error!=='string'||/^[a-z0-9_:-]+$/i.test(d.error))){
+    const code=String(d.error||'').toLowerCase();
+    if(d.needs_unlock||code.includes('unlock')&&!code.includes('invalid'))return{...d,needs_unlock:true,error:'Choose one: replace the old connection, or add this as another account with your unlock code.'};
+    if(code.includes('invalid')||code.includes('bad'))return{...d,error:'That unlock code is not valid.'};
+    return{...d,error:'This app is already connected to your account. Choose "Replace the old connection", or add another account with your unlock code.'};
+  }
+  return d;
 }
 async function findOrCreateUser(email){
   const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -188,13 +198,13 @@ export default async function handler(req,res){
       p.response_type=p.response_type.toLowerCase()||'code';
       const v=await validateAuthRequest(p);
       if(v.error){console.log('oauth/authorize rejected',JSON.stringify({method:req.method,reason:v.error,ct:String(req.headers?.['content-type']||'').slice(0,60),keys:Object.keys(source||{}),response_type_raw:source?.response_type===undefined?'<missing>':JSON.stringify(source.response_type).slice(0,60),client_prefix:String(p.client_id).slice(0,4),url_has_query:String(req.url||'').includes('?'),ua:String(req.headers?.['user-agent']||'').slice(0,80),fetch:[req.headers?.['sec-fetch-site'],req.headers?.['sec-fetch-mode'],req.headers?.['sec-fetch-dest']].join('/'),referer:(()=>{try{return new URL(req.headers?.referer).origin}catch{return ''}})(),redirect_host:(()=>{try{return new URL(p.redirect_uri).hostname}catch{return 'invalid'}})(),pkce_method:p.code_challenge_method,challenge_len:p.code_challenge.length}));return failPage(res,400,v.error);}
-      if(req.method==='GET')return page(res,200,'Connect to Handoff Hub',emailForm(p,v.client));
+      if(req.method==='GET')return page(res,200,'Connect to Axon',emailForm(p,v.client));
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
       const form=bodyOf(req);
       if(form.decision==='deny')return redirectWith(res,p.redirect_uri,{error:'access_denied',state:p.state});
       const email=str(form.email).trim().toLowerCase();
       if((form.action==='send_email'||form.action==='verify_email')&&!isValidEmail(email)){
-        return page(res,400,'Connect to Handoff Hub',emailForm(p,v.client,'Please provide a valid email address.'));
+        return page(res,400,'Connect to Axon',emailForm(p,v.client,'Please provide a valid email address.'));
       }
       if(form.action==='send_email'){
         const code=String(crypto.randomInt(100000,1000000));
@@ -205,8 +215,8 @@ export default async function handler(req,res){
         if(!saved.ok||!sent.ok){
           // Do not leave a usable code behind when the email never went out.
           if(saved.ok)await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&consumed_at=is.null`,'DELETE');
-          const msg=sent.sandbox?'Handoff Hub cannot email verification codes to this address yet: email delivery is still in test mode and only reaches the owner email. Use a portal code instead (generate one in the portal under AI apps), or use the owner email.':'Could not send the verification email. Please try again later, or use a portal code.';
-          return page(res,502,'Connect to Handoff Hub',emailForm(p,v.client,msg));
+          const msg=sent.sandbox?'Axon cannot email verification codes to this address yet: email delivery is still in test mode and only reaches the owner email. Use a portal code instead (generate one in the portal under AI apps), or use the owner email.':'Could not send the verification email. Please try again later, or use a portal code.';
+          return page(res,502,'Connect to Axon',emailForm(p,v.client,msg));
         }
         return page(res,200,'Check your email',emailForm(p,v.client,'A verification code was sent. Enter it below.','otp',email,{info:true}));
       }
@@ -220,7 +230,7 @@ export default async function handler(req,res){
         const expectedHash=crypto.createHash('sha256').update(otp).digest('hex');
         const rows=await otpDb(`handoff_email_otps?email=eq.${encodeURIComponent(email)}&code_hash=eq.${encodeURIComponent(expectedHash)}&consumed_at=is.null&expires_at=gt.${encodeURIComponent(now)}&select=id&limit=1`);
         const row=rows.ok&&Array.isArray(rows.data)?rows.data[0]:null;
-        if(!row)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email,{mode}));
+        if(!row)return page(res,401,'Connect to Axon',emailForm(p,v.client,'That verification code is invalid or expired.','otp',email,{mode}));
         // Account limit: a second account of the same AI app needs an unlock code (or replaces the old connection). Checked before the code is used up.
         const known=await lookupUser(email);
         if(known){
@@ -229,15 +239,15 @@ export default async function handler(req,res){
             let msg=check.error||'Adding another account needs an unlock code.';
             if(check.needs_unlock&&!mode)msg='Choose one: replace the old connection, or add this as another account with your unlock code.';
             else if(check.needs_unlock&&mode==='add'&&!unlock)msg='Enter your unlock code to add another account.';
-            return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,msg,'otp',email,{gate:Boolean(check.needs_unlock),otp,mode}));
+            return page(res,403,'Connect to Axon',emailForm(p,v.client,msg,'otp',email,{gate:Boolean(check.needs_unlock),otp,mode}));
           }
         }
         const consumed=await otpDb(`handoff_email_otps?id=eq.${encodeURIComponent(row.id)}&consumed_at=is.null`,'PATCH',{consumed_at:now});
-        if(!consumed.ok)return page(res,409,'Connect to Handoff Hub',emailForm(p,v.client,'That verification code was already used. Please request a new code.','otp',email));
+        if(!consumed.ok)return page(res,409,'Connect to Axon',emailForm(p,v.client,'That verification code was already used. Please request a new code.','otp',email));
         const userId=await findOrCreateUser(email);
-        if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Could not create your Handoff Hub account. Please try again.','otp',email));
+        if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Axon',emailForm(p,v.client,'Could not create your Axon account. Please try again.','otp',email));
         const applied=await gateClient(userId,p.client_id,unlock,replace,true);
-        if(!applied.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,(applied.error||'Adding another account needs an unlock code.')+' Request a new code to try again.','email'));
+        if(!applied.ok)return page(res,403,'Connect to Axon',emailForm(p,v.client,(applied.error||'Adding another account needs an unlock code.')+' Request a new code to try again.','email'));
         const code=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code,state:p.state});
       }
@@ -247,12 +257,12 @@ export default async function handler(req,res){
         const mode=str(form.mode)==='replace'?'replace':str(form.mode)==='add'?'add':'';
         const replace=mode==='replace';
         const unlock=replace?'':str(form.unlock).trim().slice(0,64);
-        if(!portalAttemptAllowed(req))return page(res,429,'Connect to Handoff Hub',emailForm(p,v.client,'Too many attempts. Wait a few minutes and try again.'));
+        if(!portalAttemptAllowed(req))return page(res,429,'Connect to Axon',emailForm(p,v.client,'Too many attempts. Wait a few minutes and try again.'));
         const now=new Date().toISOString();
         const hash=crypto.createHash('sha256').update(pcode).digest('hex');
         const pc=pcode?await otpDb(`portal_link_codes?code_hash=eq.${encodeURIComponent(hash)}&used=eq.false&expires_at=gt.${encodeURIComponent(now)}&select=account_id&limit=1`):{ok:false};
         const accountId=pc.ok&&Array.isArray(pc.data)?pc.data[0]?.account_id:null;
-        if(!accountId)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,'That portal code is invalid or expired. Generate a new one in the portal under AI apps.'));
+        if(!accountId)return page(res,401,'Connect to Axon',emailForm(p,v.client,'That portal code is invalid or expired. Generate a new one in the portal under AI apps.'));
         // Reuse the Hub account already linked to this portal account; otherwise create one from the portal email.
         const linked=await otpDb(`portal_hub_links?account_id=eq.${encodeURIComponent(accountId)}&select=hub_user_id&order=created_at.asc&limit=1`);
         let userId=linked.ok&&Array.isArray(linked.data)?linked.data[0]?.hub_user_id||null:null;
@@ -261,23 +271,23 @@ export default async function handler(req,res){
           const pemail=str(acc.ok&&Array.isArray(acc.data)?acc.data[0]?.email:'').trim().toLowerCase();
           if(isValidEmail(pemail))userId=await findOrCreateUser(pemail);
         }
-        if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Handoff Hub',emailForm(p,v.client,'Could not create your Handoff Hub account. Please try again.'));
+        if(!userId||!(await ensureHubOwner(userId)))return page(res,500,'Connect to Axon',emailForm(p,v.client,'Could not create your Axon account. Please try again.'));
         const check=await gateClient(userId,p.client_id,unlock,replace,false);
         if(!check.ok){
           let msg=check.error||'Adding another account needs an unlock code.';
           if(check.needs_unlock&&!mode)msg='Choose one: replace the old connection, or add this as another account with your unlock code.';
           else if(check.needs_unlock&&mode==='add'&&!unlock)msg='Enter your unlock code to add another account.';
-          return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,msg,'portal','',{gate:Boolean(check.needs_unlock),pcode,mode}));
+          return page(res,403,'Connect to Axon',emailForm(p,v.client,msg,'portal','',{gate:Boolean(check.needs_unlock),pcode,mode}));
         }
         // Consumes the code and links the Hub account to the portal account (same rules as link_portal_account).
         const used=await otpDb('rpc/portal_link_consume','POST',{p_code:pcode,p_hub_user:userId});
-        if(!used.ok||!used.data||used.data.ok!==true)return page(res,401,'Connect to Handoff Hub',emailForm(p,v.client,str(used.data?.error)||'That portal code could not be used. Generate a new one in the portal.'));
+        if(!used.ok||!used.data||used.data.ok!==true)return page(res,401,'Connect to Axon',emailForm(p,v.client,str(used.data?.error)||'That portal code could not be used. Generate a new one in the portal.'));
         const applied=await gateClient(userId,p.client_id,unlock,replace,true);
-        if(!applied.ok)return page(res,403,'Connect to Handoff Hub',emailForm(p,v.client,(applied.error||'Adding another account needs an unlock code.')+' Generate a new portal code to try again.'));
+        if(!applied.ok)return page(res,403,'Connect to Axon',emailForm(p,v.client,(applied.error||'Adding another account needs an unlock code.')+' Generate a new portal code to try again.'));
         const authCode=await createAuthCode({client_id:p.client_id,user_id:userId,redirect_uri:p.redirect_uri,code_challenge:p.code_challenge});
         return redirectWith(res,p.redirect_uri,{code:authCode,state:p.state});
       }
-      return page(res,400,'Connect to Handoff Hub',emailForm(p,v.client,'Start by requesting an email verification code.','email','',{info:true}));
+      return page(res,400,'Connect to Axon',emailForm(p,v.client,'Start by requesting an email verification code.','email','',{info:true}));
     }
     if(route==='token'){
       if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});

@@ -14,7 +14,7 @@ const SERVERS = {
 };
 const LINK_HINT = 'Your Hub account is not linked to a portal account yet. Open the portal dashboard, copy the code in the AI apps section, then call link_portal_account with it.';
 
-function need(v, n) { if (!v) throw new Error(n + ' is not configured on the Handoff Hub server'); return v; }
+function need(v, n) { if (!v) throw new Error(n + ' is not configured on the Axon server'); return v; }
 
 async function rest(path, { method = 'GET', body, prefer } = {}) {
   need(SUPABASE_URL, 'SUPABASE_URL');

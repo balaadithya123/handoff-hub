@@ -1,15 +1,15 @@
 import Legal from "../components/Legal";
-export const metadata = { title: "Privacy Policy · Handoff Hub" };
+export const metadata = { title: "Privacy Policy · Axon" };
 const CONTACT = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
 
 export default function Privacy() {
   return (
     <Legal title="Privacy Policy" updated="7 October 2026">
-      <p>Handoff Hub lets you connect your own apps and AI accounts so that context and tool access can follow you between them. This page explains what we store and why.</p>
+      <p>Axon lets you connect your own apps and AI accounts so that context and tool access can follow you between them. This page explains what we store and why.</p>
       <h2>What we collect</h2>
       <ul>
         <li><b>Account:</b> the email address you sign in to the portal with.</li>
-        <li><b>Content you or your AI apps save:</b> memories, events, project state and handoff tasks written through the Hub tools. Each account only sees its own. The most recent 500 memories and 100 events per project are kept.</li>
+        <li><b>Content you or your AI apps save:</b> memories, events, project state and handoff tasks written through the Hub tools. Each account only sees its own. The most recent 500 memories and 100 events per project are kept. Events older than 30 days are condensed into a short summary of key decisions, blockers and handoffs, and the original events are deleted.</li>
         <li><b>Connection tokens:</b> when you connect an integration (for example GitHub, Notion or Canva), the provider gives us an access token and sometimes a refresh token. They are encrypted on our server and used only to act for you when you or your linked AI account asks.</li>
         <li><b>AI app sessions:</b> which AI apps you have signed in to the Hub, and when they were last active.</li>
       </ul>

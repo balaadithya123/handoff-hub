@@ -22,7 +22,7 @@ export default function Legal({ title, updated, children }: { title: string; upd
         <article className="legal-body">{children}</article>
       </main>
       <footer className="px-4 sm:px-8 py-6 border-t border-white/[0.08] flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[11px] text-[#707070]">
-        <span>Handoff Hub &middot; Integration Portal</span>
+        <span>Axon &middot; Integration Portal</span>
         {LINKS.map((l) => (
           <Link key={l.href} href={l.href} className="hover:text-[#ededed] transition-colors">
             {l.label}

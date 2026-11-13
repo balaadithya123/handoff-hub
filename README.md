@@ -1,4 +1,4 @@
-# Handoff Hub
+# Axon
 
 Cross-AI context handoff and private project memory.
 
@@ -8,4 +8,4 @@ The deployed GitHub operator supports `balaadithya123/handoff-hub` through the H
 
 ## Provider OAuth
 
-Provider OAuth is controlled by the Handoff Hub backend and is isolated per portal account.
+Provider OAuth is controlled by the Axon backend and is isolated per portal account.

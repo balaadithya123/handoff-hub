@@ -7,6 +7,6 @@ export function isOwner(userId) {
 
 export function assertOwner(userId, tool) {
   if (!isOwner(userId)) {
-    throw new Error(`${tool} uses the Handoff Hub owner's private account and is not available on your account. Connect your own apps in the portal and use app_call_tool instead.`);
+    throw new Error(`${tool} uses the Axon owner's private account and is not available on your account. Connect your own apps in the portal and use app_call_tool instead.`);
   }
 }
