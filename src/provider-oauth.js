@@ -292,7 +292,7 @@ async function exchangeMcp(p, code, row) {
 
 // ---------- shared ----------
 async function startVercelConnect(id) {
-  const { url } = await startAuthorization(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }, { callbackUrl: 'https://handoff-portal.vercel.app/api/connect/vercel/callback' });
+  const { url } = await startAuthorization(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }, { callbackUrl: 'https://linkaxon.vercel.app/api/connect/vercel/callback' });
   return url;
 }
 async function vercelConnectAuthorized(id) { try { await getToken(VERCEL_CONNECTOR, { subject: { type: 'user', id: String(id) } }); return true; } catch { return false; } }
