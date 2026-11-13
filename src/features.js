@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { project, getState, mutate, opsProject } from './store.js';
 import { assertOwner } from './owner.js';
+import { projectMarkdown } from './export.js';
 
 export const HUB_VERSION = '0.22.0';
 
@@ -13,6 +14,7 @@ const CHANGELOG = [
     changes: [
       'Renamed to Axon across the portal pages, sign-in page and emails; domain is now linkaxon.vercel.app',
       'Activity archive: once a day, events older than 30 days are condensed into a short markdown digest per project and month (decisions, blockers, handoffs, issues) and the raw events are deleted. New get_archive tool reads the digests',
+      'Download a whole project as one Markdown file from the Projects page (button on each project), or read the same text with the new export_project tool',
       'Connector sign-in page: account-limit errors now show a readable message instead of a bare code',
       'Landing page no longer makes claims the product cannot back up (certifications, uptime figures, SDK, on-prem)'
     ]
@@ -180,6 +182,12 @@ export function registerFeatureTools(server, userId) {
     const st = await getState(userId);
     const digests = (project(st, pid(input.project_id)).archive || []).filter(d => !input.month || d.month === input.month);
     return text({ count: digests.length, digests: digests.map(d => ({ month: d.month, event_count: d.event_count, markdown: d.markdown })) });
+  });
+
+  tool('export_project', 'Return the full history of one project as a single Markdown document: overview, decisions, blockers, tasks, every saved memory, recent activity and the condensed older history. The portal Projects page offers the same as a .md download.', { project_id: projectId }, { title: 'Export project as Markdown', ro: true }, async input => {
+    const st = await getState(userId);
+    const markdown = projectMarkdown(st, pid(input.project_id));
+    return text(markdown ? { project: pid(input.project_id), markdown } : { error: 'Project not found.' });
   });
 
   // ----- 2. claims -----

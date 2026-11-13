@@ -4,7 +4,7 @@ import {
   FolderKanban, Plus, ShieldAlert, Sparkles, Waypoints,
 } from "lucide-react";
 import { getProjects } from "../../lib/data";
-import { PortalSwitch, ProjectCreate, ProjectArchiveButton, ProjectRestoreButton, ProjectDeleteButton } from "./ProjectActions";
+import { ProjectDownload, PortalSwitch, ProjectCreate, ProjectArchiveButton, ProjectRestoreButton, ProjectDeleteButton } from "./ProjectActions";
 
 function dateLabel(value?: string | null) {
   if (!value) return "No activity yet";
@@ -126,6 +126,7 @@ export default async function Projects({ token }: { token: string }) {
                             ) : (
                               <span className="axon-status-chip neutral">Private pool</span>
                             )}
+                            <ProjectDownload hubUser={account.id} project={project.id} />
                             <ProjectArchiveButton
                               hubUser={account.id}
                               project={project.id}

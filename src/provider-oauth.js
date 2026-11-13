@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import { getState } from './store.js';
+import { projectMarkdown, exportFilename } from './export.js';
 import { startAuthorization, getToken, revokeToken } from '@vercel/connect';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -354,7 +356,22 @@ async function disconnect(p, session) {
   return { ok: true };
 }
 
+// Download one project's full history as Markdown. The portal session must own the Axon account that holds the project.
+async function exportProject(b) {
+  const id = await account(b.portal_session);
+  if (!id) throw new Error('Not signed in.');
+  const hubUser = String(b.hub_user || '');
+  const proj = String(b.project || '');
+  if (!/^[0-9a-f-]{36}$/i.test(hubUser) || !/^[a-z0-9._-]{1,60}$/.test(proj)) throw new Error('Invalid project.');
+  const link = await rest('portal_hub_links?account_id=eq.' + encodeURIComponent(id) + '&hub_user_id=eq.' + encodeURIComponent(hubUser) + '&select=hub_user_id&limit=1');
+  if (!link?.[0]) throw new Error('That project is not on your account.');
+  const markdown = projectMarkdown(await getState(hubUser), proj);
+  if (!markdown) throw new Error('Project not found.');
+  return { ok: true, filename: exportFilename(proj), markdown };
+}
+
 export async function providerAction(b) {
+  if (b.action === 'export_project') return exportProject(b);
   if (b.action === 'start') return { authorization_url: await start(b.provider, b.portal_session) };
   if (b.action === 'consume') return { ok: await consume(b.provider, b.portal_session, b.ticket) };
   if (b.action === 'status') {
