@@ -1,3 +1,5 @@
+import { createPrivateKey, createSign } from 'node:crypto';
+
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const DEFAULT_GITHUB_BRANCH = process.env.GITHUB_DEFAULT_BRANCH || 'main';
 const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
@@ -6,6 +8,79 @@ const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
 function requireEnv(value, name) {
   if (!value) throw new Error(`${name} is not configured on the Axon server`);
   return value;
+}
+
+// ---- GitHub App authentication -------------------------------------------------
+// Preferred: a GitHub App installation token (short-lived, minted from the app's
+// private key). Fallback: the legacy GITHUB_TOKEN, used only when the App env vars
+// are not all present. Secrets are never logged or included in error messages.
+
+const b64url = input => Buffer.from(input).toString('base64url');
+
+function githubAppConfig() {
+  const appId = process.env.GITHUB_APP_ID || process.env.GITHUB_APP_CLIENT_ID;
+  const installationId = process.env.GITHUB_APP_INSTALLATION_ID;
+  const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+  if (!appId || !installationId || !privateKey) return null;
+  return { appId, installationId, privateKey };
+}
+
+function normalizePrivateKey(raw) {
+  let key = String(raw).trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) key = key.slice(1, -1);
+  return key.replace(/\\n/g, '\n');
+}
+
+function signAppJwt({ appId, privateKey }) {
+  let key;
+  try {
+    key = createPrivateKey(normalizePrivateKey(privateKey));
+  } catch {
+    throw new Error('GitHub App auth failed: GITHUB_APP_PRIVATE_KEY could not be parsed as a PEM private key');
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = b64url(JSON.stringify({ iat: now - 60, exp: now + 9 * 60, iss: String(appId) }));
+  const signature = createSign('RSA-SHA256').update(`${header}.${payload}`).sign(key).toString('base64url');
+  return `${header}.${payload}.${signature}`;
+}
+
+let cachedInstallationToken = null; // { token, refreshAt }
+let inflightInstallationToken = null;
+
+async function mintInstallationToken(config) {
+  const jwt = signAppJwt(config);
+  const response = await fetch(`https://api.github.com/app/installations/${encodeURIComponent(config.installationId)}/access_tokens`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${jwt}`,
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.token) {
+    throw new Error(`GitHub App auth failed: installation token exchange returned ${response.status} ${body?.message || ''}`.trim());
+  }
+  const expiresAt = Date.parse(body.expires_at) || Date.now() + 55 * 60 * 1000;
+  cachedInstallationToken = { token: body.token, refreshAt: expiresAt - 5 * 60 * 1000 };
+  return body.token;
+}
+
+export async function getInstallationToken() {
+  const config = githubAppConfig();
+  if (!config) throw new Error('GitHub App auth is not configured (GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY)');
+  if (cachedInstallationToken && Date.now() < cachedInstallationToken.refreshAt) return cachedInstallationToken.token;
+  if (!inflightInstallationToken) {
+    inflightInstallationToken = mintInstallationToken(config).finally(() => { inflightInstallationToken = null; });
+  }
+  return inflightInstallationToken;
+}
+
+async function githubAuthHeader() {
+  if (githubAppConfig()) return `Bearer ${await getInstallationToken()}`;
+  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
+  return `Bearer ${GITHUB_TOKEN}`;
 }
 
 function allowedRepos() {
@@ -46,13 +121,13 @@ function githubPath(path) {
 }
 
 async function githubFetch(repository, path, options = {}) {
-  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
   assertAllowedRepo(repository);
+  const authorization = await githubAuthHeader();
   const response = await fetch(`https://api.github.com/repos/${repository}/contents/${githubPath(path)}`, {
     ...options,
     headers: {
       Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Authorization: authorization,
       'X-GitHub-Api-Version': '2022-11-28',
       ...(options.headers || {})
     }
@@ -79,13 +154,13 @@ export async function githubCommitFile({ repository, path, content, message, bra
     }
   }
 
-  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
   assertAllowedRepo(repository);
+  const authorization = await githubAuthHeader();
   const response = await fetch(`https://api.github.com/repos/${repository}/contents/${githubPath(path)}`, {
     method: 'PUT',
     headers: {
       Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Authorization: authorization,
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json'
     },
@@ -108,12 +183,12 @@ export async function githubCommitFile({ repository, path, content, message, bra
 }
 
 async function githubApiFetch(path, options = {}) {
-  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
+  const authorization = await githubAuthHeader();
   const response = await fetch(`https://api.github.com${path}`, {
     ...options,
     headers: {
       Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Authorization: authorization,
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -129,7 +204,6 @@ async function githubApiFetch(path, options = {}) {
 // since the tree is built from the branch's current tree plus these blobs — no per-file
 // sha lookup needed. One network round trip per file for the blob, plus 4 fixed calls.
 export async function githubCommitFiles({ repository, files, message, branch = DEFAULT_GITHUB_BRANCH }) {
-  requireEnv(GITHUB_TOKEN, 'GITHUB_TOKEN');
   assertAllowedRepo(repository);
   if (!Array.isArray(files) || !files.length) throw new Error('files must be a non-empty array of { path, content }');
 
