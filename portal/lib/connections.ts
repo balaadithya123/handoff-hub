@@ -11,3 +11,9 @@ export async function startProviderOAuth(session:string,provider:Provider){retur
 export async function consumeProviderOAuth(session:string,provider:Provider,ticket:string){return (await call({action:"consume",portal_session:session,provider,ticket})).ok as boolean}
 export async function deleteConnection(session:string,provider:Provider){return call({action:"disconnect",portal_session:session,provider})}
 export async function exportProject(session:string,hubUser:string,project:string){return (await call({action:"export_project",portal_session:session,hub_user:hubUser,project})) as {ok:boolean;filename:string;markdown:string}}
+
+export type LibraryFile={id:string;name:string;size_bytes:number;content_type:string;uploaded_by:string|null;note:string|null;created_at:string};
+export type FileLibrary={ok:boolean;used_bytes:number;limit_bytes:number;max_file_bytes:number;files:LibraryFile[]};
+export async function filesList(session:string,hubUser:string){return (await call({action:"files_list",portal_session:session,hub_user:hubUser})) as FileLibrary}
+export async function filesDownloadUrl(session:string,hubUser:string,fileId:string){return (await call({action:"files_download",portal_session:session,hub_user:hubUser,file_id:fileId})) as {ok:boolean;url:string;name:string}}
+export async function filesDelete(session:string,hubUser:string,fileId:string){return (await call({action:"files_delete",portal_session:session,hub_user:hubUser,file_id:fileId})) as {ok:boolean;deleted:boolean;name:string}}

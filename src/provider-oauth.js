@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getState } from './store.js';
 import { projectMarkdown, exportFilename } from './export.js';
+import { portalFiles, portalDownloadUrl, portalDeleteFile } from './files.js';
 import { startAuthorization, getToken, revokeToken } from '@vercel/connect';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -370,7 +371,28 @@ async function exportProject(b) {
   return { ok: true, filename: exportFilename(proj), markdown };
 }
 
+// Shared check for the Files library: the portal session must own the Axon account (hub_user).
+async function ownedHubUser(b) {
+  const id = await account(b.portal_session);
+  if (!id) throw new Error('Not signed in.');
+  const hubUser = String(b.hub_user || '');
+  if (!/^[0-9a-f-]{36}$/i.test(hubUser)) throw new Error('Invalid account.');
+  const link = await rest('portal_hub_links?account_id=eq.' + encodeURIComponent(id) + '&hub_user_id=eq.' + encodeURIComponent(hubUser) + '&select=hub_user_id&limit=1');
+  if (!link?.[0]) throw new Error('That account is not on your login.');
+  return hubUser;
+}
+
+async function filesAction(b) {
+  const hubUser = await ownedHubUser(b);
+  if (b.action === 'files_list') return { ok: true, ...(await portalFiles(hubUser)) };
+  const fileId = String(b.file_id || '');
+  if (!/^[0-9a-f-]{36}$/i.test(fileId)) throw new Error('Invalid file.');
+  if (b.action === 'files_download') return { ok: true, ...(await portalDownloadUrl(hubUser, fileId)) };
+  return { ok: true, ...(await portalDeleteFile(hubUser, fileId)) };
+}
+
 export async function providerAction(b) {
+  if (b.action === 'files_list' || b.action === 'files_download' || b.action === 'files_delete') return filesAction(b);
   if (b.action === 'export_project') return exportProject(b);
   if (b.action === 'start') return { authorization_url: await start(b.provider, b.portal_session) };
   if (b.action === 'consume') return { ok: await consume(b.provider, b.portal_session, b.ticket) };
