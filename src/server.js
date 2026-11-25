@@ -7,7 +7,6 @@ import { listOAuthClients, revokeOAuthSessions } from './oauth-store.js';
 import { startCanvaOAuth, canvaListDesigns, canvaGetDesign, canvaCreateDesign } from './canva.js';
 import { assertOwner } from './owner.js';
 import { registerFeatureTools, applyRuntimeAllowlist, requireApproval } from './features.js';
-import { registerFileTools } from './files.js';
 import { linkPortalAccount, connectedApps, appListTools, appCallTool } from './apps.js';
 import { rankMemoriesLocal, enrichMemory } from './ai.js';
 const projectId=z.string().min(1).optional().describe('Optional. Leave this out unless the user chose or named a project (for example "save this to my X project"); then pass that project id from list_projects. Omitted means the normal private memory pool. Projects never mix with each other or with the normal pool, and are never shared with another user.');
@@ -43,6 +42,4 @@ server.tool('connected_apps','List the apps (Supabase, Vercel, Canva) connected 
 server.tool('app_list_tools','List the tools a connected app (supabase, vercel, canva) offers, using your own connection. Pass tool_name to get that one tool\'s full input schema.',{provider:appName,tool_name:z.string().optional()},async({provider,tool_name})=>text(await appListTools(userId,provider,tool_name)));
 server.tool('app_call_tool','Call a tool on a connected app (supabase, vercel, canva) as you, using your own connection. Run app_list_tools first to see tool names and arguments.',{provider:appName,tool:z.string().min(1),arguments:z.record(z.any()).optional()},async({provider,tool,arguments:args})=>text(await appCallTool(userId,provider,tool,args??{})));
 registerFeatureTools(server,userId);
-const fileTool=(name,description,schema,annotations,handler)=>server.tool(name,description,schema,{title:annotations.title,readOnlyHint:!!annotations.ro,destructiveHint:annotations.ro?false:!!annotations.destructive,idempotentHint:!!annotations.ro,openWorldHint:false},handler);
-registerFileTools(server,userId,fileTool);
 return server;}
