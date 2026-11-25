@@ -15,7 +15,7 @@ const CHANGELOG = [
     changes: [
       'File sharing between AIs next to memory: request_file_upload + confirm_file_upload (up to 30 MB per file, bytes go straight to storage), put_file (small files up to 3 MB as base64), list_files, get_file (one-hour download link), delete_file',
       'Each account can hold 100 MB of shared files in total; when full, uploads are refused until files are deleted',
-      'Needs the axon-files storage bucket (see supabase/migrations/20261125000100_file_storage_bucket.sql)'
+      'The private axon-files storage bucket is created automatically on first use (the SQL migration in supabase/migrations does the same)'
     ]
   },
   {

@@ -56,6 +56,18 @@ async function storageCall(path, init = {}) {
   return r;
 }
 
+// Creates the private bucket the first time it is needed (the SQL migration does the same thing).
+let bucketReady = false;
+async function ensureBucket() {
+  if (bucketReady) return;
+  const r = await fetch(`${storageBase()}/bucket`, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ id: BUCKET, name: BUCKET, public: false, file_size_limit: MAX_FILE_BYTES }) });
+  if (!r.ok) {
+    const body = await r.text().catch(() => '');
+    if (!(r.status === 409 || /already exists|duplicate/i.test(body))) throw new Error(`Could not create the storage bucket: ${r.status} ${body.slice(0, 200)}`);
+  }
+  bucketReady = true;
+}
+
 async function signedUploadUrl(objectPath) {
   const r = await storageCall(`/object/upload/sign/${BUCKET}/${encodePath(objectPath)}`, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: '{}' });
   const j = await r.json();
@@ -98,13 +110,14 @@ function expirePending(state, at = Date.now()) {
 }
 
 export function registerFileTools(server, userId, tool) {
-  const needStorage = () => {
+  const needStorage = async () => {
     if (!storageOn()) throw new Error('File storage is not configured on this server (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required).');
+    await ensureBucket();
   };
   const agentName = z.string().min(1).describe('Name of the calling AI agent, e.g. claude or chatgpt');
 
   tool('request_file_upload', `Reserve space and get a one-time upload URL for a file up to ${mb(MAX_FILE_BYTES)} MB. Each account can hold ${mb(MAX_ACCOUNT_BYTES)} MB in total; when full, uploads are refused until files are deleted. Send the bytes with an HTTP PUT to upload_url (no auth header), then call confirm_file_upload with the returned file_id within an hour. Use this only when the user asked to share a file through Axon. Needs an environment that can make outbound HTTP requests; otherwise use put_file for files up to ${mb(MAX_DIRECT_BYTES)} MB.`, { agent: agentName, name: z.string().min(1).max(200), size_bytes: z.number().int().positive().describe('Exact size of the file in bytes'), content_type: z.string().max(120).optional(), note: z.string().max(300).optional() }, { title: 'Request a file upload URL' }, async input => {
-    needStorage();
+    await needStorage();
     const id = crypto.randomUUID();
     const name = safeName(input.name);
     const objectPath = `${userId}/${id}/${name}`;
@@ -129,7 +142,7 @@ export function registerFileTools(server, userId, tool) {
   });
 
   tool('confirm_file_upload', 'Finish an upload started with request_file_upload. Checks the file really arrived and matches the size that was reserved. Until confirmed, the file cannot be downloaded.', { file_id: z.string().min(1) }, { title: 'Confirm a file upload' }, async ({ file_id }) => {
-    needStorage();
+    await needStorage();
     const st = await getState(userId);
     const rec = (st.files || []).find(f => f.id === file_id);
     if (!rec) return text({ error: 'No such file id (it may have expired). Call request_file_upload again.' });
@@ -153,7 +166,7 @@ export function registerFileTools(server, userId, tool) {
   });
 
   tool('put_file', `Upload a small file directly as base64 (up to ${mb(MAX_DIRECT_BYTES)} MB, because tool calls are small). For anything larger use request_file_upload. Counts toward the ${mb(MAX_ACCOUNT_BYTES)} MB account storage. Use only when the user asked to share a file through Axon.`, { agent: agentName, name: z.string().min(1).max(200), content_base64: z.string().min(1), content_type: z.string().max(120).optional(), note: z.string().max(300).optional() }, { title: 'Upload a small file' }, async input => {
-    needStorage();
+    await needStorage();
     const bytes = Buffer.from(input.content_base64, 'base64');
     if (bytes.length > MAX_DIRECT_BYTES) return text({ error: `Direct upload is limited to ${mb(MAX_DIRECT_BYTES)} MB. Use request_file_upload for larger files (up to ${mb(MAX_FILE_BYTES)} MB).` });
     const id = crypto.randomUUID();
@@ -192,7 +205,7 @@ export function registerFileTools(server, userId, tool) {
   });
 
   tool('get_file', 'Get a temporary download URL (valid one hour) for a stored file. Download it with an HTTP GET, no auth header. Use only when the user asked to fetch that file.', { file_id: z.string().min(1) }, { title: 'Get a file download link', ro: true }, async ({ file_id }) => {
-    needStorage();
+    await needStorage();
     const st = await getState(userId);
     const rec = (st.files || []).find(f => f.id === file_id);
     if (!rec) return text({ error: 'No such file.' });
@@ -201,7 +214,7 @@ export function registerFileTools(server, userId, tool) {
   });
 
   tool('delete_file', 'Permanently delete a shared file to free storage. Only call this when the user asked to delete that file or to clear the library.', { file_id: z.string().min(1) }, { title: 'Delete a shared file', destructive: true }, async ({ file_id }) => {
-    needStorage();
+    await needStorage();
     const st = await getState(userId);
     const rec = (st.files || []).find(f => f.id === file_id);
     if (!rec) return text({ deleted: false, reason: 'No such file.' });
