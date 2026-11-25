@@ -44,6 +44,13 @@ const extra = registered.filter((n) => !contract.includes(n));
 if (missing.length) fail(`tools in tools.contract.json but NOT registered in src/server.js: ${missing.join(', ')}`);
 if (extra.length) fail(`tools registered in src/server.js but missing from tools.contract.json: ${extra.join(', ')} (add them on purpose)`);
 
+// 2a. File-transfer tools are declared in src/files.js, but must also be mounted
+// on each authenticated MCP server instance or they never appear to connected AI clients.
+if (!serverSrc.includes("import { registerFileTools } from './files.js';") ||
+    !serverSrc.includes('registerFileTools(server,userId,fileTool);')) {
+  fail('Files feature exists but registerFileTools is not mounted in src/server.js');
+}
+
 // 2b. Every source file must parse. A syntax error fails the build instead of shipping a broken server.
 for (const file of files) {
   const r = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
