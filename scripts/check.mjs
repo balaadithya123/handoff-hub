@@ -46,9 +46,9 @@ if (extra.length) fail(`tools registered in src/server.js but missing from tools
 
 // 2a. File-transfer tools are declared in src/files.js, but must also be mounted
 // on each authenticated MCP server instance or they never appear to connected AI clients.
-if (!serverSrc.includes("import { registerFileTools } from './files.js';") ||
-    !serverSrc.includes('registerFileTools(server,userId,fileTool);')) {
-  fail('Files feature exists but registerFileTools is not mounted in src/server.js');
+if (!featureSrc.includes("import { registerFileTools } from './files.js';") ||
+    !featureSrc.includes('registerFileTools(server, userId, tool);')) {
+  fail('Files feature exists but registerFileTools is not mounted in src/features.js');
 }
 
 // 2b. Every source file must parse. A syntax error fails the build instead of shipping a broken server.
