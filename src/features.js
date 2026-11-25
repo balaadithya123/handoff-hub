@@ -4,10 +4,20 @@ import { z } from 'zod';
 import { project, getState, mutate, opsProject } from './store.js';
 import { assertOwner } from './owner.js';
 import { projectMarkdown } from './export.js';
+import { registerFileTools } from './files.js';
 
-export const HUB_VERSION = '0.22.0';
+export const HUB_VERSION = '0.23.0';
 
 const CHANGELOG = [
+  {
+    version: '0.23.0',
+    date: '2026-11-25',
+    changes: [
+      'File sharing between AIs next to memory: request_file_upload + confirm_file_upload (up to 30 MB per file, bytes go straight to storage), put_file (small files up to 3 MB as base64), list_files, get_file (one-hour download link), delete_file',
+      'Each account can hold 100 MB of shared files in total; when full, uploads are refused until files are deleted',
+      'The private axon-files storage bucket is created automatically on first use (the SQL migration in supabase/migrations does the same)'
+    ]
+  },
   {
     version: '0.22.0',
     date: '2026-11-13',
@@ -189,6 +199,8 @@ export function registerFeatureTools(server, userId) {
     const markdown = projectMarkdown(st, pid(input.project_id));
     return text(markdown ? { project: pid(input.project_id), markdown } : { error: 'Project not found.' });
   });
+
+  registerFileTools(server, userId, tool);
 
   // ----- 2. claims -----
   tool('claim_resource', 'Take an advisory lock on a file, task or deployment before changing it, so two AIs do not work on the same thing at once. Returns claimed:false and who holds it if someone else has an unexpired claim. Re-claiming your own resource renews it.', { project_id: projectId, agent: agentName, resource: z.string().min(1).describe('e.g. portal/app/page.tsx or deploy:portal'), note: z.string().optional(), ttl_minutes: z.number().int().min(1).max(1440).optional() }, { title: 'Claim a resource' }, async input => text(await mutate(userId, state => {

@@ -48,6 +48,12 @@
     "agent_stats",
     "create_project",
     "move_project",
-    "verify_url"
+    "verify_url",
+    "request_file_upload",
+    "confirm_file_upload",
+    "put_file",
+    "list_files",
+    "get_file",
+    "delete_file"
   ]
 }
