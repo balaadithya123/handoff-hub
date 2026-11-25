@@ -223,3 +223,30 @@ export function registerFileTools(server, userId, tool) {
     return text({ deleted: true, file: view(rec) });
   });
 }
+
+// ---------- portal (web library) helpers ----------
+// Used by the portal Files page. The caller has already proven the signed-in portal account owns `userId`.
+export async function portalFiles(userId) {
+  const st = await getState(userId);
+  const files = (st.files || []).filter(f => f.status === 'stored').sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const used = usedBytes(st.files);
+  return { used_bytes: used, limit_bytes: MAX_ACCOUNT_BYTES, max_file_bytes: MAX_FILE_BYTES, files: files.map(f => ({ id: f.id, name: f.name, size_bytes: f.size_bytes, content_type: f.content_type, uploaded_by: f.uploaded_by || null, note: f.note || null, created_at: f.created_at })) };
+}
+
+export async function portalDownloadUrl(userId, fileId) {
+  await ensureBucket();
+  const st = await getState(userId);
+  const rec = (st.files || []).find(f => f.id === fileId && f.status === 'stored');
+  if (!rec) throw new Error('File not found.');
+  return { url: await signedDownloadUrl(rec.object_path, rec.name), name: rec.name };
+}
+
+export async function portalDeleteFile(userId, fileId) {
+  await ensureBucket();
+  const st = await getState(userId);
+  const rec = (st.files || []).find(f => f.id === fileId);
+  if (!rec) throw new Error('File not found.');
+  await removeObject(rec.object_path);
+  await mutate(userId, state => { state.files = (state.files || []).filter(f => f.id !== fileId); });
+  return { deleted: true, name: rec.name };
+}

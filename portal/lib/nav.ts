@@ -1,6 +1,6 @@
-import { Activity, Bot, FolderKanban, LayoutDashboard, Plug, Wrench, type LucideIcon } from "lucide-react";
+import { Activity, Bot, FolderKanban, FolderOpen, LayoutDashboard, Plug, Wrench, type LucideIcon } from "lucide-react";
 
-export type NavId = "overview" | "integrations" | "projects" | "ai" | "tools" | "activity";
+export type NavId = "overview" | "integrations" | "projects" | "files" | "ai" | "tools" | "activity";
 export type NavGroup = "Workspace" | "AI" | "Monitor";
 
 export type NavItem = {
@@ -16,6 +16,7 @@ export const NAV: NavItem[] = [
   { id: "overview", label: "Overview", href: "/overview", group: "Workspace", icon: LayoutDashboard, hint: "home dashboard summary" },
   { id: "integrations", label: "Plugins", href: "/integrations", group: "Workspace", icon: Plug, hint: "connect apps" },
   { id: "projects", label: "Projects & Pools", href: "/projects", group: "Workspace", icon: FolderKanban, hint: "memory pools" },
+  { id: "files", label: "Files", href: "/files", group: "Workspace", icon: FolderOpen, hint: "library shared files storage upload download delete" },
   { id: "ai", label: "AI Accounts", href: "/ai", group: "AI", icon: Bot, hint: "claude chatgpt link" },
   { id: "tools", label: "Hub Tools", href: "/tools", group: "AI", icon: Wrench, hint: "claims approvals allowlist health brief" },
   { id: "activity", label: "Activity", href: "/activity", group: "Monitor", icon: Activity, hint: "timeline log events" },

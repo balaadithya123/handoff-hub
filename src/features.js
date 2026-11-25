@@ -6,9 +6,16 @@ import { assertOwner } from './owner.js';
 import { projectMarkdown } from './export.js';
 import { registerFileTools } from './files.js';
 
-export const HUB_VERSION = '0.23.0';
+export const HUB_VERSION = '0.23.1';
 
 const CHANGELOG = [
+  {
+    version: '0.23.1',
+    date: '2026-11-25',
+    changes: [
+      'Portal Files library: see every file your AIs shared, who sent it and when, how much of the 100 MB storage is used, export (download) a file and delete files to free space'
+    ]
+  },
   {
     version: '0.23.0',
     date: '2026-11-25',

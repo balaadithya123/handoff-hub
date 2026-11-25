@@ -11,6 +11,7 @@ import ActivityLog from "./components/ActivityLog";
 import Overview from "./components/Overview";
 import HubTools from "./components/HubTools";
 import Projects from "./components/Projects";
+import Files from "./components/Files";
 import { Badge } from "./components/ui/Badge";
 import { Button } from "./components/ui/Button";
 
@@ -22,6 +23,7 @@ const META: Record<Tab, [string, string]> = {
   overview: ["Overview", "Your Axon account at a glance."],
   integrations: ["Plugins", "Connect and manage the apps available to your Axon workspace."],
   projects: ["Projects & Pools", "Separate memory pools your AI apps can save to."],
+  files: ["Files", "Files your AI apps shared through Axon, with storage used."],
   ai: ["AI Accounts", "Manage connected AI clients, sessions and access."],
   tools: ["Hub Tools & Controls", "Allowlist, workload, claims, approvals, health checks and context brief."],
   activity: ["Activity", "A clear timeline of actions performed by your connected AI clients."],
@@ -66,6 +68,8 @@ async function Dashboard({
         <ConnectorDirectory connected={connections.map((c) => c.provider as string)} names={names} availability={availability} />
       ) : tab === "projects" ? (
         <Projects token={token} />
+      ) : tab === "files" ? (
+        <Files token={token} />
       ) : tab === "ai" ? (
         <AiAccounts token={token} />
       ) : tab === "tools" ? (
@@ -93,7 +97,7 @@ export default async function Home({
   const notice: Notice = err ? { kind: "error", text: err } : ok ? { kind: "ok", text: "Connected " + ok + "." } : null;
   const t = typeof sp.tab === "string" ? sp.tab : "";
   const tab: Tab =
-    t === "integrations" || t === "projects" || t === "ai" || t === "tools" || t === "activity" || t === "overview"
+    t === "integrations" || t === "projects" || t === "files" || t === "ai" || t === "tools" || t === "activity" || t === "overview"
       ? t
       : notice
       ? "integrations"

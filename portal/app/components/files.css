@@ -1,0 +1,15 @@
+.axon-storage-meter { margin-top: 14px; }
+.axon-storage-meter-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.axon-storage-meter-bar > span { display: block; height: 100%; border-radius: 999px; background: #ededed; transition: width .4s ease; }
+.axon-storage-meter.is-warning .axon-storage-meter-bar > span { background: #f5a623; }
+.axon-storage-meter.is-full .axon-storage-meter-bar > span { background: #ff5b5b; }
+.axon-storage-meter-text { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: #8a8a8a; }
+.axon-file-list { width: 100%; border-collapse: collapse; font-size: 13px; }
+.axon-file-list th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #8a8a8a; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.axon-file-list td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+.axon-file-list tr:last-child td { border-bottom: 0; }
+.axon-file-name { display: flex; flex-direction: column; min-width: 0; }
+.axon-file-name strong { font-weight: 500; overflow-wrap: anywhere; }
+.axon-file-name small { color: #8a8a8a; overflow-wrap: anywhere; }
+.axon-file-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: flex-start; }
+.axon-file-scroll { overflow-x: auto; }

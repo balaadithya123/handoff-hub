@@ -11,7 +11,7 @@ import { NAV, NAV_GROUPS } from "../../lib/nav";
 import { CommandPalette } from "./ui/CommandPalette";
 import SignOutButton from "./SignOutButton";
 
-export type Tab = "overview" | "integrations" | "projects" | "ai" | "tools" | "activity";
+export type Tab = "overview" | "integrations" | "projects" | "files" | "ai" | "tools" | "activity";
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   overview: LayoutDashboard, integrations: Puzzle, projects: FolderKanban,
