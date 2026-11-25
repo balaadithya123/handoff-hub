@@ -34,7 +34,8 @@ for (const file of files) {
 // 2. Registered MCP tools must exactly match tools.contract.json (catches silently dropped/added tools).
 const serverSrc = readFileSync(join(root, 'src/server.js'), 'utf8');
 const featureSrc = existsSync(join(root, 'src/features.js')) ? readFileSync(join(root, 'src/features.js'), 'utf8') : '';
-const registered = [...(serverSrc + '\n' + featureSrc).matchAll(/(?:server\.tool|\btool)\(\s*'([a-z0-9_]+)'/g)].map((m) => m[1]);
+const filesSrc = existsSync(join(root, 'src/files.js')) ? readFileSync(join(root, 'src/files.js'), 'utf8') : '';
+const registered = [...(serverSrc + '\n' + featureSrc + '\n' + filesSrc).matchAll(/(?:server\.tool|\btool)\(\s*'([a-z0-9_]+)'/g)].map((m) => m[1]);
 const dupes = registered.filter((n, i) => registered.indexOf(n) !== i);
 if (dupes.length) fail(`duplicate tool registrations: ${[...new Set(dupes)].join(', ')}`);
 const contract = JSON.parse(readFileSync(join(root, 'tools.contract.json'), 'utf8')).tools;
