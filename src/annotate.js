@@ -117,6 +117,16 @@ function pickProjectId(args) {
   return null;
 }
 
+// The activity log must not make the caller wait. On Vercel, waitUntil keeps the function alive after the
+// response is sent; elsewhere (or if unavailable) we fall back to waiting, as before.
+function runAfterResponse(promise) {
+  try {
+    const ctx = globalThis[Symbol.for('@vercel/request-context')]?.get?.();
+    if (typeof ctx?.waitUntil === 'function') { ctx.waitUntil(promise); return null; }
+  } catch { /* fall through */ }
+  return promise;
+}
+
 async function writeAutoLog(userId, entry) {
   try {
     await mutate(userId, state => {
@@ -188,7 +198,8 @@ function wrapTool(name, tool, userId) {
           error,
           at
         };
-        await writeAutoLog(userId, entry);
+        const pending = runAfterResponse(writeAutoLog(userId, entry));
+        if (pending) await pending;
       }
     }
   };

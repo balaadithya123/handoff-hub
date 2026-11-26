@@ -120,6 +120,15 @@ function githubPath(path) {
   return path.split('/').map(encodeURIComponent).join('/');
 }
 
+// A 403 "Resource not accessible by integration" means the GitHub App is missing from this repo or lacks a permission.
+function githubHint(status, message, repository) {
+  if (status === 403 && /not accessible by integration/i.test(message || '')) {
+    return ` (The Axon GitHub App cannot write to ${repository}: add the repository to the app's installation and give it Contents: Read and write, then retry.)`;
+  }
+  if (status === 404) return ` (Check the repository name, the branch and that the GitHub App installation includes ${repository}.)`;
+  return '';
+}
+
 async function githubFetch(repository, path, options = {}) {
   assertAllowedRepo(repository);
   const authorization = await githubAuthHeader();
@@ -133,7 +142,7 @@ async function githubFetch(repository, path, options = {}) {
     }
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`GitHub request failed: ${response.status} ${body?.message || ''}`.trim());
+  if (!response.ok) throw new Error(`GitHub request failed: ${response.status} ${body?.message || ''}${githubHint(response.status, body?.message, repository)}`.trim());
   return body;
 }
 
@@ -172,7 +181,7 @@ export async function githubCommitFile({ repository, path, content, message, bra
     })
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`GitHub commit failed: ${response.status} ${body?.message || ''}`.trim());
+  if (!response.ok) throw new Error(`GitHub commit failed: ${response.status} ${body?.message || ''}${githubHint(response.status, body?.message, repository)}`.trim());
   return {
     repository,
     path,
@@ -195,7 +204,10 @@ async function githubApiFetch(path, options = {}) {
     }
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`GitHub request failed: ${response.status} ${body?.message || ''}`.trim());
+  if (!response.ok) {
+    const repo = (path.match(/^\/repos\/([^/]+\/[^/]+)/) || [])[1] || 'this repository';
+    throw new Error(`GitHub request failed: ${response.status} ${body?.message || ''}${githubHint(response.status, body?.message, repo)}`.trim());
+  }
   return body;
 }
 

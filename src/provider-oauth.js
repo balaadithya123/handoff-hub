@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { getState } from './store.js';
 import { projectMarkdown, exportFilename } from './export.js';
-import { portalFiles, portalDownloadUrl, portalDeleteFile } from './files.js';
+import { portalFiles, portalDownloadUrl, portalDeleteFile, portalPutText } from './files.js';
 import { startAuthorization, getToken, revokeToken } from '@vercel/connect';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -385,6 +385,7 @@ async function ownedHubUser(b) {
 async function filesAction(b) {
   const hubUser = await ownedHubUser(b);
   if (b.action === 'files_list') return { ok: true, ...(await portalFiles(hubUser)) };
+  if (b.action === 'files_put_text') return { ok: true, ...(await portalPutText(hubUser, { name: String(b.name || ''), text: b.text, note: b.note })) };
   const fileId = String(b.file_id || '');
   if (!/^[0-9a-f-]{36}$/i.test(fileId)) throw new Error('Invalid file.');
   if (b.action === 'files_download') return { ok: true, ...(await portalDownloadUrl(hubUser, fileId)) };
@@ -392,7 +393,7 @@ async function filesAction(b) {
 }
 
 export async function providerAction(b) {
-  if (b.action === 'files_list' || b.action === 'files_download' || b.action === 'files_delete') return filesAction(b);
+  if (b.action === 'files_list' || b.action === 'files_download' || b.action === 'files_delete' || b.action === 'files_put_text') return filesAction(b);
   if (b.action === 'export_project') return exportProject(b);
   if (b.action === 'start') return { authorization_url: await start(b.provider, b.portal_session) };
   if (b.action === 'consume') return { ok: await consume(b.provider, b.portal_session, b.ticket) };

@@ -3,6 +3,7 @@ import { ArrowUpRight, Bot, FileText, FolderOpen, HardDrive, Files as FilesIcon 
 import { getProjects } from "../../lib/data";
 import { filesList, type FileLibrary } from "../../lib/connections";
 import { FileExport, FileDelete } from "./FileActions";
+import PdfConverter from "./PdfConverter";
 import "./files.css";
 
 function size(bytes: number) {
@@ -58,6 +59,8 @@ export default async function Files({ token }: { token: string }) {
         </div>
         <div className="axon-heading-mark"><FolderOpen size={21} /></div>
       </section>
+
+      <PdfConverter accounts={accounts.map(a => ({ id: a.id, label: a.nickname || a.label }))} />
 
       <div className="space-y-7">
         {libraries.map(({ account, library }) => {

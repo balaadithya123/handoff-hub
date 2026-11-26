@@ -4,6 +4,7 @@
 import crypto from 'node:crypto';
 import { z } from 'zod';
 import { getState, mutate } from './store.js';
+import { toMarkdown, pageText, MAX_CONVERT_BYTES } from './markdown.js';
 
 export const MAX_FILE_BYTES = 30 * 1024 * 1024;
 export const MAX_ACCOUNT_BYTES = 100 * 1024 * 1024;
@@ -109,6 +110,48 @@ function expirePending(state, at = Date.now()) {
   return gone;
 }
 
+// Store a small file in one go: upload the bytes, then record it with a single state write (quota is re-checked
+// inside that write, so two parallel uploads cannot exceed the account limit). Returns { error } or { rec }.
+async function storeSmall(userId, { bytes, name: rawName, contentType, agent, note }) {
+  const quota = checkQuota((await getState(userId)).files, bytes.length);
+  if (!quota.ok) return { error: quota.reason };
+  const id = crypto.randomUUID();
+  const name = safeName(rawName);
+  const objectPath = `${userId}/${id}/${name}`;
+  const type = contentType || 'application/octet-stream';
+  await storageCall(`/object/${BUCKET}/${encodePath(objectPath)}`, { method: 'POST', headers: authHeaders({ 'Content-Type': type, 'x-upsert': 'false' }), body: bytes });
+  let result;
+  try {
+    result = await mutate(userId, state => {
+      const gone = expirePending(state);
+      const q = checkQuota(state.files, bytes.length);
+      if (!q.ok) return { error: q.reason, gone };
+      const rec = { id, name, object_path: objectPath, size_bytes: bytes.length, content_type: type, status: 'stored', uploaded_by: String(agent || 'unknown').trim().toLowerCase(), note, created_at: now(), stored_at: now() };
+      state.files = [rec, ...(state.files || [])];
+      return { rec, gone };
+    });
+  } catch (e) {
+    await removeObject(objectPath).catch(() => {});
+    throw e;
+  }
+  await Promise.all((result.gone || []).map(f => removeObject(f.object_path).catch(() => {})));
+  if (result.error) { await removeObject(objectPath).catch(() => {}); return { error: result.error }; }
+  return { rec: result.rec };
+}
+
+// Converted Markdown is kept briefly so reading a long file page by page converts it only once.
+const converted = new Map();
+function cacheConverted(key, value) {
+  converted.set(key, value);
+  let total = 0;
+  for (const v of converted.values()) total += v.markdown.length;
+  while (converted.size > 5 || total > 4 * 1024 * 1024) {
+    const oldest = converted.keys().next().value;
+    total -= converted.get(oldest).markdown.length;
+    converted.delete(oldest);
+  }
+}
+
 export function registerFileTools(server, userId, tool) {
   const needStorage = async () => {
     if (!storageOn()) throw new Error('File storage is not configured on this server (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required).');
@@ -165,36 +208,33 @@ export function registerFileTools(server, userId, tool) {
     return text(stored ? { file: view(stored) } : { error: 'The reservation expired before it was confirmed.' });
   });
 
-  tool('put_file', `Upload a small file directly as base64 (up to ${mb(MAX_DIRECT_BYTES)} MB, because tool calls are small). For anything larger use request_file_upload. Counts toward the ${mb(MAX_ACCOUNT_BYTES)} MB account storage. Use only when the user asked to share a file through Axon.`, { agent: agentName, name: z.string().min(1).max(200), content_base64: z.string().min(1), content_type: z.string().max(120).optional(), note: z.string().max(300).optional() }, { title: 'Upload a small file' }, async input => {
+  tool('put_file', `Upload a small file directly as base64 (up to ${mb(MAX_DIRECT_BYTES)} MB, because tool calls are small). For anything larger use request_file_upload. Counts toward the ${mb(MAX_ACCOUNT_BYTES)} MB account storage. Tip: Markdown (.md) uses far fewer tokens than PDF or Office files when an AI reads it later. Use only when the user asked to share a file through Axon.`, { agent: agentName, name: z.string().min(1).max(200), content_base64: z.string().min(1), content_type: z.string().max(120).optional(), note: z.string().max(300).optional() }, { title: 'Upload a small file' }, async input => {
     await needStorage();
     const bytes = Buffer.from(input.content_base64, 'base64');
     if (bytes.length > MAX_DIRECT_BYTES) return text({ error: `Direct upload is limited to ${mb(MAX_DIRECT_BYTES)} MB. Use request_file_upload for larger files (up to ${mb(MAX_FILE_BYTES)} MB).` });
-    const id = crypto.randomUUID();
-    const name = safeName(input.name);
-    const objectPath = `${userId}/${id}/${name}`;
-    const gone = [];
-    const reserved = await mutate(userId, state => {
-      gone.push(...expirePending(state));
-      const q = checkQuota(state.files, bytes.length);
-      if (!q.ok) return { error: q.reason };
-      const rec = { id, name, object_path: objectPath, size_bytes: bytes.length, content_type: input.content_type || 'application/octet-stream', status: 'pending', uploaded_by: String(input.agent).trim().toLowerCase(), note: input.note, created_at: now(), expires_at: new Date(Date.now() + 5 * 60000).toISOString() };
-      state.files = [rec, ...(state.files || [])];
-      return { rec };
-    });
-    await Promise.all(gone.map(f => removeObject(f.object_path).catch(() => {})));
-    if (reserved.error) return text({ error: reserved.error });
-    try {
-      await storageCall(`/object/${BUCKET}/${encodePath(objectPath)}`, { method: 'POST', headers: authHeaders({ 'Content-Type': reserved.rec.content_type, 'x-upsert': 'false' }), body: bytes });
-    } catch (e) {
-      await mutate(userId, state => { state.files = (state.files || []).filter(f => f.id !== id); });
-      throw e;
+    const r = await storeSmall(userId, { bytes, name: input.name, contentType: input.content_type, agent: input.agent, note: input.note });
+    return text(r.error ? { error: r.error } : { file: view(r.rec) });
+  });
+
+  tool('read_file', 'Read a stored file as compact Markdown right in the chat, with no download needed. Converts Word (.docx), PowerPoint (.pptx), Excel (.xlsx), CSV/TSV, JSON, HTML, XML, text/Markdown and common code files, using far fewer tokens than the raw file. Long files come in pages: pass next_offset as offset to continue. PDFs cannot be converted here; convert them to Markdown in the Axon portal Files page first, then read the saved .md. Use only when the user asked to read that file.', { file_id: z.string().min(1), offset: z.number().int().min(0).optional(), max_chars: z.number().int().min(1000).max(100000).optional().describe('Page size in characters (default 30000)') }, { title: 'Read a file as Markdown', ro: true }, async ({ file_id, offset = 0, max_chars = 30000 }) => {
+    await needStorage();
+    const st = await getState(userId);
+    const rec = (st.files || []).find(f => f.id === file_id);
+    if (!rec) return text({ error: 'No such file.' });
+    if (rec.status !== 'stored') return text({ error: 'This upload was never confirmed. Call confirm_file_upload first.' });
+    let conv = converted.get(rec.id);
+    if (!conv) {
+      if (rec.size_bytes > MAX_CONVERT_BYTES) return text({ error: `This file is ${mb(rec.size_bytes)} MB; reading in chat is limited to ${mb(MAX_CONVERT_BYTES)} MB. Use get_file to download it instead.` });
+      const bytes = Buffer.from(await (await storageCall(`/object/authenticated/${BUCKET}/${encodePath(rec.object_path)}`, { headers: authHeaders() })).arrayBuffer());
+      let out;
+      try { out = toMarkdown({ name: rec.name, contentType: rec.content_type, bytes }); }
+      catch (e) { return text({ error: `Could not convert ${rec.name}: ${e.message}. Use get_file to download the original.` }); }
+      if (out.unsupported) return text({ error: out.unsupported });
+      conv = { markdown: out.markdown, method: out.method, original_bytes: rec.size_bytes };
+      cacheConverted(rec.id, conv);
     }
-    const stored = await mutate(userId, state => {
-      const f = (state.files || []).find(x => x.id === id);
-      if (f) { f.status = 'stored'; delete f.expires_at; f.stored_at = now(); }
-      return f;
-    });
-    return text({ file: view(stored || reserved.rec) });
+    const page = pageText(conv.markdown, offset, max_chars);
+    return text({ file: { id: rec.id, name: rec.name }, converted_with: conv.method, original_bytes: conv.original_bytes, markdown_chars: page.total_chars, approx_tokens_total: Math.ceil(page.total_chars / 4), offset: page.offset, next_offset: page.next_offset, markdown: page.text });
   });
 
   tool('list_files', 'List files shared through Axon with how much of the 100 MB account storage is used. Includes who uploaded each file and any note.', {}, { title: 'List shared files', ro: true }, async () => {
@@ -249,4 +289,16 @@ export async function portalDeleteFile(userId, fileId) {
   await removeObject(rec.object_path);
   await mutate(userId, state => { state.files = (state.files || []).filter(f => f.id !== fileId); });
   return { deleted: true, name: rec.name };
+}
+
+const MAX_PORTAL_TEXT_BYTES = 3 * 1024 * 1024;
+export async function portalPutText(userId, { name, text: body, note }) {
+  await ensureBucket();
+  const bytes = Buffer.from(String(body ?? ''), 'utf8');
+  if (!bytes.length) throw new Error('Nothing to save.');
+  if (bytes.length > MAX_PORTAL_TEXT_BYTES) throw new Error(`That Markdown is ${mb(bytes.length)} MB; the limit for saving from the portal is ${mb(MAX_PORTAL_TEXT_BYTES)} MB.`);
+  const finalName = /\.md$/i.test(String(name)) ? String(name) : `${String(name || 'document')}.md`;
+  const r = await storeSmall(userId, { bytes, name: finalName, contentType: 'text/markdown; charset=utf-8', agent: 'portal', note: note ? String(note).slice(0, 300) : 'Converted in the portal' });
+  if (r.error) throw new Error(r.error);
+  return { id: r.rec.id, name: r.rec.name, size_bytes: r.rec.size_bytes };
 }

@@ -83,23 +83,68 @@ async function writeSupabase(userId, state, expectedVersion) {
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+// Warm-instance snapshot cache. The whole account state is one JSON document, so every read or write moves
+// all of it. We keep the last state this instance saw together with its version number:
+//  - reads ask Supabase only for the version (a few bytes) and reuse the cached state when it is unchanged;
+//  - writes try the cached version first, skipping the read. The version check in the PATCH still rejects a
+//    write if another instance changed the state, in which case we drop the cache and re-read.
+const snapshots = new Map();
+const MAX_CACHED_USERS = 20;
+export const storeStats = { version_probes: 0, cache_hits: 0, cache_misses: 0, optimistic_writes: 0, conflicts: 0 };
+
+function remember(userId, state, version) {
+  if (snapshots.size >= MAX_CACHED_USERS && !snapshots.has(userId)) snapshots.delete(snapshots.keys().next().value);
+  snapshots.set(userId, { state: structuredClone(state), version });
+}
+
+async function readVersion(userId) {
+  storeStats.version_probes += 1;
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/handoff_state?user_id=eq.${encodeURIComponent(userId)}&select=version`,
+    { headers: supabaseHeaders() }
+  );
+  if (!r.ok) throw new Error(`Supabase read failed: ${r.status}`);
+  const rows = await r.json();
+  return rows[0] ? Number(rows[0].version ?? 0) : null;
+}
+
+async function readCached(userId) {
+  const cached = snapshots.get(userId);
+  if (cached) {
+    const version = await readVersion(userId);
+    if (version !== null && version === cached.version) {
+      storeStats.cache_hits += 1;
+      return structuredClone(cached.state);
+    }
+  }
+  storeStats.cache_misses += 1;
+  const snap = await readSupabase(userId);
+  if (snap.version !== null) remember(userId, snap.state, snap.version);
+  return snap.state;
+}
+
 async function mutateSupabase(userId, fn) {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
-    const snapshot = await readSupabase(userId);
+    // First attempt may reuse the cached snapshot (no read). Retries always read fresh.
+    const cached = attempt === 0 ? snapshots.get(userId) : null;
+    const snapshot = cached ? { state: structuredClone(cached.state), version: cached.version } : await readSupabase(userId);
+    if (cached) storeStats.optimistic_writes += 1;
 
     if (snapshot.version === null) {
       const state = empty();
       const result = await fn(state);
       const inserted = await writeSupabase(userId, state, null);
-      if (inserted) return result;
+      if (inserted) { remember(userId, state, 0); return result; }
       await sleep(10 + Math.floor(Math.random() * 40));
       continue;
     }
 
     const result = await fn(snapshot.state);
     const updated = await writeSupabase(userId, snapshot.state, snapshot.version);
-    if (updated) return result;
+    if (updated) { remember(userId, snapshot.state, snapshot.version + 1); return result; }
 
+    storeStats.conflicts += 1;
+    snapshots.delete(userId);
     await sleep(10 + Math.floor(Math.random() * 40));
   }
   throw new Error('Concurrent state update detected after 5 retries');
@@ -107,7 +152,7 @@ async function mutateSupabase(userId, fn) {
 
 async function readState(userId) {
   if (!useSupabase) return readLocal(userId);
-  return (await readSupabase(userId)).state;
+  return readCached(userId);
 }
 
 const queues = new Map();

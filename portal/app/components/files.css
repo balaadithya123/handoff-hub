@@ -13,3 +13,12 @@
 .axon-file-name small { color: #8a8a8a; overflow-wrap: anywhere; }
 .axon-file-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: flex-start; }
 .axon-file-scroll { overflow-x: auto; }
+
+.axon-converter{border:1px solid var(--line,#2a2f3a);border-radius:12px;padding:16px;margin-bottom:24px}
+.axon-converter-head{display:flex;gap:10px;align-items:flex-start}
+.axon-converter-head h2{font-size:15px;margin:0}
+.axon-converter-head p,.axon-converter-note{font-size:12.5px;opacity:.75;margin:4px 0}
+.axon-converter-controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:12px 0 4px}
+.axon-converter-check{display:flex;gap:6px;align-items:center;font-size:13px}
+.axon-converter-output{width:100%;font:12px/1.5 ui-monospace,monospace;border-radius:8px;padding:10px;background:transparent;color:inherit;border:1px solid var(--line,#2a2f3a);resize:vertical}
+.axon-converter-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
