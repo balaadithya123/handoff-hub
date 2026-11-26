@@ -6,9 +6,21 @@ import { assertOwner } from './owner.js';
 import { projectMarkdown } from './export.js';
 import { registerFileTools } from './files.js';
 
-export const HUB_VERSION = '0.23.1';
+export const HUB_VERSION = '0.24.0';
 
 const CHANGELOG = [
+  {
+    version: '0.24.0',
+    date: '2026-11-26',
+    changes: [
+      'Faster state: per-instance snapshot cache means warm writes skip the full-state read and reads need only a version probe',
+      'Activity logging now runs after the response so tool calls return sooner',
+      'New read_file tool: reads a shared file as Markdown (docx, pptx, xlsx, csv, html, text) in pages, fewer tokens than raw files and works when an AI cannot download from a URL',
+      'put_file now uses a single state write instead of three',
+      'Portal Files page: PDF to Markdown converter that runs in the browser, with download, copy and save-to-library',
+      'GitHub 403/404 errors now explain how to fix the GitHub App installation permissions'
+    ]
+  },
   {
     version: '0.23.1',
     date: '2026-11-25',

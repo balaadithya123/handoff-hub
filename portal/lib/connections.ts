@@ -17,3 +17,4 @@ export type FileLibrary={ok:boolean;used_bytes:number;limit_bytes:number;max_fil
 export async function filesList(session:string,hubUser:string){return (await call({action:"files_list",portal_session:session,hub_user:hubUser})) as FileLibrary}
 export async function filesDownloadUrl(session:string,hubUser:string,fileId:string){return (await call({action:"files_download",portal_session:session,hub_user:hubUser,file_id:fileId})) as {ok:boolean;url:string;name:string}}
 export async function filesDelete(session:string,hubUser:string,fileId:string){return (await call({action:"files_delete",portal_session:session,hub_user:hubUser,file_id:fileId})) as {ok:boolean;deleted:boolean;name:string}}
+export async function filesPutText(session:string,hubUser:string,name:string,text:string,note?:string){return (await call({action:"files_put_text",portal_session:session,hub_user:hubUser,name,text,note})) as {ok:boolean;file_id?:string;name?:string}}

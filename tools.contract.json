@@ -54,6 +54,7 @@
     "put_file",
     "list_files",
     "get_file",
-    "delete_file"
+    "delete_file",
+    "read_file"
   ]
 }
